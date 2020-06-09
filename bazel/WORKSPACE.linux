@@ -1,0 +1,12 @@
+new_local_repository(
+    name = "libusb",
+    path = "/usr/include/",
+    build_file_content = """
+cc_library(
+  name = "headers",
+  includes = ["."],
+  hdrs = ["libusb-1.0/libusb.h"],
+  visibility = ["//visibility:public"],
+)
+"""
+)

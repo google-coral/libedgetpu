@@ -1,0 +1,478 @@
+// IDL file for DarwiNN Executable.
+
+namespace platforms.darwinn;
+
+
+// A new file identifier should only be introduced if a different schema, with
+// probably a different root node, is needed. This shall be a very rare case.
+file_identifier "DWN1";
+
+enum Description : short {
+  // Bundle::Alu::MOVI instruction to load output activation base address.
+  BASE_ADDRESS_OUTPUT_ACTIVATION = 0,
+
+  // Bundle::Alu::MOVI instruction to load input activation base address.
+  BASE_ADDRESS_INPUT_ACTIVATION = 1,
+
+  // Bundle::Alu::MOVI instruction to load parameter base address.
+  BASE_ADDRESS_PARAMETER = 2,
+
+  // Bundle::Alu::MOVI instruction to load scratch buffer base address.
+  BASE_ADDRESS_SCRATCH = 3,
+}
+
+enum Position : short {
+  // Lower 32-bit of 64-bit address.
+  LOWER_32BIT = 0,
+
+  // Upper 32-bit of 64-bit address.
+  UPPER_32BIT = 1,
+}
+
+// Linker metadata. Enums for various special fields in the encoded instruction
+// stream that will be populated by the driver at run time.
+table Meta {
+  // Indicates which base address this metadata is targeting.
+  desc:Description;
+
+  // For input/output/scratch, provides batch information.
+  // Parameter will not contain batch.
+  batch:int;
+
+  // Name of the input/output layer for input/output activations. Parameter and
+  // scratch should not have this field.
+  name:string;
+
+  // Tells which bit position to update.
+  position:Position;
+}
+
+// Holds offset information of a field in an instruction bit stream chunk.
+table FieldOffset {
+  // Linker metadata.
+  meta:Meta;
+
+  // Bit offset.
+  offset_bit:int;
+}
+
+// Holds information for an instruction bitstream chunk.
+table InstructionBitstream {
+  // Encoded bitstream for a real hardware.
+  bitstream:[ubyte];
+
+  // Offset (in bits) of various fields in the instruction bit stream. These
+  // fields are filled in by the driver before sending the instruction stream
+  // to the hardware.
+  field_offsets:[FieldOffset];
+}
+
+
+// Represents interrupt coming through descriptor path.
+enum InterruptType : short {
+  // Scalar core supports 4 interrupts.
+  SCALAR_CORE_INT_0 = 0,
+  SCALAR_CORE_INT_1 = 1,
+  SCALAR_CORE_INT_2 = 2,
+  SCALAR_CORE_INT_3 = 3,
+}
+
+// Represents direction of DMA.
+enum Direction : short {
+  // From host to device.
+  INFEED = 0,
+
+  // From device to host.
+  OUTFEED = 1,
+}
+
+// Holds DMA hint information for DMA descriptors.
+table DmaDescriptorHint {
+  // Metadata to indicate the DMA descriptor.
+  meta:Meta;
+
+  // Since base address is determined at link time, byte offset from base
+  // address is recorded here.
+  offset_in_bytes:int;
+
+  // Number of bytes to be transferred for this hint.
+  size_in_bytes:int;
+}
+
+// Holds interrupt hint information.
+table InterruptHint {
+  type:InterruptType;
+}
+
+// Holds Instuction hint information.
+table InstructionHint {
+  // Instruction chunk. Whole instruction chunk is always transferred.
+  instruction_chunk_index:int;
+}
+
+// Holds fence hint. Fence enforces that all DMA hints before Fence should be
+// processed completely before processing any DMA hints after the Fence.
+table FenceHint {
+}
+
+// A hint can be any one of the following.
+union AnyHint {
+  DmaDescriptorHint,
+  InstructionHint,
+  InterruptHint,
+  FenceHint,
+}
+
+// Hints deterministic DMA.
+table DmaHint {
+  any_hint:AnyHint;
+
+  // Direction of DMA.
+  direction:Direction;
+}
+
+// A complete collection of DMA hints for either input or output.
+table DmaHints {
+  // Series of hints.
+  hints:[DmaHint];
+
+  // True if "hints" cover all the DMAs in the model.
+  fully_deterministic:bool;
+}
+
+// A group of simple int->int map that helps us to translate a user-visible
+// coordinate value to hardware-friendly data layout for the final output
+// activation.
+//
+// Note that this is needed only for 3D output. 1D output, this field will not
+// be used and a user is not supposed to use this function.
+//
+//
+// Let's use an example when we have 2x2 tiles and we want to produce 4x5x32
+// output tensor (y/x/z order).
+//
+// In this example, tile0 and tile2 will produce a 2x3x32 tensor and tile1 and
+// tile3 will produce a 2x2x32 tensor.
+//
+// +--------+--------+
+// | Tile0  | Tile1  |
+// | 2x3x32 | 2x2x32 |
+// +--------+--------+
+// | Tile2  | Tile3  |
+// | 2x3x32 | 2x2x32 |
+// +--------+--------+
+//
+// y_coordinate_to_linear_tile_id_map will be (0, 0, 2, 2), encoding the
+// linearized tile ID of the first tile of a row that a target y value will be
+// stored.
+//
+// x_coordinate_to_linear_tile_id_map will be (0, 0, 0, 1, 1), encoding the
+// X tile ID of a tile that will hold corresponding x value.
+//
+// linearized_tile_byte_offset will be (0, 192, 320, 512) encoding the starting
+// byte offset of output of each tile when we fully linearize output.
+//
+// x_coordinate_to_local_byte_offset will be (0, 32, 64, 0, 32) as byte
+// offset, encoding byte offset for each local x offset.
+//
+// y_coordinate_to_local_y_offset will be (0, 1, 0, 1) as y offset for
+// y=0 will be 0 in each tile while that for y=1 will be 1.
+//
+// x_coordinate_to_local_y_row_size will be (3*32, 3*32, 3*32, 2*32, 2*32) as
+// each y-row for Tile0/2 is 3*32 bytes and that for Tile1/3 is 2*32 bytes.
+table OutputLayout {
+  // Holds a map from a tensor Y coordinate value to the linearized ID of the
+  // first tile of rows that produces output values for a given Y coordinate.
+  y_coordinate_to_linear_tile_id_map:[int];
+
+  // Holds a map for a given x coordinate value to tile ID within a row of
+  // tiles.
+  x_coordinate_to_linear_tile_id_map:[int];
+
+  // Holds an accumulated offset value for each tile.
+  linearized_tile_byte_offset:[int];
+
+  // Holds a map from a tensor x coordinate to local byte offset within each
+  // tile.
+  x_coordinate_to_local_byte_offset:[int];
+
+  // Holds a map from a tensor y coordinate to local y offset within each tile.
+  y_coordinate_to_local_y_offset:[int];
+
+  // Holds a map from a tensor x coordinate to local y row size within each
+  // tile.
+  x_coordinate_to_local_y_row_size:[int];
+}
+
+// Inclusive range of numbers.
+struct Range {
+  start:int;
+  end:int;
+}
+
+// Tensor shape
+table TensorShape {
+  // List of inclusive index range (start, end) of each dimension.
+  dimension:[Range];
+}
+
+// Tensor layout describes how tensor elements are stored in a linear memory
+// space. See details in go/darwinn-output-layout.
+table TensorLayout {
+  // Tensor shape stored in this layout.
+  shape:TensorShape;
+
+  // Distance (in number of elements) between two adjacent elements in each
+  // dimension.
+  stride:[int];
+}
+
+// Represents output tensor shape of each tile. This information will be used
+// for re-layout in the host.
+table OutputShapeInfo {
+  // The final model output is transferred to the host in a list of tensor
+  // slices (sub-tensors). A slice is a collection of elements that can be
+  // represented as a single tensor shape and tensor layout.
+  slice_layout:[TensorLayout];
+
+  // Base offset (in bytes) of the first element in the layout.
+  slice_offset:[int];
+}
+
+// Numerics-related constant values needed for interpreting output tensor.
+table NumericsConstants {
+  zero_point:int;
+  dequantization_factor:float;
+}
+
+//   //depot/google3/third_party/darwinn/api/runtime_version.h:runtime_version,
+//   //depot/google3/platforms/darwinn/driver/test_data/backward_compatibility/BUILD:test_cases)
+
+// Layer data type information.
+// Note: The DataType enum should be synced with
+// platforms/darwinn/model/config/array.proto.
+enum DataType : short {
+  // Unsigned fixed point (it would be more appropriate to call this an affine
+  // value) means there is a scale and zero point associated with this tensor,
+  // To transform unsigned fixed-point values to real values:
+  //   real_value = (unsigned_fixed-point_value - zero_point) * scale
+  FIXED_POINT8 = 0,
+  FIXED_POINT16 = 1,
+  // SIGNED_FIXED_POINT32 is a signed fixed point but is given an enum value
+  // of 2 due to historical reason. Please see the below for documentation of
+  // signed fixed-point types.
+  SIGNED_FIXED_POINT32 = 2,
+
+  // BFLOAT is Google’s own floating point format, with 8 bit exponent and 8 bit
+  // significand (7 bit stored significand).
+  BFLOAT = 3,
+  // HALF is industry standard IEEE 754-2008 binary16, with 5 bit exponent and
+  // 11 bit significand (10 bit stored significand).
+  HALF = 4,
+  // SINGLE is industry standard IEEE 754-2008 binary32, with 8 bit exponent and
+  // 24 bit significant (23 bit stored signficand).
+  SINGLE = 5,
+
+  // Signed fixed point data types. Number is stored in two's complement format.
+  // There is an associated scale but no zero point. To transform fixed-point
+  // values to real values:
+  //   real_value = signed_fixedpoint_value * scale
+  SIGNED_FIXED_POINT8 = 8,
+  SIGNED_FIXED_POINT16 = 9,
+}
+
+//   //depot/google3/third_party/darwinn/api/runtime_version.h:runtime_version,
+//   //depot/google3/platforms/darwinn/driver/test_data/backward_compatibility/BUILD:test_cases)
+
+// Output layer specific information.
+table OutputLayer {
+  // Encapsulates information needed to transform a multi-dimensional output
+  // tensor to its original YXZ layout. This field must be set for any tensor
+  // with x_dim and y_dim more than 1.
+  layout:OutputLayout;
+  data_type:DataType; // deprecated
+
+  // Output shape information that is streamed from the tiles.
+  shape_info:OutputShapeInfo;
+}
+
+// Input layer specific information.
+table InputLayer {
+}
+
+// One of output or input layer.
+union AnyLayer {
+  OutputLayer,
+  InputLayer,
+}
+
+// Layer information.
+table Layer {
+  // Name of the corresponding input/output layer.
+  name:string;
+
+  // Size in bytes, including padding. This number is for batch_size=1. The
+  // unpadded byte size of a tensor is:
+  //   x_dim * y_dim * z_dim * bytes_per_data_type.
+  size_bytes:int;
+
+  // Dimension info. All these fields should be set for input and output
+  // tensors. ?_dim=1 means we don't have ? dimension. For example, in a single
+  // dimensional tensor x_dim=1, y_dim=1, z_dim=N.
+  y_dim:int;
+  x_dim:int;
+  z_dim:int;
+
+  // Numerics constants used for dequantization and quantization.
+  numerics:NumericsConstants;
+
+  // For input layer, this is the data type of input, for output layer, this is the data type of output.
+  data_type:DataType;
+
+  // Input or Output Layer specific information.
+  any_layer:AnyLayer;
+
+  // How many times this layer will get executed per inference. Default is 1.
+  // This information will be used to create large enough buffer to host inputs
+  // and outputs for layers that will get executed several times per inference.
+  execution_count_per_inference:int = 1;
+
+  // If set, the activations on this layer will be cached on TPU DRAM (if DRAM
+  // is available and there is enough free space on it).
+  cache_on_dram:bool = false;
+
+  // Tensor shape info.
+  shape:TensorShape;
+}
+
+// Specifies the nature of an executable.
+enum ExecutableType : short {
+  // Everything needed to run a successful inference is included.
+  STAND_ALONE = 0,
+
+  // Only loads parameters into TPU memory. This type of executable should
+  // always accompany at least 1 EXECUTION_ONLY executable in the same package.
+  PARAMETER_CACHING = 1,
+
+  // This type of executable assumes the parameters are already cached on TPU.
+  // This type should always be accompanied by a PARAMETER_CACHING executable in
+  // the same package.
+  EXECUTION_ONLY = 2,
+}
+
+table Executable {
+  // Executable format version. Set to 0 for now.
+  version:int = 0;
+
+  // Model name.
+  name:string;
+
+  // Model protobuf in binary serialized format.
+  serialized_model:[ubyte];
+
+  // Batch size. That is the number of inputs that can be simultaneously
+  // processed.
+  batch_size:int;
+
+  // Size in bytes of the scratch buffer expected for this model.
+  // This number is for batch_size=1.
+  scratch_size_bytes:int;
+
+  // Encoded instruction bitstreams.
+  instruction_bitstreams:[InstructionBitstream];
+
+  // Parameter stream. This field must be guaranteed to be aligned by the code
+  // that produces the flat buffer. As of now, executable_converter ensures
+  // this.
+  parameters:[ubyte];
+
+  // Dma Hints.
+  dma_hints:DmaHints;
+
+  // Input layer Information
+  input_layers:[Layer];
+
+  // Output layer Information.
+  output_layers:[Layer];
+
+  // Chip that the executable was compiled for.
+  chip:string;
+
+  // Deprecated.  Use estimated_cycles_64bit below instead.
+  estimated_cycles:int;
+
+  // The maximum amount of narrow memory bytes that is guaranteed to be used per
+  // tile. All narrow memory used in a tile is guaranteed to be at byte
+  // addresses below this value.
+  used_narrow_memory_bytes_per_tile:int;
+
+  // Type of this executable. If not specified, runtime assumes STAND_ALONE.
+  type:ExecutableType;
+
+  // Parameter-caching executables with the same token can cache their
+  // parameters together on the TPU SRAM.
+  parameter_caching_token:uint64;
+
+  // If set, parameters in this model will be loaded in the TPU DRAM for higher
+  // performance. TPU DRAM is available on some architectures (e.g. Noronha).
+  // TPU DRAM is a scarce resource, therefore only selected models can have this
+  // option enabled (e.g. RNN-T for Noronha). If this option is enabled and
+  // enough TPU DRAM is not available an error is returned at run time.
+  use_tpu_dram_for_parameters:bool = false;
+
+  // Estimated runtime in cycles for this model.
+  estimated_cycles_64bit:int64;
+}
+
+// MultiExecutable encapsulates one or more DarwiNN serialized executables that
+// are all part of the same package.
+table MultiExecutable {
+  serialized_executables:[string];
+}
+
+// Serialized package allows individual packages to stay page-aligned
+// relative to beginning of the byte array.
+table SerializedPackage {
+  serialized_package:[ubyte] (nested_flatbuffer: "Package");
+}
+
+// The collection of executables, signature and everything else that is needed
+// for DarwiNN runtime to run one or more models that are related.
+table Package {
+  // Minimum runtime version needed to process this package correctly.
+  min_runtime_version:int;
+
+  // A serialized MultiExecutable.
+  serialized_multi_executable:[ubyte];
+
+  // Signature of serialized_multi_executable.
+  signature:[ubyte];
+
+  // The version of this package to identify assumptions on the structure.
+  keypair_version:int;
+
+  // Specifies the version of DarwiNN compiler used to create this package.
+  compiler_version:string;
+
+  // Chip ID in the virtual cluster to execute these graphs.
+  // 0 if this package is compiled to run on a single chip.
+  // -1 if this is a multiple-chip package.
+  virtual_chip_id:int = 0;
+
+  // Package data for individual chip to execute.
+  // Note that the package data is not aligned in package bundle file, but it
+  // will be loaded into aligned memory block at model registration.
+  // An intermediate table SerializedPackage is needed, for flatbuffer only
+  // supports 1-d vector.
+  // TODO: Consider creating a new root type for new chips.
+  multi_chip_package:[SerializedPackage];
+
+  // A user-specified identifier. This is for limited use of offline compiled
+  // models.
+  model_identifier:string;
+}
+
+root_type Package;
+
+//   //depot/google3/third_party/darwinn/api/runtime_version.h:runtime_version,
+//   //depot/google3/platforms/darwinn/driver/test_data/backward_compatibility/BUILD:test_cases)

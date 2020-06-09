@@ -1,0 +1,91 @@
+// IDL file for DarwiNN Driver Options.
+
+namespace platforms.darwinn.api;
+
+enum PerformanceExpectation : int {
+  // Clock-rate setting affecting performance.
+  Low,
+  Medium,
+  High,
+  Max
+}
+
+// USB-specific options
+table DriverUsbOptions {
+  // Path to the DFU firmware. Empty string implies default values(s).
+  dfu_firmware:string;
+
+  // If true, always performs DFU. Otherwise, only performs DFU if
+  // device is in DFU mode.
+  always_dfu:bool = true;
+
+  // If true, driver would fail to open if the current connection is low,
+  // full, or high speed. If the connection speed is not observable from
+  // underlying provider, this option is ignored.
+  has_fail_if_slower_than_superspeed: bool = false;
+  fail_if_slower_than_superspeed: bool = false;
+
+  // If true, bulk-in data is transmitted in largest chunks possible.
+  // By default, driver uses 1KB chunk size for USB3 and 256B for USB2.
+  // This is part of workaround for b/73181174
+  has_force_largest_bulk_in_chunk_size: bool = false;
+  force_largest_bulk_in_chunk_size: bool = false;
+
+  // If true, the fence between bulk-out and bulk-in would be lifted, allowing
+  // bulk-in to be issued before all bulk-out are finished. This feature could
+  // improve performance significantly on Android platform.
+  has_enable_overlapping_bulk_in_and_out: bool = false;
+  enable_overlapping_bulk_in_and_out: bool = true;
+
+  // If true, multiple bulk-in requests would be issued instead of just one at
+  // any moment. enable_overlapping_bulk_in_and_out must also be true for
+  // this feature to be enabled.
+  has_enable_queued_bulk_in_requests: bool = false;
+  enable_queued_bulk_in_requests: bool = true;
+
+  // Max number of buffers to queue when enable_queued_bulk_in_requests
+  // is true.
+  has_bulk_in_queue_capacity: bool = false;
+  bulk_in_queue_capacity: int = 32;
+}
+
+table DriverOptions {
+  // Forwarded compatibility is possible only within the same version number
+  // by following Flatbuffer schema evolution guidelines.
+  // https://google.github.io/flatbuffers/md__schemas.html
+  version:int = 1;
+  usb:DriverUsbOptions;
+
+  // Debug message verbosity inside the driver.
+  verbosity:int = 0;
+  performance_expectation:PerformanceExpectation = High;
+
+  // The public key used for verifying executable packages in PEM format.
+  public_key:string;
+
+  // The amount of time (in nanoseconds) that runtime waits to hear back from
+  // TPU (when it expects to) until it decides TPU is stuck and we need to
+  // perform a reset. A TPU reset results in all pending requests to be
+  // cancelled. 0 means Unlimited.
+  watchdog_timeout_ns:long = 0;
+
+  // Operating frequency. Used for computing initial max execution time for
+  // drivers supporting real-time mode.
+  // -1 means no operating frequency supplied (for drivers without real-time
+  // mode support).
+  tpu_frequency_hz:int64  = -1;
+
+  // The maximum amount of work (in terms of nanoseconds spent on TPU) that can
+  // be scheduled in the DMA scheduler at any given point in time. -1 means no
+  // maximum and all tasks get scheduled immediately. Exceptions are:
+  //   1. P0 requests.
+  //   2. When a single inference takes longer than this time and there is no
+  //      other task scheduled (avoid starvation).
+  max_scheduled_work_ns:int64 = -1;
+
+  // Data transfer bandwidth between host and TPU in bytes per second. -1 means
+  // assume infinite bandwidth.
+  host_to_tpu_bps:int64 = -1;
+}
+
+root_type DriverOptions;

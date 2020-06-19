@@ -84,6 +84,20 @@ struct ScalarCoreCsrOffsets {
   uint64 infeed_3_1RunControl;
   uint64 outfeed_3_1RunControl;
 
+  // Ring bus credit control
+  // Context 0
+  uint64 ScalarCoreRingBusCreditSender_0Reset;
+  uint64 ScalarCoreRingBusCreditReceiver_0Reset;
+  // Context 1
+  uint64 ScalarCoreRingBusCreditSender_1Reset;
+  uint64 ScalarCoreRingBusCreditReceiver_1Reset;
+  // Context 2
+  uint64 ScalarCoreRingBusCreditSender_2Reset;
+  uint64 ScalarCoreRingBusCreditReceiver_2Reset;
+  // Context 3
+  uint64 ScalarCoreRingBusCreditSender_3Reset;
+  uint64 ScalarCoreRingBusCreditReceiver_3Reset;
+
   // Power related.
   uint64 TilePowerInterval;
   uint64 peakPowerSampleInterval;

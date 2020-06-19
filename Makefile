@@ -18,8 +18,10 @@ OS := $(shell uname -s)
 
 ifeq ($(OS),Linux)
 CPU ?= k8
+WORKSPACE_PLATFORM_FILE := WORKSPACE.linux
 else ifeq ($(OS),Darwin)
 CPU ?= darwin
+WORKSPACE_PLATFORM_FILE := WORKSPACE.darwin
 else
 $(error $(OS) is not supported)
 endif
@@ -37,12 +39,9 @@ BAZEL_OUT_DIR := $(MAKEFILE_DIR)/bazel-out/$(CPU)-$(COMPILATION_MODE)/bin
 
 # Linux-specific parameters
 BAZEL_BUILD_TARGET_Linux := //tflite/public:libedgetpu_direct_all.so
-# --experimental_repo_remote_exec for remotable parameter used in
-# --`repository_rule` from TF.
 BAZEL_BUILD_FLAGS_Linux := --crosstool_top=@crosstool//:toolchains \
                            --compiler=gcc \
-                           --linkopt=-l:libusb-1.0.so \
-                           --experimental_repo_remote_exec
+                           --linkopt=-l:libusb-1.0.so
 BAZEL_BUILD_OUTPUT_FILE_Linux := libedgetpu.so.1.0
 BAZEL_BUILD_OUTPUT_SYMLINK_Linux := libedgetpu.so.1
 
@@ -63,10 +62,10 @@ BAZEL_BUILD_OUTPUT_SYMLINK_Darwin := libedgetpu.1.dylib
 
 # Common parameters
 BAZEL_BUILD_FLAGS := --sandbox_debug --subcommands \
+  --experimental_repo_remote_exec \
   --compilation_mode=$(COMPILATION_MODE) \
   --define darwinn_portable=1 \
   --copt=-DSTRIP_LOG=1 \
-  --copt=-DEDGETPU_EXTERNAL_RELEASE_RUNTIME \
   --copt=-fno-rtti \
   --copt=-fno-exceptions \
   --copt='-D__FILE__=""' \
@@ -93,23 +92,66 @@ endef
 endif
 endif
 
+.PHONY: libedgetpu \
+        libedgetpu-direct \
+        libedgetpu-throttled \
+        workspace \
+        clean
+
 libedgetpu: libedgetpu-direct libedgetpu-throttled
 
-libedgetpu-direct:
+libedgetpu-direct: workspace
 	bazel build $(BAZEL_BUILD_FLAGS) $(BAZEL_BUILD_TARGET)
 	$(call copy_out,direct)
 	$(call strip_out,direct)
 
-libedgetpu-throttled:
+libedgetpu-throttled: workspace
 	bazel build $(BAZEL_BUILD_FLAGS) --copt=-DTHROTTLE_EDGE_TPU $(BAZEL_BUILD_TARGET)
 	$(call copy_out,throttled)
 	$(call strip_out,throttled)
 
+workspace: bazel/WORKSPACE bazel/$(WORKSPACE_PLATFORM_FILE)
+	cat $^ > WORKSPACE
+
 clean:
 	rm -rf $(OUT_DIR)
 
-ifdef DOCKER_MK
+################################################################################
+# Docker commands
+################################################################################
+DOCKER_CONTEXT_DIR := $(MAKEFILE_DIR)/docker
 DOCKER_WORKSPACE := $(MAKEFILE_DIR)
-DOCKER_TAG_BASE=coral-libedgetpu
-include $(DOCKER_MK)
-endif
+DOCKER_CONTAINER_WORKSPACE := /workspace
+DOCKER_CPUS ?= k8 armv7a armv6 aarch64
+DOCKER_TARGETS ?=
+DOCKER_IMAGE ?= debian:stretch
+DOCKER_TAG_BASE ?= libedgetpu-cross
+DOCKER_TAG := "$(DOCKER_TAG_BASE)-$(subst :,-,$(DOCKER_IMAGE))"
+DOCKER_SHELL_COMMAND ?=
+
+DOCKER_MAKE_COMMAND := \
+for cpu in $(DOCKER_CPUS); do \
+    make CPU=\$${cpu} -C $(DOCKER_CONTAINER_WORKSPACE) $(DOCKER_TARGETS) || exit 1; \
+done
+
+define docker_run_command
+chmod a+w /; \
+groupadd --gid $(shell id -g) $(shell id -g -n); \
+useradd -m -e '' -s /bin/bash --gid $(shell id -g) --uid $(shell id -u) $(shell id -u -n); \
+echo '$(shell id -u -n) ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers; \
+su $(shell id -u -n) $(if $(1),-c '$(1)',)
+endef
+
+docker-image:
+	docker build $(DOCKER_IMAGE_OPTIONS) -t $(DOCKER_TAG) \
+	    --build-arg IMAGE=$(DOCKER_IMAGE) $(DOCKER_CONTEXT_DIR)
+
+docker-shell: docker-image
+	docker run --rm -i --tty --workdir $(DOCKER_CONTAINER_WORKSPACE) \
+	    -v $(DOCKER_WORKSPACE):$(DOCKER_CONTAINER_WORKSPACE) \
+	    $(DOCKER_TAG) /bin/bash -c "$(call docker_run_command,$(DOCKER_SHELL_COMMAND))"
+
+docker-build: docker-image
+	docker run --rm -i $(shell tty -s && echo --tty) \
+	    -v $(DOCKER_WORKSPACE):$(DOCKER_CONTAINER_WORKSPACE) \
+	    $(DOCKER_TAG) /bin/bash -c "$(call docker_run_command,$(DOCKER_MAKE_COMMAND))"

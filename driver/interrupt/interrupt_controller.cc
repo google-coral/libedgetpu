@@ -14,6 +14,7 @@
 
 #include "driver/interrupt/interrupt_controller.h"
 
+#include "driver/config/register_constants.h"
 #include "driver/registers/registers.h"
 #include "port/logging.h"
 
@@ -31,23 +32,35 @@ InterruptController::InterruptController(
 }
 
 util::Status InterruptController::EnableInterrupts() {
-  const uint64 enable_all = (1ULL << NumInterrupts()) - 1;
-  return registers_->Write(csr_offsets_.control, enable_all);
+  if (csr_offsets_.control != kCsrRegisterSpaceInvalidOffset) {
+    const uint64 enable_all = (1ULL << NumInterrupts()) - 1;
+    return registers_->Write(csr_offsets_.control, enable_all);
+  } else {
+    return util::OkStatus();
+  }
 }
 
 util::Status InterruptController::DisableInterrupts() {
-  constexpr uint64 kDisableAll = 0;
-  return registers_->Write(csr_offsets_.control, kDisableAll);
+  if (csr_offsets_.control != kCsrRegisterSpaceInvalidOffset) {
+    constexpr uint64 kDisableAll = 0;
+    return registers_->Write(csr_offsets_.control, kDisableAll);
+  } else {
+    return util::OkStatus();
+  }
 }
 
 util::Status InterruptController::ClearInterruptStatus(int id) {
-  // Interrupt status register has W0C policy meaning that writing 0 clears the
-  // bit, while writing 1 does not have any effect.
-  const uint64 clear_bit = ~(1ULL << id);
+  if (csr_offsets_.status != kCsrRegisterSpaceInvalidOffset) {
+    // Interrupt status register has W0C policy meaning that writing 0
+    // clears the bit, while writing 1 does not have any effect.
+    const uint64 clear_bit = ~(1ULL << id);
 
-  uint64 value = (1ULL << NumInterrupts()) - 1;
-  value &= clear_bit;
-  return registers_->Write(csr_offsets_.status, value);
+    uint64 value = (1ULL << NumInterrupts()) - 1;
+    value &= clear_bit;
+    return registers_->Write(csr_offsets_.status, value);
+  } else {
+    return util::OkStatus();
+  }
 }
 
 }  // namespace driver

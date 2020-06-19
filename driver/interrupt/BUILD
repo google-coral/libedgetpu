@@ -43,7 +43,10 @@ cc_library(
 cc_library(
     name = "interrupt_controller_interface",
     hdrs = ["interrupt_controller_interface.h"],
-    deps = ["//port"],
+    deps = [
+        "//driver/config:register_constants",
+        "//port",
+    ],
 )
 
 cc_library(
@@ -62,6 +65,7 @@ cc_library(
     deps = [
         ":interrupt_controller_interface",
         "//driver/config",
+        "//driver/config:register_constants",
         "//driver/registers",
         "//port",
     ],

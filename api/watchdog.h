@@ -162,7 +162,9 @@ class TimerFdWatchdog : public Watchdog {
   // The timer to be used for keeping track of expiration deadlines.
   std::unique_ptr<Timer> timer_;
 
-  // A single mutex to protect mutable fields in this class.
+  // A single mutex to protect mutable fields in this class. This mutex is not
+  // held while the watchdog callback is being executed. It is safe to signal,
+  // activate, deactivate or destroy a barking watchdog.
   std::mutex mutex_;
 
   // Watchdog state machine:
@@ -280,9 +282,11 @@ class CascadeWatchdog : public Watchdog {
   // A mutex to protect mutable class fields.
   std::mutex mutex_;
 
-  // Specifies which child watchdog is currently active. It can be used as an
-  // index to configs_ or watchdogs_. -1 means all watchdogs are inactive.
+  // Value that indicates all watchdogs are inactive.
   static constexpr int kNoneActive = -1;
+
+  // Specifies which child watchdog is currently active. A value other than
+  // kNoneActive can be used as an index to configs_ or watchdogs_.
   int currently_active_ GUARDED_BY(mutex_){kNoneActive};
 
   // The current/last generated activation ID for the caller of Activate on this

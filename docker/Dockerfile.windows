@@ -1,0 +1,42 @@
+FROM mcr.microsoft.com/windows/servercore:1903
+SHELL ["powershell", "-command"]
+
+# Install chocolatey + Win10 SDK + VS build tools
+RUN "Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))" 
+RUN choco install -y windows-sdk-10
+RUN choco install -y visualstudio2019buildtools
+RUN choco install -y visualstudio2019-workload-vctools
+RUN choco install -y python3
+RUN python -m pip install six numpy wheel
+
+# Install 7-zip
+RUN choco install -y 7zip
+RUN setx /M PATH $($Env:PATH + ';C:\Program Files\7-Zip')
+
+# Install msys2
+ARG MSYS_VERSION=20200602
+ADD http://repo.msys2.org/distrib/x86_64/msys2-base-x86_64-${MSYS_VERSION}.tar.xz c:/windows/temp
+RUN 7z.exe x c:\windows\temp\msys2-base-x86_64-$env:MSYS_VERSION.tar.xz
+RUN 7z.exe x c:\msys2-base-x86_64-$env:MSYS_VERSION.tar -o"c:\\"
+RUN setx /M PATH $($Env:PATH + ';C:\msys64\usr\bin')
+
+# Install patch
+ARG PATCH_VERSION=2.7.6-1
+ADD http://repo.msys2.org/msys/x86_64/patch-${PATCH_VERSION}-x86_64.pkg.tar.xz c:/windows/temp
+RUN 7z.exe x -y c:\windows\temp\patch-$env:PATCH_VERSION-x86_64.pkg.tar.xz
+RUN 7z.exe x -y c:\patch-$env:PATCH_VERSION-x86_64.pkg.tar -o"c:\\msys64"
+
+# Install vim (for xxd)
+ARG VIM_VERSION=8.2.0592-1
+ADD http://repo.msys2.org/msys/x86_64/vim-${VIM_VERSION}-x86_64.pkg.tar.xz c:/windows/temp
+RUN 7z.exe x -y c:\windows\temp\vim-$env:VIM_VERSION-x86_64.pkg.tar.xz
+RUN 7z.exe x -y c:\vim-$env:VIM_VERSION-x86_64.pkg.tar -o"c:\\msys64"
+
+# Install libusb release package
+ARG LIBUSB_VERSION=1.0.22
+ADD https://github.com/libusb/libusb/releases/download/v${LIBUSB_VERSION}/libusb-${LIBUSB_VERSION}.7z c:/windows/temp
+RUN 7z x -oc:\libusb-1.0.22 c:\windows\temp\libusb-1.0.22.7z
+
+# Install Bazel
+ARG BAZEL_VERSION=3.2.0
+ADD https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-windows-x86_64.exe c:/windows/system32/bazel.exe

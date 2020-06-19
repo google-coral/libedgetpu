@@ -86,8 +86,11 @@ util::StatusOr<int64> TimerFdWatchdog::Activate() {
     case WatchdogState::ACTIVE:
       break;  // Already active: Return old activation_id.
     case WatchdogState::BARKING:
-      return util::FailedPreconditionError(
-          "Cannot activate a barking watchdog.");
+      VLOG(1) << "A barking watchdog was re-activated.";
+      RETURN_IF_ERROR(timer_->Set(timeout_ns_));
+      state_ = WatchdogState::ACTIVE;
+      activation_id_ = GetNextActivationId(activation_id_);
+      break;
     case WatchdogState::INACTIVE:
       VLOG(5) << "Activating the watchdog.";
       RETURN_IF_ERROR(timer_->Set(timeout_ns_));
@@ -190,9 +193,11 @@ void TimerFdWatchdog::Watcher() {
       // Acquire lock again to update shared state after calling expire_.
       {
         StdMutexLock lock(&mutex_);
-        //  Watchdog might be destroyed while callback was running.
-        //  In that case, retain the 'DESTROYED' state.
-        if (state_ != WatchdogState::DESTROYED) {
+        // While the watchdog was executing the expire_ callback (ie BARKING):
+        //  If ~Watchdog was called, retain DESTROYED state.
+        //  If Activate was called (re-activated), retain ACTIVE state.
+        //  If Deactivate was called, state will change to INACTIVE now.
+        if (state_ == WatchdogState::BARKING) {
           state_ = WatchdogState::INACTIVE;
         }
       }

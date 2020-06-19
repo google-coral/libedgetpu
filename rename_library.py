@@ -65,7 +65,7 @@ def main():
                           cwd=os.path.dirname(args.output_dll))
 
   # Move original DLL to new name.
-  os.rename(args.input_dll, args.output_dll)
+  os.replace(args.input_dll, args.output_dll)
 
   # Clean up intermediates.
   os.remove(def_file_name)

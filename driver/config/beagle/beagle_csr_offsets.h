@@ -1496,6 +1496,22 @@ const ScalarCoreCsrOffsets kBeagleScalarCoreCsrOffsets = {
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_3_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_3_1RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_3_1RunControl
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // ScalarCoreRingBusCreditSender_0Reset
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // ScalarCoreRingBusCreditReceiver_0Reset
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // ScalarCoreRingBusCreditSender_1Reset
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // ScalarCoreRingBusCreditReceiver_1Reset
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // ScalarCoreRingBusCreditSender_2Reset
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // ScalarCoreRingBusCreditReceiver_2Reset
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // ScalarCoreRingBusCreditSender_3Reset
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // ScalarCoreRingBusCreditReceiver_3Reset
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, TilePowerInterval
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, peakPowerSampleInterval
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, tdpPowerSampleInterval
@@ -1586,6 +1602,8 @@ const TileCsrOffsets kBeagleTileCsrOffsets = {
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, narrowMemoryContext_1
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, narrowMemoryContext_2
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, narrowMemoryContext_3
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, TileRingBusCreditSenderReset
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, TileRingBusCreditReceiverReset
 };
 
 const WireCsrOffsets kBeagleWireCsrOffsets = {

@@ -15,6 +15,8 @@ echo off
 
 setlocal
 
+type bazel\WORKSPACE bazel\WORKSPACE.windows > WORKSPACE 2>NUL
+
 set THROTTLED=0
 set COMPILATION_MODE=opt
 set OUT_DIR=%~dp0\out
@@ -48,7 +50,8 @@ set BAZEL_BUILD_FLAGS= ^
 --define darwinn_portable=1 ^
 --copt=/DSTRIP_LOG=1 ^
 --copt=/DABSL_FLAGS_STRIP_NAMES ^
---copt=/DEDGETPU_EXTERNAL_RELEASE_RUNTIME ^
+--copt=/D_HAS_DEPRECATED_RESULT_OF ^
+--copt=/D_HAS_DEPRECATED_ADAPTOR_TYPEDEFS ^
 --copt=/GR- ^
 --copt=/DWIN32_LEAN_AND_MEAN ^
 --copt=/D_WINSOCKAPI_ ^

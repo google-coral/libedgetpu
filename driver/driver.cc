@@ -392,8 +392,11 @@ util::Status Driver::SubmitInferenceRequest(std::shared_ptr<Request> request) {
                    DoCreateRequest(request, &request->MainExecutableReference(),
                                    TpuRequest::RequestType::INFERENCE));
   RETURN_IF_ERROR(request->PrepareTpuRequest(tpu_request));
-  RETURN_IF_ERROR(DoSubmit(std::move(tpu_request)));
+
+  // Record the submission time before actually submitting the workload. This
+  // avoids race conditions where the completion is notified before submission.
   request->NotifySubmission(TpuRequest::RequestType::INFERENCE);
+  RETURN_IF_ERROR(DoSubmit(std::move(tpu_request)));
 
   return util::OkStatus();
 }
@@ -429,8 +432,11 @@ util::Status Driver::SubmitParameterCachingRequest(
                    DoCreateRequest(request, parameter_caching_ref,
                                    TpuRequest::RequestType::PARAMETER_CACHING));
   RETURN_IF_ERROR(tpu_request->SetDone([](int, const util::Status&) {}));
-  RETURN_IF_ERROR(DoSubmit(std::move(tpu_request)));
+
+  // Record the submission time before actually submitting the workload. This
+  // avoids race conditions where the completion is notified before submission.
   request->NotifySubmission(TpuRequest::RequestType::PARAMETER_CACHING);
+  RETURN_IF_ERROR(DoSubmit(std::move(tpu_request)));
 
   return util::OkStatus();
 }

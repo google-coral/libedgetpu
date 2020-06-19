@@ -6,7 +6,31 @@ This software is distributed in the binary form at [coral.ai/software](https://c
 
 ## Building
 
-At present only Bazel build system is supported, but it can be invoked from the Makefile. 
+At present only [Bazel](https://bazel.build/) build system is supported. For
+proper environment setup check `docker` directory.
+
+Build native binaries on Linux and macOS:
+```
+$ make
+```
+
+Build native binaries on Windows:
+```
+$ build.bat
+```
+
+Cross-compile for ARMv7-A (32 bit), and ARMv8-A (64 bit) on Linux:
+```
+$ CPU=armv7a make
+$ CPU=aarch64 make
+```
+
+Build Linux binaries inside Docker container (works on Linux and macOS):
+```
+$ DOCKER_CPUS="k8 armv7a aarch64" DOCKER_TARGETS=libedgetpu make docker-build
+```
+
+All built binaries go to the `out` directory.
 
 ## Support
 

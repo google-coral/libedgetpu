@@ -15,11 +15,9 @@
 #ifndef DARWINN_DRIVER_KERNEL_KERNEL_EVENT_H_
 #define DARWINN_DRIVER_KERNEL_KERNEL_EVENT_H_
 
-#include <mutex>   // NOLINT
-#include <thread>  // NOLINT
+#include <functional>
 
-#include "port/status.h"
-#include "port/thread_annotations.h"
+#include "port/fileio.h"
 
 namespace platforms {
 namespace darwinn {
@@ -33,31 +31,12 @@ class KernelEvent {
  public:
   using Handler = std::function<void()>;
 
-  KernelEvent(int event_fd, Handler handler);
-  ~KernelEvent();
+  KernelEvent(FileDescriptor event_fd, Handler handler) {}
+  virtual ~KernelEvent() = default;
 
   // This class is neither copyable nor movable.
   KernelEvent(const KernelEvent&) = delete;
   KernelEvent& operator=(const KernelEvent&) = delete;
-
- private:
-  // Monitors eventfd_. Runs on thread_.
-  void Monitor(int event_fd, const Handler& handler);
-
-  // Convenience function to read |enabled_| with locks held.
-  bool IsEnabled() const LOCKS_EXCLUDED(mutex_);
-
-  // Event fd.
-  const int event_fd_;
-
-  // Mutex that guards enabled_;
-  mutable std::mutex mutex_;
-
-  // Enabled if true.
-  bool enabled_ GUARDED_BY(mutex_){true};
-
-  // Thread for monitoring interrupts.
-  std::thread thread_;
 };
 
 }  // namespace driver

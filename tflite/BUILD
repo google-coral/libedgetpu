@@ -12,11 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_binary", "libedgetpu_cc_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-cc_library(
+libedgetpu_cc_library(
     name = "custom_op_data",
     srcs = ["custom_op_data.cc"],
     hdrs = ["custom_op_data.h"],
@@ -26,7 +28,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "custom_op",
     srcs = ["custom_op.cc"],
     hdrs = ["custom_op.h"],
@@ -40,7 +42,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "custom_op_user_data_direct",
     srcs = ["custom_op_user_data_direct.cc"],
     hdrs = ["custom_op_user_data_direct.h"],
@@ -53,7 +55,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "edgetpu_context_direct_header",
     hdrs = ["edgetpu_context_direct.h"],
     deps = [
@@ -72,7 +74,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "edgetpu_manager_direct_header",
     hdrs = ["edgetpu_manager_direct.h"],
     deps = [
@@ -92,7 +94,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "edgetpu_context_direct",
     srcs = ["edgetpu_context_direct.cc"],
     hdrs = ["edgetpu_context_direct.h"],
@@ -113,7 +115,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "edgetpu_manager_direct",
     srcs = ["edgetpu_manager_direct.cc"],
     hdrs = ["edgetpu_manager_direct.h"],
@@ -136,7 +138,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "custom_op_direct",
     srcs = ["custom_op_direct.cc"],
     deps = [
@@ -155,7 +157,7 @@ cc_library(
     alwayslink = 1,
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "tensor_data_controller",
     srcs = ["tensor_data_controller.cc"],
     hdrs = ["tensor_data_controller.h"],
@@ -166,7 +168,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "edgetpu_context_factory",
     srcs = ["edgetpu_context_factory.cc"],
     hdrs = ["edgetpu_context_factory.h"],
@@ -184,7 +186,7 @@ config_setting(
     values = {"define": "EXTRA_LOGGING=DUMMY"},
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "edgetpu_delegate_for_custom_op",
     srcs = [
         "edgetpu_delegate_for_custom_op.cc",
@@ -198,7 +200,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "edgetpu_delegate_for_custom_op_tflite_plugin",
     srcs = [
         "edgetpu_delegate_for_custom_op_tflite_plugin.cc",
@@ -206,13 +208,14 @@ cc_library(
     deps = [
         ":edgetpu_delegate_for_custom_op",
         "@com_google_absl//absl/strings",
+        "@com_google_absl//absl/types:optional",
         "//tflite/public:edgetpu",
         "@org_tensorflow//tensorflow/lite:kernel_api",
     ],
     alwayslink = 1,
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "edgetpu_c",
     srcs = [
         "edgetpu_c.cc",

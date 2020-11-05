@@ -41,6 +41,12 @@ void Helper::Crash(const Status& status) {
   unreachable();  // NOLINT
 }
 
+void ThrowBadStatusOrAccess(Status status) {
+  LOG(FATAL) << "Attempting to fetch value instead of handling error "
+             << status;
+  unreachable();  // NOLINT
+}
+
 }  // namespace internal_statusor
 }  // namespace util
 }  // namespace darwinn

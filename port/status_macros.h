@@ -17,10 +17,12 @@
 
 #include "port/defs.h"
 
+// IWYU pragma: begin_exports
 #if DARWINN_PORT_USE_GOOGLE3
 #include "util/task/status_macros.h"
 #else  // !DARWINN_PORT_USE_GOOGLE3
 #include "port/default/status_macros.h"
 #endif  // DARWINN_PORT_USE_GOOGLE3
+// IWYU pragma: end_exports
 
 #endif  // DARWINN_PORT_STATUS_MACROS_H_

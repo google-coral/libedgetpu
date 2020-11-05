@@ -15,6 +15,7 @@
 #include "driver/request.h"
 
 #include "api/request.h"
+#include "driver_shared/time_stamper/time_stamper.h"
 #include "port/math_util.h"
 #include "port/status.h"
 #include "port/status_macros.h"
@@ -27,16 +28,16 @@ namespace platforms {
 namespace darwinn {
 namespace driver {
 Request::Request(int id, const PackageReference& package_ref,
-                 const TimeStamper& timestamper)
+                 const driver_shared::TimeStamper& timestamper)
     : id_(id),
       package_ref_(package_ref),
       main_executable_ref_(*package_ref.MainExecutableReference()),
       hardware_batch_size_(package_ref.MainExecutableReference()->BatchSize()),
       current_time_(timestamper) {
-          timing_.created_ns = timestamper.GetTimeNanoSeconds();
-          timing_.submitted_ns = -1;
-          timing_.completed_ns = -1;
-      }
+  timing_.created_ns = timestamper.GetTimeNanoSeconds();
+  timing_.submitted_ns = -1;
+  timing_.completed_ns = -1;
+}
 
 util::Status Request::AddInput(const std::string& name, const Buffer& input) {
   StdMutexLock lock(&mutex_);

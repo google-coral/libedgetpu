@@ -188,7 +188,7 @@ class UsbDriver : public Driver {
       std::unique_ptr<DramAllocator> dram_allocator,
       std::unique_ptr<PackageRegistry> executable_registry,
       const UsbDriverOptions& options,
-      std::unique_ptr<TimeStamper> time_stamper);
+      std::unique_ptr<driver_shared::TimeStamper> time_stamper);
 
   // Constructs a driver instance around a supplied device object.
   // Note that since no factory is provided, this driver cannot be re-opened
@@ -205,7 +205,7 @@ class UsbDriver : public Driver {
       std::unique_ptr<DramAllocator> dram_allocator,
       std::unique_ptr<PackageRegistry> executable_registry,
       const UsbDriverOptions& options,
-      std::unique_ptr<TimeStamper> time_stamper);
+      std::unique_ptr<driver_shared::TimeStamper> time_stamper);
 
   // This class is neither copyable nor movable.
   UsbDriver(const UsbDriver&) = delete;
@@ -290,7 +290,7 @@ class UsbDriver : public Driver {
       std::unique_ptr<DramAllocator> dram_allocator,
       std::unique_ptr<PackageRegistry> executable_registry,
       const UsbDriverOptions& options,
-      std::unique_ptr<TimeStamper> time_stamper);
+      std::unique_ptr<driver_shared::TimeStamper> time_stamper);
 
   // Prepares USB device with resets and DFU according to options_.
   util::Status PrepareUsbDevice();

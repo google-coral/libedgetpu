@@ -17,10 +17,12 @@
 
 #include "port/defs.h"
 
+// IWYU pragma: begin_exports
 #if DARWINN_PORT_USE_GOOGLE3
 #include "util/task/canonical_errors.h"
 #else  // !DARWINN_PORT_USE_GOOGLE3
 #include "port/default/errors.h"
 #endif  // DARWINN_PORT_USE_GOOGLE3
+// IWYU pragma: end_exports
 
 #endif  // DARWINN_PORT_ERRORS_H_

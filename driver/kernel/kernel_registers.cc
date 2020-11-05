@@ -16,10 +16,8 @@
 
 #include <fcntl.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <unistd.h>
 
 #include <string>
 
@@ -52,29 +50,33 @@ KernelRegisters::KernelRegisters(const std::string& device_path,
     : KernelRegisters(device_path, {{mmap_offset, mmap_size}}, read_only) {}
 
 KernelRegisters::~KernelRegisters() {
-  for (auto& region : mmap_region_) {
-    if (region.registers != nullptr) {
-      const int ret = munmap(region.registers, region.size);
-      if (ret != 0) {
-        LOG(ERROR) << "Error unmapping registers: " << strerror(errno);
-      }
-      region.registers = nullptr;
-    }
-  }
-
-  if (fd_ != -1) {
+  util::Status status;
+  if (fd_ != INVALID_FD_VALUE) {
     LOG(WARNING)
         << "Destroying KernelRegisters - Close() had not yet been called!";
-    util::Status status = Close();
+    status = Close();
     if (!status.ok()) {
       LOG(ERROR) << status;
     }
   }
 }
 
+void KernelRegisters::UnmapAllRegions() {
+  util::Status status;
+  for (auto& region : mmap_region_) {
+    if (region.registers != nullptr) {
+      status = UnmapRegion(fd_, region);
+      if (status.ok()) {
+        LOG(ERROR) << status;
+      }
+      region.registers = nullptr;
+    }
+  }
+}
+
 util::Status KernelRegisters::Open() {
   StdMutexLock lock(&mutex_);
-  if (fd_ != -1) {
+  if (fd_ != INVALID_FD_VALUE) {
     return util::FailedPreconditionError("Device already open.");
   }
 
@@ -86,14 +88,9 @@ util::Status KernelRegisters::Open() {
   }
 
   fd_ = open(device_path_.c_str(), mode);
-  if (fd_ < 0) {
+  if (fd_ == INVALID_FD_VALUE) {
     return util::FailedPreconditionError(
         StringPrintf("Device open failed : %d (%s)", fd_, strerror(errno)));
-  }
-
-  int protections = PROT_READ | PROT_WRITE;
-  if (read_only_) {
-    protections = PROT_READ;
   }
 
   for (auto& region : mmap_region_) {
@@ -101,17 +98,13 @@ util::Status KernelRegisters::Open() {
                             static_cast<long long>(region.offset),
                             static_cast<long long>(region.size));
 
-    region.registers =
-        static_cast<uint64*>(mmap(nullptr, region.size, protections,
-                                  MAP_SHARED | MAP_LOCKED, fd_, region.offset));
-    if (region.registers == MAP_FAILED) {
+    auto statusor = MapRegion(fd_, region, read_only_);
+    if (!statusor.ok()) {
       close(fd_);
-      fd_ = -1;
-      region.registers = nullptr;
-
-      return util::FailedPreconditionError(
-          StringPrintf("Could not mmap: %s.", strerror(errno)));
+      fd_ = INVALID_FD_VALUE;
+      return statusor.status();
     }
+    region.registers = std::move(statusor.ValueOrDie());
     VLOG(3) << "Got map addr at 0x" << std::hex << region.registers;
   }
 
@@ -120,7 +113,7 @@ util::Status KernelRegisters::Open() {
 
 util::Status KernelRegisters::Close() {
   StdMutexLock lock(&mutex_);
-  if (fd_ == -1) {
+  if (fd_ == INVALID_FD_VALUE) {
     return util::FailedPreconditionError("Device not open.");
   }
 
@@ -132,16 +125,16 @@ util::Status KernelRegisters::Close() {
           static_cast<long long>(region.offset),  // NOLINT(runtime/int)
           static_cast<long long>(region.size),    // NOLINT(runtime/int)
           read_only_);
-      const int ret = munmap(region.registers, region.size);
-      if (ret != 0) {
-        LOG(ERROR) << "Error unmapping registers: " << strerror(errno);
+      util::Status status = UnmapRegion(fd_, region);
+      if (!status.ok()) {
+        LOG(ERROR) << status;
       }
       region.registers = nullptr;
     }
   }
 
   close(fd_);
-  fd_ = -1;
+  fd_ = INVALID_FD_VALUE;
 
   return util::Status();  // OK
 }
@@ -180,7 +173,7 @@ inline util::StatusOr<uint8*> KernelRegisters::GetMappedOffset(
 
 util::Status KernelRegisters::Write(uint64 offset, uint64 value) {
   StdMutexLock lock(&mutex_);
-  if (fd_ == -1) {
+  if (fd_ == INVALID_FD_VALUE) {
     return util::FailedPreconditionError("Device not open.");
   }
   if (read_only_) {
@@ -204,7 +197,7 @@ util::Status KernelRegisters::Write(uint64 offset, uint64 value) {
 
 util::StatusOr<uint64> KernelRegisters::Read(uint64 offset) {
   StdMutexLock lock(&mutex_);
-  if (fd_ == -1) {
+  if (fd_ == INVALID_FD_VALUE) {
     return util::FailedPreconditionError("Device not open.");
   }
   if (offset % sizeof(uint64) != 0) {
@@ -225,7 +218,7 @@ util::StatusOr<uint64> KernelRegisters::Read(uint64 offset) {
 
 util::Status KernelRegisters::Write32(uint64 offset, uint32 value) {
   StdMutexLock lock(&mutex_);
-  if (fd_ == -1) {
+  if (fd_ == INVALID_FD_VALUE) {
     return util::FailedPreconditionError("Device not open.");
   }
   if (read_only_) {
@@ -233,7 +226,7 @@ util::Status KernelRegisters::Write32(uint64 offset, uint32 value) {
   }
   if (offset % sizeof(uint32) != 0) {
     return util::FailedPreconditionError(StringPrintf(
-        "Offset (0x%016llx) not aligned to 8B",
+        "Offset (0x%016llx) not aligned to 4B",
         static_cast<unsigned long long>(offset)));  // NOLINT(runtime/int)
   }
 
@@ -249,7 +242,7 @@ util::Status KernelRegisters::Write32(uint64 offset, uint32 value) {
 
 util::StatusOr<uint32> KernelRegisters::Read32(uint64 offset) {
   StdMutexLock lock(&mutex_);
-  if (fd_ == -1) {
+  if (fd_ == INVALID_FD_VALUE) {
     return util::FailedPreconditionError("Device not open.");
   }
   if (offset % sizeof(uint32) != 0) {

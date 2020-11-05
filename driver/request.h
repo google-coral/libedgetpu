@@ -16,8 +16,8 @@
 #define DARWINN_DRIVER_REQUEST_H_
 
 #include "api/request.h"
-#include "driver/time_stamper/time_stamper.h"
 #include "driver/tpu_request.h"
+#include "driver_shared/time_stamper/time_stamper.h"
 #include "port/statusor.h"
 
 namespace platforms {
@@ -44,7 +44,7 @@ class Request : public api::Request {
   // Constructs a request provided a unique ID and a reference to the package,
   // and an interface to get current timestamps in nanoseconds.
   Request(int id, const PackageReference& package_ref,
-          const TimeStamper& timestamper);
+          const driver_shared::TimeStamper& timestamper);
 
   // This class is not copyable nor movable.
   Request(const Request&) = delete;
@@ -191,7 +191,7 @@ class Request : public api::Request {
   util::Status done_status_ GUARDED_BY(mutex_);
 
   // Gets the current time in nanoseconds.
-  const TimeStamper& current_time_;
+  const driver_shared::TimeStamper& current_time_;
 
   // Timing information of this request.
   Timing timing_;

@@ -92,6 +92,8 @@ struct ChipStructures {
   // Number of scalar core contexts supported. Default 1 is legacy behavior with
   // no context switching.
   uint64 number_of_scalar_core_contexts;
+
+  uint64 support_tile_thread_gcsr_node;
 };
 
 }  // namespace config

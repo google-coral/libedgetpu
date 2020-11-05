@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef DARWINN_DRIVER_TIME_STAMPER_TIME_STAMPER_FACTORY_H_
-#define DARWINN_DRIVER_TIME_STAMPER_TIME_STAMPER_FACTORY_H_
+#ifndef DARWINN_DRIVER_SHARED_TIME_STAMPER_TIME_STAMPER_FACTORY_H_
+#define DARWINN_DRIVER_SHARED_TIME_STAMPER_TIME_STAMPER_FACTORY_H_
 
-#include "driver/time_stamper/time_stamper.h"
-
+#include "driver_shared/time_stamper/time_stamper.h"
 #include "port/ptr_util.h"
 
 namespace platforms {
 namespace darwinn {
-namespace driver {
+
+namespace driver_shared {
 
 // Factory class for allocating TimeStamper objects.
 class TimeStamperFactory {
@@ -37,8 +37,8 @@ class TimeStamperFactory {
   virtual std::unique_ptr<TimeStamper> CreateTimeStamper() = 0;
 };
 
-}  // namespace driver
+}  // namespace driver_shared
 }  // namespace darwinn
 }  // namespace platforms
 
-#endif  // DARWINN_DRIVER_TIME_STAMPER_TIME_STAMPER_FACTORY_H_
+#endif  // DARWINN_DRIVER_SHARED_TIME_STAMPER_TIME_STAMPER_FACTORY_H_

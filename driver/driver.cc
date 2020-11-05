@@ -24,6 +24,7 @@
 #include "driver/package_registry.h"
 #include "driver/request.h"
 #include "driver/tpu_request.h"
+#include "driver_shared/time_stamper/time_stamper.h"
 #include "executable/executable_generated.h"
 #include "port/blocking_counter.h"
 #include "port/errors.h"
@@ -52,7 +53,7 @@ using api::ExecutionContextInterface;
 Driver::Driver(api::Chip chip,
                std::unique_ptr<PackageRegistry> executable_registry,
                const api::DriverOptions& driver_options,
-               std::unique_ptr<TimeStamper> time_stamper)
+               std::unique_ptr<driver_shared::TimeStamper> time_stamper)
     : chip_(chip),
       executable_registry_(std::move(executable_registry)),
       time_stamper_(std::move(time_stamper)),

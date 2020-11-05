@@ -31,8 +31,8 @@
 #include "driver/dma_scheduler.h"
 #include "driver/package_registry.h"
 #include "driver/single_queue_dma_scheduler.h"
-#include "driver/time_stamper/time_stamper.h"
 #include "driver/tpu_request.h"
+#include "driver_shared/time_stamper/time_stamper.h"
 #include "port/errors.h"
 #include "port/ptr_util.h"
 #include "port/status.h"
@@ -49,7 +49,7 @@ class RealTimeDmaScheduler : public DmaScheduler {
  public:
   RealTimeDmaScheduler() = delete;
   RealTimeDmaScheduler(std::unique_ptr<api::Watchdog> watchdog,
-                       std::unique_ptr<TimeStamper> time_stamper)
+                       std::unique_ptr<driver_shared::TimeStamper> time_stamper)
       : backing_scheduler_(
             gtl::MakeUnique<SingleQueueDmaScheduler>(std::move(watchdog))),
         time_stamper_(std::move(time_stamper)) {}
@@ -177,7 +177,7 @@ class RealTimeDmaScheduler : public DmaScheduler {
   std::unique_ptr<SingleQueueDmaScheduler> backing_scheduler_;
 
   // Time-stamper for tracking submission and completion time for requests.
-  std::unique_ptr<TimeStamper> time_stamper_;
+  std::unique_ptr<driver_shared::TimeStamper> time_stamper_;
 
   // Tracks registered executables.
   std::unordered_map<const ExecutableReference *, TimingInternal>

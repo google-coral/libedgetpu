@@ -39,7 +39,8 @@ class KernelWireInterruptHandler : public InterruptHandler {
 
   KernelWireInterruptHandler(Registers* registers,
                              const config::WireCsrOffsets& wire_csr_offsets,
-                             const std::string& device_path, int num_wires);
+                             std::unique_ptr<KernelEventHandler> event_handler,
+                             int num_wires);
   ~KernelWireInterruptHandler() override = default;
 
   // This class is neither copyable nor movable.
@@ -56,7 +57,7 @@ class KernelWireInterruptHandler : public InterruptHandler {
   WireInterruptHandler wire_handler_;
 
   // KernelEventHandler
-  KernelEventHandler event_handler_;
+  std::unique_ptr<KernelEventHandler> event_handler_;
 
   // Number of wires.
   const int num_wires_;

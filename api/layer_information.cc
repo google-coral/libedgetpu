@@ -203,30 +203,41 @@ bool OutputLayerInformation::NeedsRelayout() const {
 // TODO Add unit tests for this method.
 util::Status OutputLayerInformation::Relayout(unsigned char* dest,
                                               const unsigned char* src) const {
-  // TODO: re-use the same buffer and avoid an unnecessary memcopy
-  // when relayout is not needed.
-  if (!NeedsRelayout()) {
-    memcpy(dest, src,
-           batch_dim() * y_dim() * x_dim() * z_dim() * DataTypeSize());
-    return util::OkStatus();
-  }
-
-  if (output_layer_->shape_info()) {
-    // If output shape info exists in the executable, use the new re-layout
-    // function. Currently, this is only enabled for models with multiple
-    // batches.
-    return RelayoutWithShapeInformation(dest, src);
-  }
-
   const auto data_type_size = DataTypeSize();
   const int z_bytes = z_dim() * data_type_size;
+  const int executions = execution_count_per_inference();
+
+  if (executions == 1) {
+    // Handle case when execution count is equal to 1, since if execution count
+    // is greater than 1, there might be padding data in-between.
+
+    // TODO: re-use the same buffer and avoid an unnecessary
+    // memcopy when relayout is not needed.
+    if (!NeedsRelayout()) {
+      memcpy(dest, src, batch_dim() * y_dim() * x_dim() * z_bytes);
+      return util::OkStatus();
+    }
+
+    if (output_layer_->shape_info()) {
+      // If output shape info exists in the executable, use the new re-layout
+      // function. Currently, this is only enabled for models with multiple
+      // batches.
+      return RelayoutWithShapeInformation(dest, src);
+    }
+  } else if (PaddedSizeBytes() == ActualSizeBytes() && !NeedsRelayout()) {
+    // Use memcpy if `executions` is greater than 1 and there is no internal
+    // padding between iterations.
+    if (dest != src) {
+      memcpy(dest, src, ActualSizeBytes());
+    }
+    return util::OkStatus();
+  }
 
   if (y_dim() == 1 && x_dim() == 1) {
     // One dimensional output (only z-dimension).
     if (src != dest) {
       const int padded_size_bytes = PaddedSizeBytes();
       const int actual_size_bytes = ActualSizeBytes();
-      const int executions = execution_count_per_inference();
       if (executions == 1 || padded_size_bytes == actual_size_bytes) {
         memcpy(dest, src, z_bytes * executions);
       } else {
@@ -276,8 +287,7 @@ util::Status OutputLayerInformation::Relayout(unsigned char* dest,
 // provided we have a guaranteed way of ensuring this function would be inlined
 // so that the compiler optimizations based on compile-time-constants can kick
 // in.
-#define RELAYOUT_WITH_Z_BYTES_SPECIALIZATION(                                 \
-    num_z_bytes, num_z_bytes_padded)                                          \
+#define RELAYOUT_WITH_Z_BYTES_SPECIALIZATION(num_z_bytes, num_z_bytes_padded) \
   do {                                                                        \
     for (int y = 0; y < y_dim(); ++y) {                                       \
       const auto y_buffer_index = GetYBufferIndex(y);                         \
@@ -330,6 +340,12 @@ util::Status OutputLayerInformation::Relayout(unsigned char* dest,
           active_tile_x_sizes.size() > 1 || first_y_tile != last_y_tile;
 
       if (need_relayout) {
+        // TODO: If iteration count is more than 1, we need to make
+        // sure we advance 'src' and 'dest' correctly due to padding issue. We
+        // don't have test case now.
+        CHECK_EQ(executions, 1)
+            << "Verification is missing if execution count is greater than 1";
+
         // If there's no z padding, copy one xz block on one tile at a time.
         for (int y = 0; y < y_dim(); ++y) {
           const auto y_buffer_index = GetYBufferIndex(y);
@@ -347,17 +363,11 @@ util::Status OutputLayerInformation::Relayout(unsigned char* dest,
         }
       } else {
         // TODO: avoid copy and assign in caller directly.
-        memcpy(dest, src, x_dim() * y_dim() * z_bytes);
+        memcpy(dest, src, x_dim() * y_dim() * z_bytes * executions);
       }
     }
 
 #undef RELAYOUT_WITH_Z_BYTES_SPECIALIZATION
-
-    // TODO: If iteration count is more than 1, we need to make sure we
-    // advance 'src' and 'dest' correctly due to padding issue. We don't have
-    // test case now.
-    CHECK_EQ(execution_count_per_inference(), 1)
-        << "Verification is missing if execution count is greater than 1";
   }
 
   return util::OkStatus();

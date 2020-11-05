@@ -17,6 +17,7 @@
 
 #include "port/defs.h"
 
+// IWYU pragma: begin_exports
 #if DARWINN_PORT_FIRMWARE
 #include "port/firmware/logging.h"
 #elif DARWINN_PORT_USE_GOOGLE3
@@ -24,5 +25,6 @@
 #else  // !DARWINN_PORT_USE_GOOGLE3
 #include "port/default/logging.h"
 #endif  // DARWINN_PORT_USE_GOOGLE3
+// IWYU pragma: end_exports
 
 #endif  // DARWINN_PORT_LOGGING_H_

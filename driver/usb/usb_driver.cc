@@ -31,12 +31,12 @@
 #include "driver/memory/dram_allocator.h"
 #include "driver/package_registry.h"
 #include "driver/single_tpu_request.h"
-#include "driver/time_stamper/time_stamper.h"
 #include "driver/top_level_handler.h"
 #include "driver/tpu_request.h"
 #include "driver/usb/usb_dfu_util.h"
 #include "driver/usb/usb_latest_firmware.h"
 #include "driver/usb/usb_ml_commands.h"
+#include "driver_shared/time_stamper/time_stamper.h"
 #include "port/cleanup.h"
 #include "port/errors.h"
 #include "port/integral_types.h"
@@ -135,7 +135,8 @@ UsbDriver::UsbDriver(
     std::unique_ptr<TopLevelHandler> top_level_handler,
     std::unique_ptr<DramAllocator> dram_allocator,
     std::unique_ptr<PackageRegistry> executable_registry,
-    const UsbDriverOptions& options, std::unique_ptr<TimeStamper> time_stamper)
+    const UsbDriverOptions& options,
+    std::unique_ptr<driver_shared::TimeStamper> time_stamper)
     : Driver(
           [](config::ChipConfig* chip_config) {
             CHECK(chip_config != nullptr);
@@ -189,7 +190,8 @@ UsbDriver::UsbDriver(
     std::unique_ptr<TopLevelHandler> top_level_handler,
     std::unique_ptr<DramAllocator> dram_allocator,
     std::unique_ptr<PackageRegistry> executable_registry,
-    const UsbDriverOptions& options, std::unique_ptr<TimeStamper> time_stamper)
+    const UsbDriverOptions& options,
+    std::unique_ptr<driver_shared::TimeStamper> time_stamper)
     : UsbDriver(driver_options, std::move(chip_config), std::move(registers),
                 std::move(top_level_interrupt_manager),
                 std::move(fatal_error_interrupt_controller),
@@ -211,7 +213,8 @@ UsbDriver::UsbDriver(
     std::unique_ptr<TopLevelHandler> top_level_handler,
     std::unique_ptr<DramAllocator> dram_allocator,
     std::unique_ptr<PackageRegistry> executable_registry,
-    const UsbDriverOptions& options, std::unique_ptr<TimeStamper> time_stamper)
+    const UsbDriverOptions& options,
+    std::unique_ptr<driver_shared::TimeStamper> time_stamper)
     : UsbDriver(driver_options, std::move(chip_config), std::move(registers),
                 std::move(top_level_interrupt_manager),
                 std::move(fatal_error_interrupt_controller),

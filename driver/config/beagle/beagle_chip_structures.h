@@ -48,6 +48,7 @@ const ChipStructures kBeagleChipStructures = {
     0ULL,        // NOLINT: support_trace_arch_registers
     0ULL,        // NOLINT: base_and_bound_unit_size_bytes
     1ULL,        // NOLINT: number_of_scalar_core_contexts
+    0ULL,        // NOLINT: support_tile_thread_gcsr_node
 };
 
 }  // namespace config

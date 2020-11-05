@@ -12,16 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 SHELL := /bin/bash
+PYTHON3 ?= python3
 MAKEFILE_DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 OUT_DIR := $(MAKEFILE_DIR)/out
 OS := $(shell uname -s)
 
 ifeq ($(OS),Linux)
 CPU ?= k8
-WORKSPACE_PLATFORM_FILE := WORKSPACE.linux
 else ifeq ($(OS),Darwin)
 CPU ?= darwin
-WORKSPACE_PLATFORM_FILE := WORKSPACE.darwin
 else
 $(error $(OS) is not supported)
 endif
@@ -40,23 +39,16 @@ BAZEL_OUT_DIR := $(MAKEFILE_DIR)/bazel-out/$(CPU)-$(COMPILATION_MODE)/bin
 # Linux-specific parameters
 BAZEL_BUILD_TARGET_Linux := //tflite/public:libedgetpu_direct_all.so
 BAZEL_BUILD_FLAGS_Linux := --crosstool_top=@crosstool//:toolchains \
-                           --compiler=gcc \
-                           --linkopt=-l:libusb-1.0.so
+                           --compiler=gcc
 BAZEL_BUILD_OUTPUT_FILE_Linux := libedgetpu.so.1.0
 BAZEL_BUILD_OUTPUT_SYMLINK_Linux := libedgetpu.so.1
 
-ifeq ($(COMPILATION_MODE), opt)
-BAZEL_BUILD_FLAGS_Linux += --linkopt=-Wl,--strip-all
-endif
 ifeq ($(CPU), armv6)
 BAZEL_BUILD_FLAGS_Linux += --linkopt=-L/usr/lib/arm-linux-gnueabihf/
 endif
 
 # Darwin-specific parameters
 BAZEL_BUILD_TARGET_Darwin := //tflite/public:libedgetpu_direct_usb.dylib
-BAZEL_BUILD_FLAGS_Darwin := --linkopt=-L/opt/local/lib \
-                            --linkopt=-lusb-1.0 \
-                            --copt=-fvisibility=hidden
 BAZEL_BUILD_OUTPUT_FILE_Darwin := libedgetpu.1.0.dylib
 BAZEL_BUILD_OUTPUT_SYMLINK_Darwin := libedgetpu.1.dylib
 
@@ -65,11 +57,10 @@ BAZEL_BUILD_FLAGS := --sandbox_debug --subcommands \
   --experimental_repo_remote_exec \
   --compilation_mode=$(COMPILATION_MODE) \
   --define darwinn_portable=1 \
-  --copt=-DSTRIP_LOG=1 \
-  --copt=-fno-rtti \
-  --copt=-fno-exceptions \
-  --copt='-D__FILE__=""' \
-  --cpu=$(CPU)
+  --action_env PYTHON_BIN_PATH=$(shell which $(PYTHON3)) \
+  --cpu=$(CPU) \
+  --embed_label='TENSORFLOW_COMMIT=$(shell grep "TENSORFLOW_COMMIT =" $(MAKEFILE_DIR)/workspace.bzl | grep -o '[0-9a-f]\{40\}')' \
+  --stamp
 BAZEL_BUILD_FLAGS += $(BAZEL_BUILD_FLAGS_$(OS))
 BAZEL_BUILD_TARGET := $(BAZEL_BUILD_TARGET_$(OS))
 BAZEL_BUILD_OUTPUT_FILE := $(BAZEL_BUILD_OUTPUT_FILE_$(OS))
@@ -95,23 +86,31 @@ endif
 .PHONY: libedgetpu \
         libedgetpu-direct \
         libedgetpu-throttled \
-        workspace \
+        deb \
+        deb-armhf \
+        deb-arm64 \
         clean
 
 libedgetpu: libedgetpu-direct libedgetpu-throttled
 
-libedgetpu-direct: workspace
+libedgetpu-direct:
 	bazel build $(BAZEL_BUILD_FLAGS) $(BAZEL_BUILD_TARGET)
 	$(call copy_out,direct)
 	$(call strip_out,direct)
 
-libedgetpu-throttled: workspace
+libedgetpu-throttled:
 	bazel build $(BAZEL_BUILD_FLAGS) --copt=-DTHROTTLE_EDGE_TPU $(BAZEL_BUILD_TARGET)
 	$(call copy_out,throttled)
 	$(call strip_out,throttled)
 
-workspace: bazel/WORKSPACE bazel/$(WORKSPACE_PLATFORM_FILE)
-	cat $^ > WORKSPACE
+deb:
+	dpkg-buildpackage -rfakeroot -us -uc -tc -b
+
+deb-armhf:
+	dpkg-buildpackage -rfakeroot -us -uc -tc -b -a armhf -d
+
+deb-arm64:
+	dpkg-buildpackage -rfakeroot -us -uc -tc -b -a arm64 -d
 
 clean:
 	rm -rf $(OUT_DIR)

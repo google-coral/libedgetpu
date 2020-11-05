@@ -12,27 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "driver/beagle/beagle_pci_driver_provider.h"
+
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include "api/chip.h"
-#include "api/driver.h"
 #include "driver/aligned_allocator.h"
 #include "driver/beagle/beagle_kernel_top_level_handler.h"
 #include "driver/config/beagle/beagle_chip_config.h"
 #include "driver/config/chip_structures.h"
-#include "driver/driver_factory.h"
 #include "driver/hardware_structures.h"
 #include "driver/interrupt/dummy_interrupt_controller.h"
 #include "driver/interrupt/grouped_interrupt_controller.h"
 #include "driver/interrupt/interrupt_handler.h"
 #include "driver/interrupt/top_level_interrupt_manager.h"
-#include "driver/kernel/kernel_coherent_allocator.h"
-#include "driver/kernel/kernel_interrupt_handler.h"
 #include "driver/kernel/kernel_mmu_mapper.h"
-#include "driver/kernel/kernel_registers.h"
 #include "driver/kernel/kernel_wire_interrupt_handler.h"
 #include "driver/memory/dual_address_space.h"
 #include "driver/memory/null_dram_allocator.h"
@@ -42,9 +38,7 @@
 #include "driver/package_verifier.h"
 #include "driver/run_controller.h"
 #include "driver/scalar_core_controller.h"
-#include "driver/time_stamper/driver_time_stamper.h"
-#include "port/integral_types.h"
-#include "port/ptr_util.h"
+#include "driver_shared/time_stamper/driver_time_stamper.h"
 
 namespace platforms {
 namespace darwinn {
@@ -55,25 +49,6 @@ using platforms::darwinn::api::Chip;
 using platforms::darwinn::api::Device;
 
 }  // namespace
-
-class BeaglePciDriverProvider : public DriverProvider {
- public:
-  static std::unique_ptr<DriverProvider> CreateDriverProvider() {
-    return gtl::WrapUnique<DriverProvider>(new BeaglePciDriverProvider());
-  }
-
-  ~BeaglePciDriverProvider() override = default;
-
-  std::vector<Device> Enumerate() override;
-  bool CanCreate(const Device& device) override;
-  util::StatusOr<std::unique_ptr<api::Driver>> CreateDriver(
-      const Device& device, const api::DriverOptions& options) override;
-
- private:
-  BeaglePciDriverProvider() = default;
-};
-
-REGISTER_DRIVER_PROVIDER(BeaglePciDriverProvider);
 
 std::vector<Device> BeaglePciDriverProvider::Enumerate() {
   return EnumerateSysfs("apex", Chip::kBeagle, Device::Type::PCI);
@@ -111,10 +86,9 @@ BeaglePciDriverProvider::CreateDriver(const Device& device,
       {kScalarCoreOffset, kSectionSize},
       {kUserHibOffset, kSectionSize},
   };
-  auto registers = gtl::MakeUnique<KernelRegisters>(device.path, regions,
-                                                    /*read_only=*/false);
-
-  auto interrupt_handler = gtl::MakeUnique<KernelInterruptHandler>(device.path);
+  auto registers =
+      CreateKernelRegisters(device.path, regions, /*read_only=*/false);
+  auto interrupt_handler = CreateKernelInterruptHandler(device.path);
   auto top_level_handler = gtl::MakeUnique<BeagleKernelTopLevelHandler>(
       device.path, options.performance_expectation());
   auto mmu_mapper = gtl::MakeUnique<KernelMmuMapper>(device.path);
@@ -124,7 +98,7 @@ BeaglePciDriverProvider::CreateDriver(const Device& device,
       config->GetChipStructures().allocation_alignment_bytes;
   auto allocator =
       gtl::MakeUnique<AlignedAllocator>(allocation_alignment_bytes);
-  auto coherent_allocator = gtl::MakeUnique<KernelCoherentAllocator>(
+  auto coherent_allocator = CreateKernelCoherentAllocator(
       device.path, allocation_alignment_bytes, kCoherentAllocatorMaxSizeByte);
   auto host_queue =
       gtl::MakeUnique<HostQueue<HostQueueDescriptor, HostQueueStatusBlock>>(
@@ -160,7 +134,7 @@ BeaglePciDriverProvider::CreateDriver(const Device& device,
       MakeExecutableVerifier(flatbuffers::GetString(options.public_key())));
   auto executable_registry = gtl::MakeUnique<PackageRegistry>(
       device.chip, std::move(verifier), dram_allocator.get());
-  auto time_stamper = gtl::MakeUnique<DriverTimeStamper>();
+  auto time_stamper = gtl::MakeUnique<driver_shared::DriverTimeStamper>();
 
   return {gtl::MakeUnique<MmioDriver>(
       options, std::move(config), std::move(registers),

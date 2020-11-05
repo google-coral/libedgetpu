@@ -19,6 +19,7 @@
 
 #include "api/driver_options_generated.h"
 #include "driver/top_level_handler.h"
+#include "port/fileio.h"
 #include "port/status.h"
 #include "port/thread_annotations.h"
 
@@ -45,7 +46,7 @@ class BeagleKernelTopLevelHandler : public TopLevelHandler {
   const std::string device_path_;
 
   // File descriptor of the opened device.
-  int fd_ GUARDED_BY(mutex_){-1};
+  FileDescriptor fd_ GUARDED_BY(mutex_){INVALID_FD_VALUE};
 
   // Mutex that guards fd_.
   std::mutex mutex_;

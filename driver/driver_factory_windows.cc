@@ -13,7 +13,8 @@
 // limitations under the License.
 
 #include "driver/driver_factory.h"
-
+#include "driver/kernel/gasket_ioctl.h"
+#include "port/fileio.h"
 #include "port/logging.h"
 
 namespace platforms {
@@ -24,7 +25,58 @@ std::vector<api::Device> DriverProvider::EnumerateByClass(
     const std::string& class_name, const std::string& device_name,
     api::Chip chip, api::Device::Type type) {
   std::vector<api::Device> device_list;
-  LOG(FATAL) << "EnumerateByClass is not supported on Windows at this time.";
+
+  VLOG(1) << "DriverFactoryWin::EnumerateByClass()... ";
+
+  switch (chip) {
+    case api::Chip::kBeagle:
+      for (int j = 0; j < APEX_MAX_DEVICES; j++) {
+        std::string device_path;
+        device_path =
+            "\\\\?\\" + std::string(APEX_DEVICE_NAME_BASE) + std::to_string(j);
+
+        FileDescriptor fd = CreateFileW(
+            std::wstring(device_path.begin(), device_path.end()).c_str(),
+            GENERIC_READ,
+            0,     // No sharing - expect gle==ERROR_ACCESS_DENIED if already
+                   // opened
+            NULL,  // default security attributes
+            OPEN_EXISTING,  // disposition
+            0,              // file attributes
+            NULL);          // do not copy file attributes
+
+        if (fd != INVALID_FD_VALUE) {
+          VLOG(4) << "devpath=" << device_path;
+          device_list.push_back(
+              {api::Chip::kBeagle, api::Device::Type::PCI, device_path});
+          CloseHandle(fd);
+        } else {
+          DWORD error = GetLastError();
+          if (error == ERROR_FILE_NOT_FOUND) break;
+          if (error == ERROR_ACCESS_DENIED) {
+            // Device is used by another process.
+            VLOG(4) << "devpath=" << device_path << " (in use)";
+            device_list.push_back(
+                {api::Chip::kBeagle, api::Device::Type::PCI, device_path});
+          } else {
+            VLOG(4) << "devpath=" << device_path << " open failed with "
+                    << error;
+          }
+        }
+      }
+      break;
+
+    default:
+      LOG(FATAL)
+          << "EnumerateByClass is not supported on Windows for this device.";
+  }
+
+  if (device_list.empty())
+    VLOG(5) << "DriverFactoryWin::EnumerateByClass returns empty list.";
+  else
+    VLOG(5) << "DriverFactoryWin::EnumerateByClass returns listsize(%d)="
+            << device_list.size();
+
   return device_list;
 }
 

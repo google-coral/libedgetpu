@@ -34,8 +34,8 @@
 #include "driver/memory/dma_direction.h"
 #include "driver/package_registry.h"
 #include "driver/request.h"
-#include "driver/time_stamper/time_stamper.h"
 #include "driver/tpu_request.h"
+#include "driver_shared/time_stamper/time_stamper.h"
 #include "executable/executable_generated.h"
 #include "port/integral_types.h"
 #include "port/shared_mutex.h"
@@ -129,7 +129,7 @@ class Driver : public api::Driver {
  protected:
   Driver(api::Chip chip, std::unique_ptr<PackageRegistry> executable_registry,
          const api::DriverOptions& driver_options,
-         std::unique_ptr<TimeStamper> timestamper);
+         std::unique_ptr<driver_shared::TimeStamper> timestamper);
 
   // The base driver implementation does the necessary state checks and
   // validations before issuing the following calls that are implemented by the
@@ -209,7 +209,7 @@ class Driver : public api::Driver {
   GetOldestActiveRequest() const = 0;
 
  private:
-  // Driver state. Transitions :
+  // Driver state. Transitions:
   //  kClosed -> kOpen -> kClosing -> kClosed.
   enum State {
     kOpen,     // Driver is Open.
@@ -311,7 +311,7 @@ class Driver : public api::Driver {
   std::unique_ptr<PackageRegistry> executable_registry_;
 
   // Driver clock for timestamp reporting
-  std::unique_ptr<TimeStamper> time_stamper_;
+  std::unique_ptr<driver_shared::TimeStamper> time_stamper_;
 
   // Registered fatal Error Callback.
   FatalErrorCallback fatal_error_callback_;

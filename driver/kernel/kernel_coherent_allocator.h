@@ -12,17 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef DARWINN_DRIVER_KERNEL_KERNEL_COHERENT_ALLOCATOR_H_
-#define DARWINN_DRIVER_KERNEL_KERNEL_COHERENT_ALLOCATOR_H_
+#ifndef DARWINN_DRIVER_KERNEL_KERNEL_COHERENT_ALLOCATOR_INTERNAL_H_
+#define DARWINN_DRIVER_KERNEL_KERNEL_COHERENT_ALLOCATOR_INTERNAL_H_
 
 #include <fcntl.h>
 #include <stddef.h>
 #include <sys/types.h>
-#include <unistd.h>
+
 #include <string>
 
 #include "driver/mmio/coherent_allocator.h"
 #include "port/errors.h"
+#include "port/fileio.h"
 #include "port/integral_types.h"
 #include "port/logging.h"
 #include "port/statusor.h"
@@ -37,7 +38,14 @@ class KernelCoherentAllocator : public CoherentAllocator {
  public:
   KernelCoherentAllocator(const std::string &device_path, int alignment_bytes,
                           size_t size_bytes);
-  ~KernelCoherentAllocator() = default;
+  virtual ~KernelCoherentAllocator() = default;
+
+ protected:
+  // Maps and unmaps kernel allocated memory block to user space.
+  virtual util::StatusOr<char *> Map(FileDescriptor fd, size_t size_bytes,
+                                     uint64 dma_address) = 0;
+  virtual util::Status Unmap(FileDescriptor fd, char *mem_base,
+                             size_t size_bytes) = 0;
 
  private:
   // Implements Open.
@@ -47,7 +55,7 @@ class KernelCoherentAllocator : public CoherentAllocator {
   util::Status DoClose(char *mem_base, size_t size_bytes) override;
 
   // File descriptor of the opened device.
-  int fd_{-1};
+  FileDescriptor fd_{INVALID_FD_VALUE};
 
   // Device specific DMA address of the coherent memory block.
   uint64 dma_address_{0};
@@ -60,4 +68,4 @@ class KernelCoherentAllocator : public CoherentAllocator {
 }  // namespace darwinn
 }  // namespace platforms
 
-#endif  // DARWINN_DRIVER_KERNEL_KERNEL_COHERENT_ALLOCATOR_H_
+#endif  // DARWINN_DRIVER_KERNEL_KERNEL_COHERENT_ALLOCATOR_INTERNAL_H_

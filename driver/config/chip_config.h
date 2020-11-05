@@ -26,6 +26,7 @@
 #include "driver/config/hib_kernel_csr_offsets.h"
 #include "driver/config/hib_user_csr_offsets.h"
 #include "driver/config/interrupt_csr_offsets.h"
+#include "driver/config/lpm_csr_offsets.h"
 #include "driver/config/memory_csr_offsets.h"
 #include "driver/config/misc_csr_offsets.h"
 #include "driver/config/msix_csr_offsets.h"

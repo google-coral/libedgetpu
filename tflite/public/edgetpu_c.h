@@ -55,7 +55,7 @@ limitations under the License.
 #ifndef TFLITE_PUBLIC_EDGETPU_C_H_
 #define TFLITE_PUBLIC_EDGETPU_C_H_
 
-#include "tensorflow/lite/context.h"
+#include "tensorflow/lite/c/common.h"
 
 #if defined(_WIN32)
 #ifdef EDGETPU_COMPILE_LIBRARY

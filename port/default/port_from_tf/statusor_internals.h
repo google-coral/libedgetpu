@@ -242,6 +242,8 @@ struct TraitsBase<false, false> {
   TraitsBase& operator=(TraitsBase&&) = delete;
 };
 
+void ThrowBadStatusOrAccess(Status status);
+
 }  // namespace internal_statusor
 }  // namespace util
 }  // namespace darwinn

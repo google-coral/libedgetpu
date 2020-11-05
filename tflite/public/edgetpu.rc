@@ -1,0 +1,42 @@
+// Redefine some constants we would usually get from winver.h
+// Bazel doesn't know the correct include paths to pass along
+// to rc to pick up the header.
+#define VS_VERSION_INFO      1
+#define VS_FFI_FILEFLAGSMASK 0x3FL
+#define VS_FF_DEBUG          0x1L
+#define VOS__WINDOWS32       0x4L
+#define VFT_DLL              0x2L
+
+#define VER_FILEVERSION 14,0,0,0
+#define VER_FILEVERSION_STR "14.0.0.0\0"
+
+VS_VERSION_INFO VERSIONINFO
+FILEVERSION VER_FILEVERSION
+PRODUCTVERSION VER_FILEVERSION
+FILEFLAGSMASK VS_FFI_FILEFLAGSMASK
+#ifdef _DEBUG
+FILEFLAGS VS_FF_DEBUG
+#else
+FILEFLAGS 0
+#endif
+FILEOS VOS__WINDOWS32
+FILETYPE VFT_DLL
+FILESUBTYPE 0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "040904E4"
+    BEGIN
+      VALUE "FileDescription", "EdgeTPU interface library\0"
+      VALUE "FileVersion", VER_FILEVERSION_STR
+      VALUE "InternalName", "edgetpu.dll\0"
+      VALUE "LegalCopyright", "(C) 2019-2020 Google, LLC\0"
+      VALUE "ProductName", "edgetpu\0"
+      VALUE "ProductVersion", VER_FILEVERSION_STR
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x0409, 1252
+  END
+END

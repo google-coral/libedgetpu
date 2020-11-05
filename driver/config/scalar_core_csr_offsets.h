@@ -59,9 +59,13 @@ struct ScalarCoreCsrOffsets {
   uint64 infeed1RunControl;
   uint64 outfeed1RunControl;
 
+  // TODO: Separate out context switching related stuff to
+  // scalar_core_context_csr_offsets.h
   // Context Switching
   uint64 contextControl;
   uint64 contextStatus;
+  uint64 contextSwitchCount;
+  uint64 contextSwitchTimeoutCount;
 
   // Context 0
   uint64 infeed_0_0RunControl;
@@ -131,6 +135,31 @@ struct ScalarCoreCsrOffsets {
   // Scalar core cycle count. This could be used to synchronize timestamp
   // between host and the TPU
   uint64 cycleCount;
+
+  // Error Registers
+  uint64 Error_ScalarCoreDatapath_0;
+  uint64 Error_Mask_ScalarCoreDatapath_0;
+  uint64 Error_Force_ScalarCoreDatapath_0;
+  uint64 Error_Timestamp_ScalarCoreDatapath_0;
+  uint64 Error_Info_ScalarCoreDatapath_0;
+
+  uint64 Error_ScalarCoreDatapath_1;
+  uint64 Error_Mask_ScalarCoreDatapath_1;
+  uint64 Error_Force_ScalarCoreDatapath_1;
+  uint64 Error_Timestamp_ScalarCoreDatapath_1;
+  uint64 Error_Info_ScalarCoreDatapath_1;
+
+  uint64 Error_ScalarCoreDatapath_2;
+  uint64 Error_Mask_ScalarCoreDatapath_2;
+  uint64 Error_Force_ScalarCoreDatapath_2;
+  uint64 Error_Timestamp_ScalarCoreDatapath_2;
+  uint64 Error_Info_ScalarCoreDatapath_2;
+
+  uint64 Error_ScalarCoreDatapath_3;
+  uint64 Error_Mask_ScalarCoreDatapath_3;
+  uint64 Error_Force_ScalarCoreDatapath_3;
+  uint64 Error_Timestamp_ScalarCoreDatapath_3;
+  uint64 Error_Info_ScalarCoreDatapath_3;
 };
 
 }  // namespace config

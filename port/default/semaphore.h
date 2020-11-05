@@ -15,11 +15,14 @@
 #ifndef DARWINN_PORT_DEFAULT_SEMAPHORE_H_
 #define DARWINN_PORT_DEFAULT_SEMAPHORE_H_
 
-#include <stdint.h>
+#include <cstdint>
 
-#include <chrono>              //NOLINT
-#include <condition_variable>  //NOLINT
-#include <mutex>               //NOLINT
+#include "absl/synchronization/mutex.h"
+#include "absl/time/clock.h"
+#include "absl/time/time.h"
+#include "thread/fiber/fiber.h"
+#include "thread/fiber/select.h"
+#include "thread/fiber/semaphore/fifo_semaphore.h"
 
 namespace platforms {
 namespace darwinn {
@@ -29,59 +32,64 @@ namespace internal {
 // Base class, not for direct use.
 class Semaphore {
  public:
-  virtual ~Semaphore() = default;
+  virtual ~Semaphore() {
+    // Give the underlying semaphore its credits back so that it doesn't CHECK.
+    semaphore_.Release(semaphore_.capacity() - semaphore_.current_value());
+  }
 
   bool Take() {
-    std::unique_lock<std::mutex> lock(mutex_);
-    while (count_ == 0) {
-      cv_.wait(lock);
+    if (thread::Select({thread::OnCancel(), semaphore_.OnAcquire(1)}) == 0) {
+      return false;
     }
-    count_--;
 
     return true;
   }
 
+  // A common::firmware::Status return type would be nicer here, but by keeping
+  // it as a bool we can avoid the need for a wrapper class in firmware.
   bool Take(uint32_t timeout) {
     // Generally we're running one tick per ms.
-    auto timeout_time =
-        std::chrono::system_clock::now() + std::chrono::milliseconds(timeout);
+    auto timeout_time = absl::Now() + absl::Milliseconds(timeout);
 
-    std::unique_lock<std::mutex> lock(mutex_);
-    while (count_ == 0) {
-      if (cv_.wait_until(lock, timeout_time) == std::cv_status::timeout) {
-        // Timed-out, check the predicate one last time.
-        if (count_ != 0) {
-          break;
-        }
-
+    int i = thread::SelectUntil(timeout_time,
+                                {thread::OnCancel(), semaphore_.OnAcquire(1)});
+    switch (i) {
+      case -1:
+        // timeout
         return false;
-      }
+
+      case 0:
+        // canceled
+        return false;
     }
-    count_--;
 
     return true;
   }
 
   bool Give() {
-    mutex_.lock();
-    if (count_ < max_count_) {
-      count_++;
-    }
-    mutex_.unlock();
-    cv_.notify_one();
+    // Grab a mutex to prevent multiple givers from releasing at the same time.
+    absl::MutexLock lock(&giver_mutex_);
 
-    return true;
+    bool released = false;
+    // Prevent the semaphore from overflowing.
+    if (semaphore_.current_value() < semaphore_.capacity()) {
+      semaphore_.Release(1);
+      released = true;
+    }
+
+    return released;
   }
 
  protected:
   Semaphore(unsigned int max_count, unsigned int initial_count)
-      : count_(initial_count), max_count_(max_count) {}
+      : semaphore_(max_count) {
+    // By default the FifoSemaphore starts fully given.
+    semaphore_.Acquire(max_count - initial_count);
+  }
 
  private:
-  std::mutex mutex_;
-  std::condition_variable cv_;
-  int count_;
-  const int max_count_;
+  thread::FifoSemaphore semaphore_;
+  absl::Mutex giver_mutex_;
 };
 
 }  // namespace internal

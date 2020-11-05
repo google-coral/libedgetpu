@@ -30,18 +30,19 @@ namespace platforms {
 namespace darwinn {
 namespace driver {
 
-KernelInterruptHandler::KernelInterruptHandler(const std::string& device_path)
-    : event_handler_(device_path, DW_INTERRUPT_COUNT) {}
+KernelInterruptHandler::KernelInterruptHandler(
+    std::unique_ptr<KernelEventHandler> event_handler)
+    : event_handler_(std::move(event_handler)) {}
 
-util::Status KernelInterruptHandler::Open() { return event_handler_.Open(); }
+util::Status KernelInterruptHandler::Open() { return event_handler_->Open(); }
 
 util::Status KernelInterruptHandler::Close(bool in_error) {
-  return event_handler_.Close();
+  return event_handler_->Close();
 }
 
 util::Status KernelInterruptHandler::Register(Interrupt interrupt,
                                               Handler handler) {
-  return event_handler_.RegisterEvent(interrupt, std::move(handler));
+  return event_handler_->RegisterEvent(interrupt, std::move(handler));
 }
 
 }  // namespace driver

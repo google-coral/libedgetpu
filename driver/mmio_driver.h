@@ -45,9 +45,9 @@
 #include "driver/registers/registers.h"
 #include "driver/run_controller.h"
 #include "driver/scalar_core_controller.h"
-#include "driver/time_stamper/time_stamper.h"
 #include "driver/top_level_handler.h"
 #include "driver/tpu_request.h"
+#include "driver_shared/time_stamper/time_stamper.h"
 #include "executable/executable_generated.h"
 #include "port/integral_types.h"
 #include "port/statusor.h"
@@ -79,7 +79,7 @@ class MmioDriver : public Driver {
       std::unique_ptr<RunController> run_controller,
       std::unique_ptr<TopLevelHandler> top_level_handler,
       std::unique_ptr<PackageRegistry> executable_registry,
-      std::unique_ptr<TimeStamper> time_stamper);
+      std::unique_ptr<driver_shared::TimeStamper> time_stamper);
 
   // This class is neither copyable nor movable.
   MmioDriver(const MmioDriver&) = delete;

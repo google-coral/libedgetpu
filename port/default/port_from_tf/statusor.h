@@ -28,7 +28,7 @@ limitations under the License.
 //
 //  StatusOr<float> result = DoBigCalculationThatCouldFail();
 //  if (result.ok()) {
-//    float answer = result.ValueOrDie();
+//    float answer = *result;
 //    printf("Big calculation yielded: %f", answer);
 //  } else {
 //    LOG(ERROR) << result.status();
@@ -38,7 +38,7 @@ limitations under the License.
 //
 //  StatusOr<Foo*> result = FooFactory::MakeNewFoo(arg);
 //  if (result.ok()) {
-//    std::unique_ptr<Foo> foo(result.ValueOrDie());
+//    std::unique_ptr<Foo> foo(*result);
 //    foo->DoSomethingCool();
 //  } else {
 //    LOG(ERROR) << result.status();
@@ -48,7 +48,7 @@ limitations under the License.
 //
 //  StatusOr<std::unique_ptr<Foo>> result = FooFactory::MakeNewFoo(arg);
 //  if (result.ok()) {
-//    std::unique_ptr<Foo> foo = std::move(result.ValueOrDie());
+//    std::unique_ptr<Foo> foo = std::move(*result);
 //    foo->DoSomethingCool();
 //  } else {
 //    LOG(ERROR) << result.status();
@@ -172,6 +172,37 @@ class StatusOr : private internal_statusor::StatusOrData<T>,
   const Status& status() const &;
   Status status() &&;
 
+  // Returns a reference to the held value if `this->ok()`. Otherwise, it
+  // is guaranteed to terminate the process.
+  //
+  // If you have already checked the status using `this->ok()`, you probably
+  // want to use `operator*()` or `operator->()` to access the value instead of
+  // `value`.
+  //
+  // Note: for value types that are cheap to copy, prefer simple code:
+  //
+  //   T value = statusor.value();
+  //
+  // Otherwise, if the value type is expensive to copy, but can be left
+  // in the StatusOr, simply assign to a reference:
+  //
+  //   T& value = statusor.value();  // or `const T&`
+  //
+  // Otherwise, if the value type supports an efficient move, it can be
+  // used as follows:
+  //
+  //   T value = std::move(statusor).value();
+  //
+  // The `std::move` on statusor instead of on the whole expression enables
+  // warnings about possible uses of the statusor object after the move.
+  // C++ style guide waiver for ref-qualified overloads granted in cl/143176389
+  // See go/ref-qualifiers for more details on such overloads.
+  const T& value() const&;
+  T& value() &;
+  const T&& value() const&&;
+  T&& value() &&;
+
+  // DEPRECATED.
   // Returns a reference to our current value, or CHECK-fails if !this->ok().
   //
   // Note: for value types that are cheap to copy, prefer simple code:
@@ -196,6 +227,27 @@ class StatusOr : private internal_statusor::StatusOrData<T>,
   T& ValueOrDie() &;
   const T&& ValueOrDie() const &&;
   T&& ValueOrDie() &&;
+
+  // Returns a reference to the current value.
+  //
+  // REQUIRES: `this->ok() == true`, otherwise the behavior is undefined.
+  //
+  // Use `this->ok()` to verify that there is a current value within the
+  // `StatusOr<T>`. Alternatively, see the `value()` member function for a
+  // similar API that guarantees crashing if there is
+  // no current value.
+  const T& operator*() const&;
+  T& operator*() &;
+  const T&& operator*() const&&;
+  T&& operator*() &&;
+
+  // Returns a pointer to the current value.
+  //
+  // REQUIRES: `this->ok() == true`, otherwise the behavior is undefined.
+  //
+  // Use `this->ok()` to verify that there is a current value.
+  const T* operator->() const;
+  T* operator->();
 
   T ConsumeValueOrDie() { return std::move(ValueOrDie()); }
 
@@ -276,6 +328,34 @@ Status StatusOr<T>::status() && {
 }
 
 template <typename T>
+const T& StatusOr<T>::value() const& {
+  if (!this->ok()) internal_statusor::ThrowBadStatusOrAccess(this->status_);
+  return this->data_;
+}
+
+template <typename T>
+T& StatusOr<T>::value() & {
+  if (!this->ok()) internal_statusor::ThrowBadStatusOrAccess(this->status_);
+  return this->data_;
+}
+
+template <typename T>
+const T&& StatusOr<T>::value() const&& {
+  if (!this->ok()) {
+    internal_statusor::ThrowBadStatusOrAccess(std::move(this->status_));
+  }
+  return std::move(this->data_);
+}
+
+template <typename T>
+T&& StatusOr<T>::value() && {
+  if (!this->ok()) {
+    internal_statusor::ThrowBadStatusOrAccess(std::move(this->status_));
+  }
+  return std::move(this->data_);
+}
+
+template <typename T>
 const T& StatusOr<T>::ValueOrDie() const & {
   this->EnsureOk();
   return this->data_;
@@ -297,6 +377,42 @@ template <typename T>
 T&& StatusOr<T>::ValueOrDie() && {
   this->EnsureOk();
   return std::move(this->data_);
+}
+
+template <typename T>
+const T& StatusOr<T>::operator*() const& {
+  this->EnsureOk();
+  return this->data_;
+}
+
+template <typename T>
+T& StatusOr<T>::operator*() & {
+  this->EnsureOk();
+  return this->data_;
+}
+
+template <typename T>
+const T&& StatusOr<T>::operator*() const&& {
+  this->EnsureOk();
+  return std::move(this->data_);
+}
+
+template <typename T>
+T&& StatusOr<T>::operator*() && {
+  this->EnsureOk();
+  return std::move(this->data_);
+}
+
+template <typename T>
+const T* StatusOr<T>::operator->() const {
+  this->EnsureOk();
+  return &this->data_;
+}
+
+template <typename T>
+T* StatusOr<T>::operator->() {
+  this->EnsureOk();
+  return &this->data_;
 }
 
 template <typename T>

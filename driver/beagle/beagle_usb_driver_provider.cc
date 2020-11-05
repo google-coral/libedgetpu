@@ -40,12 +40,12 @@
 #include "driver/package_verifier.h"
 #include "driver/run_controller.h"
 #include "driver/scalar_core_controller.h"
-#include "driver/time_stamper/driver_time_stamper.h"
 #include "driver/usb/local_usb_device.h"
 #include "driver/usb/usb_device_interface.h"
 #include "driver/usb/usb_driver.h"
 #include "driver/usb/usb_ml_commands.h"
 #include "driver/usb/usb_registers.h"
+#include "driver_shared/time_stamper/driver_time_stamper.h"
 #include "port/gflags.h"
 #include "port/ptr_util.h"
 #include "port/tracing.h"
@@ -350,7 +350,7 @@ BeagleUsbDriverProvider::CreateDriver(
   auto executable_registry = gtl::MakeUnique<PackageRegistry>(
       device.chip, std::move(verifier), dram_allocator.get());
 
-  auto time_stamper = gtl::MakeUnique<DriverTimeStamper>();
+  auto time_stamper = gtl::MakeUnique<driver_shared::DriverTimeStamper>();
 
   // Note that although driver_options is passed into constructor of UsbDriver,
   // it's USB portion is not used by the driver directly, due to historical

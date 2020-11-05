@@ -15,6 +15,8 @@
 # Description:
 #  Port of various google3 libraries and utilities.
 
+load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
+
 package(default_visibility = ["//visibility:public"])
 
 # Files are originally ported from TensorFlow.
@@ -23,7 +25,7 @@ licenses(["notice"])
 exports_files(["logging.h"])
 
 # Test helpers
-cc_library(
+libedgetpu_cc_library(
     name = "status_test_util",
     testonly = 1,
     hdrs = [
@@ -36,7 +38,7 @@ cc_library(
 )
 
 #  Port of various google3 libraries and utilities.
-cc_library(
+libedgetpu_cc_library(
     name = "port_from_tf",
     srcs = [
         "logging.cc",
@@ -61,7 +63,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "thread_annotations",
     hdrs = [
         "thread_annotations.h",

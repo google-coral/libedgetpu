@@ -32,7 +32,8 @@ class KernelInterruptHandler : public InterruptHandler {
   // Default close to avoid name hiding.
   using InterruptHandler::Close;
 
-  explicit KernelInterruptHandler(const std::string& device_path);
+  explicit KernelInterruptHandler(
+      std::unique_ptr<KernelEventHandler> event_handler);
   ~KernelInterruptHandler() override = default;
 
   util::Status Open() override;
@@ -41,7 +42,7 @@ class KernelInterruptHandler : public InterruptHandler {
 
  private:
   // Backing event handler.
-  KernelEventHandler event_handler_;
+  std::unique_ptr<KernelEventHandler> event_handler_;
 };
 
 }  // namespace driver

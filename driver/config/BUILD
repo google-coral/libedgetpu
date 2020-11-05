@@ -20,6 +20,8 @@
 # When compiled in non-google3 environment, pregenerated headers in
 # ${PROJECT}/...  is used.
 
+load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
+
 DEFAULT_VISIBILITY = [
     "//:internal",
 ]
@@ -31,7 +33,7 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])
 
 # Configuration structures.
-cc_library(
+libedgetpu_cc_library(
     name = "config",
     hdrs = [
         "apex_csr_offsets.h",
@@ -47,6 +49,7 @@ cc_library(
         "hib_kernel_csr_offsets.h",
         "hib_user_csr_offsets.h",
         "interrupt_csr_offsets.h",
+        "lpm_csr_offsets.h",
         "memory_csr_offsets.h",
         "misc_csr_offsets.h",
         "msix_csr_offsets.h",
@@ -73,7 +76,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "register_constants",
     hdrs = ["register_constants.h"],
     deps = [
@@ -81,7 +84,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "scalar_core_csr_offsets_helper",
     hdrs = ["scalar_core_csr_offsets_helper.h"],
     deps = [

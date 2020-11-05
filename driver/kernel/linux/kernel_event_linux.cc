@@ -12,20 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "driver/kernel/kernel_event.h"
+#include "driver/kernel/linux/kernel_event_linux.h"
 
 #include <errno.h>
-#include <fcntl.h>
 #include <inttypes.h>
-#include <sys/eventfd.h>
-#include <sys/ioctl.h>
+#include <fcntl.h>
 #include <unistd.h>
-
-#include <thread>  // NOLINT
 
 #include "port/errors.h"
 #include "port/integral_types.h"
-#include "port/ptr_util.h"
 #include "port/status.h"
 #include "port/status_macros.h"
 #include "port/std_mutex_lock.h"
@@ -36,13 +31,15 @@ namespace platforms {
 namespace darwinn {
 namespace driver {
 
-KernelEvent::KernelEvent(int event_fd, Handler handler) : event_fd_(event_fd) {
-  std::thread event_thread(&KernelEvent::Monitor, this, event_fd,
+KernelEventLinux::KernelEventLinux(FileDescriptor event_fd, Handler handler)
+    : KernelEvent(event_fd, handler),
+      event_fd_(event_fd) {
+  std::thread event_thread(&KernelEventLinux::Monitor, this,
                            std::move(handler));
   thread_ = std::move(event_thread);
 }
 
-KernelEvent::~KernelEvent() {
+KernelEventLinux::~KernelEventLinux() {
   // Mark as disabled.
   {
     StdMutexLock lock(&mutex_);
@@ -61,27 +58,22 @@ KernelEvent::~KernelEvent() {
   thread_.join();
 }
 
-bool KernelEvent::IsEnabled() const {
-  StdMutexLock lock(&mutex_);
-  return enabled_;
-}
-
-void KernelEvent::Monitor(int event_fd, const Handler& handler) {
-  VLOG(5) << StringPrintf("event_fd=%d. Monitor thread begin.", event_fd);
+void KernelEventLinux::Monitor(const Handler& handler) {
+  VLOG(5) << StringPrintf("event_fd=%d. Monitor thread begin.", event_fd_);
   TRACE_START_THREAD("KernelEventHandlerMonitor");
 
   while (IsEnabled()) {
     // Wait for events (blocking).
     uint64_t num_events = 0;
-    int result = read(event_fd, &num_events, sizeof(num_events));
+    int result = read(event_fd_, &num_events, sizeof(num_events));
     if (result != sizeof(num_events)) {
-      LOG(WARNING) << StringPrintf("event_fd=%d. Read failed (%d).", event_fd,
+      LOG(WARNING) << StringPrintf("event_fd=%d. Read failed (%d).", event_fd_,
                                    result);
       break;
     }
 
     VLOG(5) << StringPrintf(
-        "event_fd=%d. Monitor thread got num_events=%" PRId64 ".", event_fd,
+        "event_fd=%d. Monitor thread got num_events=%" PRId64 ".", event_fd_,
         num_events);
     if (IsEnabled()) {
       for (int i = 0; i < num_events; ++i) {
@@ -90,7 +82,12 @@ void KernelEvent::Monitor(int event_fd, const Handler& handler) {
     }
   }
 
-  VLOG(5) << StringPrintf("event_fd=%d. Monitor thread exit.", event_fd);
+  VLOG(5) << StringPrintf("event_fd=%d. Monitor thread exit.", event_fd_);
+}
+
+bool KernelEventLinux::IsEnabled() const {
+  StdMutexLock lock(&mutex_);
+  return enabled_;
 }
 
 }  // namespace driver

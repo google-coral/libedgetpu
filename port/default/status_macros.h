@@ -16,7 +16,7 @@
 #define DARWINN_PORT_DEFAULT_STATUS_MACROS_H_
 
 #include <memory>
-#include <sstream> // NOLINT
+#include <sstream>  // NOLINT
 #include <string>
 #include <utility>
 #include <vector>
@@ -230,14 +230,13 @@ class StatusAdaptorForMacros {
     if (PREDICT_FALSE(!_status.ok())) return _status;          \
   } while (0)
 
-#define RETURN_WITH_CONTEXT_IF_ERROR(expr, ...)                        \
-  do {                                                                 \
-    ::platforms::darwinn::util::Status _status = (expr);               \
-    if (PREDICT_FALSE(!_status.ok())) {                                \
-      ::platforms::darwinn::util::error::AppendToMessage(&_status,     \
-                                                         __VA_ARGS__); \
-      return _status;                                                  \
-    }                                                                  \
+#define RETURN_WITH_CONTEXT_IF_ERROR(expr, ...)                           \
+  do {                                                                    \
+    ::platforms::darwinn::util::Status _status = (expr);                  \
+    if (PREDICT_FALSE(!_status.ok())) {                                   \
+      ::platforms::darwinn::util::AppendToMessage(&_status, __VA_ARGS__); \
+      return _status;                                                     \
+    }                                                                     \
   } while (0)
 
 #endif  // DARWINN_PORT_DEFAULT_STATUS_MACROS_H_

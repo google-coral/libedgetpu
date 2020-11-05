@@ -20,122 +20,79 @@
 #define DARWINN_SCOPE_PREFIX "DarwiNN::"
 
 // For Android binaries built on Android.
-// We borrow the NNAPI systrace implementation to profile DarwiNN drivers built
-// on Android.
 #if defined(DARWINN_PORT_ANDROID_SYSTEM)
 
-#include "Tracing.h"
-
-#define TRACE_INITIALIZE()
-// Use this only once per function, ideally at the beginning of each scope.
-#define TRACE_SCOPE(name) NNTRACE_NAME_1(DARWINN_SCOPE_PREFIX name)
-
-// Use this to add trace markers in a scope that already has a TRACE_SCOPE.
-#define TRACE_WITHIN_SCOPE(name) NNTRACE_NAME_SWITCH(DARWINN_SCOPE_PREFIX name)
-
-// Use this when a new thread starts up.
-#define TRACE_START_THREAD(name)
-
-#define TRACE_DUMP(output_file)
-#define TRACE_FINALIZE()
+#include "port/tracer/darwinn_android_native_trace_macros.h"
 
 // For Android binaries built on google3.
-// When building on google3, blaze will not be able to link against the atrace
-// symbols and we will need to dynamically link to it by ourselves.
 #elif defined(__ANDROID__) && defined(DARWINN_ANDROID_GOOGLE3_TRACE_ENABLED)
 
-#include "port/tracer/darwinn_android_tracer.h"
-
-#define TRACE_SCOPE(name) \
-  ::platforms::darwinn::DARWINN_ANDROID_TRACE_SCOPE(DARWINN_SCOPE_PREFIX name)
-
-#define TRACE_WITHIN_SCOPE(name) \
-  ::platforms::darwinn::DARWINN_ANDROID_TRACE_SCOPE(DARWINN_SCOPE_PREFIX name)
-
-#define TRACE_START_THREAD(name)
-#define TRACE_DUMP(output_file)
-#define TRACE_FINALIZE()
+#include "port/tracer/darwinn_android_google3_trace_macros.h"
 
 // Perfetto tracing for firmware can be enabled at build time.
 // Build the firmware with --define darwinn_firmware_trace_enabled=1
-// and build run_graph_executor with --define darwinn_perfetto_trace_enabled=1.
+// and build the application with --define darwinn_perfetto_trace_enabled=1.
 #elif defined(__ANDROID__) && defined(DARWINN_PERFETTO_TRACE_ENABLED)
 
-#include "port/tracer/darwinn_perfetto_scoped_tracer.h"
-#include "port/tracer/darwinn_perfetto_tracer.h"
-
-#define TRACE_INITIALIZE() ::platforms::darwinn::InitializeScopedPerfetto()
-
-#define TRACE_SCOPE(name) \
-  PERFTETTO_TRACK_SCOPE(DARWINN_SCOPE_PREFIX name)
-
-#define TRACE_WITHIN_SCOPE(name) \
-  PERFTETTO_TRACK_SCOPE(DARWINN_SCOPE_PREFIX name)
-
-#define TRACE_START_THREAD(name)
-#define TRACE_DUMP(output_file)
-
-#define TRACE_FINALIZE() ::platforms::darwinn::FinalizePerfetto()
+#include "port/tracer/darwinn_perfetto_trace_macros.h"
 
 // Web Tracing Framework can be enabled at build time.
 // --define=GLOBAL_WTF_ENABLE=1
 #elif defined(WTF_ENABLE)
 
-#include "third_party/tracing_framework_bindings_cpp/macros.h"  // IWYU pragma: export
+#include "port/tracer/darwinn_wtf_trace_macros.h"
 
-#define TRACE_INITIALIZE()
-#define TRACE_SCOPE(name) WTF_SCOPE0(DARWINN_SCOPE_PREFIX name)
-#define TRACE_WITHIN_SCOPE(name) WTF_EVENT0(DARWINN_SCOPE_PREFIX name)
-#define TRACE_START_THREAD(name) WTF_THREAD_ENABLE(DARWINN_SCOPE_PREFIX name)
-#define TRACE_DUMP(output_file)
-#define TRACE_FINALIZE()
-
+// If --define darwinn_csv_trace_enabled=1 is specified, the trace events could
+// be dumped into a CSV file.
 #elif defined(DARWINN_CSV_TRACE_ENABLED)
 
-#include "port/tracer/darwinn_csv_tracer.h"
-
-#define TRACE_INITIALIZE()
-#define TRACE_SCOPE(name) \
-  ::platforms::darwinn::DARWINN_CSV_TRACE_SCOPE(DARWINN_SCOPE_PREFIX name)
-#define TRACE_WITHIN_SCOPE(name) \
-  ::platforms::darwinn::DARWINN_CSV_TRACE_SCOPE(DARWINN_SCOPE_PREFIX name)
-
-#define TRACE_START_THREAD(name)
-
-#define TRACE_DUMP(output_file) \
-  ::platforms::darwinn::DarwinnCSVTracer::DumpTrace(output_file)
-
-#define TRACE_FINALIZE()
+#include "port/tracer/darwinn_csv_trace_macros.h"
 
 // If xprof tracing is enabled at build time: --define=darwinn_xprof_enabled=1
-// To capture the trace, use perftools/gputools/profiler/xprof.sh.
+// Add --xprof_end_2_end_upload to the test to upload the xprof trace.
 #elif defined(DARWINN_XPROF_ENABLED)
 
-#include "port/tracer/darwinn_fw_xprof_tracer.h"
-#include "tensorflow/core/profiler/lib/traceme.h"
-
-#define _PASTE(x, y) x##y
-#define PASTE(x, y) _PASTE(x, y)
-
-#define TRACE_INITIALIZE()
-#define TRACE_SCOPE(name)                       \
-  tensorflow::profiler::TraceMe PASTE(activity, \
-                                      __LINE__)(DARWINN_SCOPE_PREFIX name)
-#define TRACE_WITHIN_SCOPE(name) TRACE_SCOPE(name)
-#define TRACE_START_THREAD(name) TRACE_SCOPE(name)
-
-#define TRACE_FINALIZE()
+#include "port/tracer/darwinn_xprof_trace_macros.h"
 
 // No tracing for other environments.
 #else
 
+// Initializes tracing. Only required for Perfetto tracing.
 #define TRACE_INITIALIZE()
-#define TRACE_SCOPE(name)
+
+// Adds a trace event with the start and end time specified by the life time of
+// the created scope object.
+// The "CRITICAL" makes it visible even for lab testing. See the PNP_BENCHMARK
+// below.
+#define TRACE_SCOPE_CRITICAL(name)
+
+// Starts a trace event. A uint64 unique ID will be returned which could be used
+// to match the trace event in TRACE_SCOPE_CRITICAL_END. `device_paths` are
+// added as metadata to xprof, and ignored for other tracing backends.
+#define TRACE_SCOPE_CRITICAL_BEGIN(name, device_paths) 0
+#define TRACE_SCOPE_CRITICAL_END(id)
+
+// For adding a trace event inside anoter scoped trace event. The newly added
+// one has the same nested layer as the outer scope trace event.
+// Only supported by our Android native tracing.
 #define TRACE_WITHIN_SCOPE(name)
+
+// To mark the start of a thread. Only supported by WTF trace.
 #define TRACE_START_THREAD(name)
+
+// Dumps the trace events into a file. Only supported by CSV trace.
 #define TRACE_DUMP(output_file)
+
+// Marks the end of the profiling. Only required by Perfetto.
 #define TRACE_FINALIZE()
 
+#endif
+
+// Don't trace TRACE_SCOPE macros when PNP_BENCHMARKING is on
+#ifdef PNP_BENCHMARKING
+#define TRACE_SCOPE(name)
+#else
+#define TRACE_SCOPE(name) TRACE_SCOPE_CRITICAL(name)
 #endif
 
 #endif  // DARWINN_PORT_DEFAULT_SYSTRACE_H_

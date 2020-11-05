@@ -15,13 +15,15 @@
 # Description:
 #   Beagle-specific configuration and CSR Layouts.
 
+load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
 exports_files(glob(["**/*"]))
 
-cc_library(
+libedgetpu_cc_library(
     name = "beagle_config",
     hdrs = [
         "beagle_chip_structures.h",
@@ -33,7 +35,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "beagle_chip_config",
     hdrs = ["beagle_chip_config.h"],
     deps = [

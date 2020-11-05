@@ -37,9 +37,10 @@
 #include "driver/mmio/host_queue.h"
 #include "driver/package_registry.h"
 #include "driver/single_tpu_request.h"
-#include "driver/time_stamper/driver_time_stamper.h"
 #include "driver/top_level_handler.h"
 #include "driver/tpu_request.h"
+#include "driver_shared/time_stamper/driver_time_stamper.h"
+#include "driver_shared/time_stamper/time_stamper.h"
 #include "executable/executable_generated.h"
 #include "port/cleanup.h"
 #include "port/errors.h"
@@ -82,7 +83,7 @@ MmioDriver::MmioDriver(
     std::unique_ptr<RunController> run_controller,
     std::unique_ptr<TopLevelHandler> top_level_handler,
     std::unique_ptr<PackageRegistry> executable_registry,
-    std::unique_ptr<TimeStamper> time_stamper)
+    std::unique_ptr<driver_shared::TimeStamper> time_stamper)
     : Driver(
           [](config::ChipConfig* chip_config) {
             CHECK(chip_config != nullptr);
@@ -111,7 +112,7 @@ MmioDriver::MmioDriver(
       dma_scheduler_(api::Watchdog::MakeWatchdog(
                          driver_options.watchdog_timeout_ns(),
                          [this](int64) { HandleWatchdogTimeout(); }),
-                     gtl::MakeUnique<DriverTimeStamper>()),
+                     gtl::MakeUnique<driver_shared::DriverTimeStamper>()),
       chip_config_(std::move(chip_config)) {}
 
 MmioDriver::~MmioDriver() {
@@ -318,10 +319,14 @@ util::Status MmioDriver::DoOpen(bool debug_mode) {
     RETURN_IF_ERROR(run_controller_->DoRunControl(RunControl::kMoveToRun));
   }
 
-  // Disable periodic status block updates.
   // TODO: refactor for Darwinn 1.0 vs 2.0 driver.
-  RETURN_IF_ERROR(
-      registers_->Write(hib_user_csr_offsets_.status_block_update, 0));
+
+  if (hib_user_csr_offsets_.status_block_update !=
+      kCsrRegisterSpaceInvalidOffset) {
+    // Disable periodic status block updates.
+    RETURN_IF_ERROR(
+        registers_->Write(hib_user_csr_offsets_.status_block_update, 0));
+  }
 
   // Register and enable all interrupts.
   RETURN_IF_ERROR(RegisterAndEnableAllInterrupts());

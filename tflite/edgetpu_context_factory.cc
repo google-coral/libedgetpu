@@ -25,9 +25,12 @@ namespace darwinn {
 namespace tflite {
 
 const char* EdgeTpuContextFactory::GetDescriptionForDeviceTypeOptions() {
-  static const std::string desc =
-      StringPrintf("Type of Edge TPU device. Possible choices are %s | %s | %s",
-                   kDeviceTypeDefault, kDeviceTypeApexUsb, kDeviceTypeApexPci);
+  static const std::string desc = [] {
+    auto s = StringPrintf(
+        "Type of Edge TPU device. Possible choices are %s | %s | %s",
+        kDeviceTypeDefault, kDeviceTypeApexUsb, kDeviceTypeApexPci);
+    return s;
+  }();
 
   return desc.c_str();
 }

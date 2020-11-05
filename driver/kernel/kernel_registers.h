@@ -20,6 +20,7 @@
 #include <vector>
 
 #include "driver/registers/registers.h"
+#include "port/fileio.h"
 #include "port/integral_types.h"
 #include "port/status.h"
 #include "port/statusor.h"
@@ -70,6 +71,20 @@ class KernelRegisters : public Registers {
   // Returns the reference to the mapped regions.
   std::vector<MappedRegisterRegion>& GetMmapRegion() { return mmap_region_; }
 
+  // Unmaps all device BARs ranges previously mapped to user mode space VAs.
+  void UnmapAllRegions() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+
+  // Maps and returns user mode space VA for device BARs range described by
+  // region.offset and region.size.
+  virtual util::StatusOr<uint64*> MapRegion(FileDescriptor fd,
+                                            const MappedRegisterRegion& region,
+                                            bool read_only) = 0;
+
+  // Unmaps device BARs range described by region.offset and region.size
+  // which was previously mapped to region.registers user mode space VA.
+  virtual util::Status UnmapRegion(FileDescriptor fd,
+                                   const MappedRegisterRegion& region) = 0;
+
  private:
   // Maps CSR offset to virtual address without acquiring the lock.
   util::StatusOr<uint8*> GetMappedOffset(uint64 offset, int alignment) const
@@ -85,7 +100,7 @@ class KernelRegisters : public Registers {
   const bool read_only_;
 
   // File descriptor of the opened device.
-  int fd_ GUARDED_BY(mutex_){-1};
+  FileDescriptor fd_ GUARDED_BY(mutex_){INVALID_FD_VALUE};
 
   // Mutex that guards fd_;
   mutable std::mutex mutex_;

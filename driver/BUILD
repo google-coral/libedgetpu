@@ -15,6 +15,8 @@
 # Description:
 #  Portable DarwiNN driver implementation.
 
+load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
+
 package(
     default_visibility = ["//visibility:public"],
 )
@@ -24,7 +26,7 @@ licenses(["notice"])
 exports_files(["libdarwinn_driver.lds"])
 
 # Utility functions.
-cc_library(
+libedgetpu_cc_library(
     name = "util",
     hdrs = [
         "bitfield.h",
@@ -35,7 +37,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "allocator",
     srcs = [
         "aligned_allocator.cc",
@@ -52,7 +54,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "device_buffer",
     srcs = ["device_buffer.cc"],
     hdrs = ["device_buffer.h"],
@@ -61,7 +63,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "executable_util",
     srcs = ["executable_util.cc"],
     hdrs = ["executable_util.h"],
@@ -73,7 +75,7 @@ cc_library(
 )
 
 # Driver Factory.
-cc_library(
+libedgetpu_cc_library(
     name = "driver_factory",
     srcs = ["driver_factory.cc"] + select({
         "//:windows": ["driver_factory_windows.cc"],
@@ -91,13 +93,15 @@ cc_library(
         "//api:driver_options_fbs",
         "//api:driver_options_helper",
         "//driver/config",
+        "//driver/kernel:gasket_ioctl",
         "//port",
+        "//port:fileio",
         "//port:std_mutex_lock",
         "//port:thread_annotations",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "driver_helper",
     srcs = ["driver_helper.cc"],
     hdrs = ["driver_helper.h"],
@@ -119,7 +123,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "instruction_buffers",
     srcs = ["instruction_buffers.cc"],
     hdrs = ["instruction_buffers.h"],
@@ -134,7 +138,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "run_controller",
     srcs = ["run_controller.cc"],
     hdrs = ["run_controller.h"],
@@ -147,7 +151,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "scalar_core_controller",
     srcs = ["scalar_core_controller.cc"],
     hdrs = ["scalar_core_controller.h"],
@@ -161,7 +165,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "hardware_structures",
     hdrs = ["hardware_structures.h"],
     deps = [
@@ -170,7 +174,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "driver",
     srcs = ["driver.cc"],
     hdrs = ["driver.h"],
@@ -189,7 +193,7 @@ cc_library(
         "//api:request",
         "//api:telemeter_interface",
         "//driver/memory:dma_direction",
-        "//driver/time_stamper",
+        "//driver_shared/time_stamper",
         "//executable:executable_fbs",
         "//port",
         "//port:blocking_counter",
@@ -200,7 +204,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "default_telemeter",
     hdrs = ["default_telemeter.h"],
     deps = [
@@ -208,7 +212,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "mmio_driver",
     srcs = ["mmio_driver.cc"],
     hdrs = ["mmio_driver.h"],
@@ -241,17 +245,18 @@ cc_library(
         "//driver/memory:mmu_mapper",
         "//driver/mmio:host_queue",
         "//driver/registers",
-        "//driver/time_stamper",
-        "//driver/time_stamper:driver_time_stamper",
+        "//driver_shared/time_stamper",
+        "//driver_shared/time_stamper:driver_time_stamper",
         "//executable:executable_fbs",
         "//port",
+        "//port:fileio",
         "//port:std_mutex_lock",
         "//port:thread_annotations",
         "//port:tracing",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "dma_info",
     srcs = ["dma_info.cc"],
     hdrs = ["dma_info.h"],
@@ -261,7 +266,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "device_buffer_mapper",
     srcs = ["device_buffer_mapper.cc"],
     hdrs = ["device_buffer_mapper.h"],
@@ -277,7 +282,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "dma_info_extractor",
     srcs = ["dma_info_extractor.cc"],
     hdrs = ["dma_info_extractor.h"],
@@ -291,7 +296,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "dma_scheduler",
     hdrs = ["dma_scheduler.h"],
     deps = [
@@ -302,7 +307,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "single_queue_dma_scheduler",
     srcs = ["single_queue_dma_scheduler.cc"],
     hdrs = ["single_queue_dma_scheduler.h"],
@@ -319,7 +324,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "real_time_dma_scheduler",
     srcs = ["real_time_dma_scheduler.cc"],
     hdrs = ["real_time_dma_scheduler.h"],
@@ -334,14 +339,14 @@ cc_library(
         "//api:package_reference",
         "//api:timing",
         "//api:watchdog",
-        "//driver/time_stamper",
+        "//driver_shared/time_stamper",
         "//port",
         "//port:std_mutex_lock",
         "//port:thread_annotations",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "dma_chunker",
     srcs = ["dma_chunker.cc"],
     hdrs = ["dma_chunker.h"],
@@ -351,13 +356,13 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "top_level_handler",
     hdrs = ["top_level_handler.h"],
     deps = ["//port"],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "package_registry",
     srcs = ["package_registry.cc"],
     hdrs = ["package_registry.h"],
@@ -382,7 +387,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "package_verifier",
     srcs = ["package_verifier.cc"],
     hdrs = ["package_verifier.h"],
@@ -392,7 +397,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "tpu_request",
     hdrs = ["tpu_request.h"],
     deps = [
@@ -404,7 +409,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "single_tpu_request",
     srcs = ["single_tpu_request.cc"],
     hdrs = ["single_tpu_request.h"],
@@ -432,15 +437,15 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "request",
     srcs = ["request.cc"],
     hdrs = ["request.h"],
     deps = [
         ":tpu_request",
         "//api:request",
-        "//driver/time_stamper",
-        "//driver/time_stamper:driver_time_stamper_factory",
+        "//driver_shared/time_stamper",
+        "//driver_shared/time_stamper:driver_time_stamper_factory",
         "//port",
         "//port:std_mutex_lock",
         "//port:thread_annotations",

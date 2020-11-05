@@ -15,11 +15,13 @@
 # Description:
 #  Memory Mapped IO (ex: PCIe.)
 
+load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-cc_library(
+libedgetpu_cc_library(
     name = "coherent_allocator",
     srcs = ["coherent_allocator.cc"],
     hdrs = ["coherent_allocator.h"],
@@ -31,7 +33,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "host_queue",
     hdrs = ["host_queue.h"],
     deps = [

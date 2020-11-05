@@ -17,10 +17,12 @@
 
 #include "port/defs.h"
 
+// IWYU pragma: begin_exports
 #if DARWINN_PORT_USE_GOOGLE3
 #include "util/math/mathutil.h"
 #else  // !DARWINN_PORT_USE_GOOGLE3
 #include "port/default/math_util.h"
 #endif  // DARWINN_PORT_USE_GOOGLE3
+// IWYU pragma: end_exports
 
 #endif  // DARWINN_PORT_MATH_UTIL_H_

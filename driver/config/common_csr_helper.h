@@ -499,6 +499,7 @@ class ClockEnableReg {
   void set_clock_enable(uint64 value) { reg_.clock_enable_ = value; }
   uint64 clock_enable() const { return reg_.clock_enable_(); }
   void set_idle_override(uint64 value) { reg_.idle_override_ = value; }
+  uint64 idle_override() const { return reg_.idle_override_(); }
 
  private:
   union {

@@ -17,10 +17,12 @@
 
 #include "port/defs.h"
 
+// IWYU pragma: begin_exports
 #if DARWINN_PORT_USE_GOOGLE3
 #include "absl/types/span.h"
 #else  // !DARWINN_PORT_USE_GOOGLE3
 #include "port/default/array_slice.h"
 #endif  // DARWINN_PORT_USE_GOOGLE3
+// IWYU pragma: end_exports
 
 #endif  // DARWINN_PORT_ARRAY_SLICE_H_

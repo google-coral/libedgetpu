@@ -15,7 +15,12 @@ echo off
 
 setlocal
 
-type bazel\WORKSPACE bazel\WORKSPACE.windows > WORKSPACE 2>NUL
+if not defined PYTHON set PYTHON=python
+set BAZEL_VS=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools
+set BAZEL_VC=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC
+call "%BAZEL_VC%\Auxiliary\Build\vcvars64.bat"
+
+for /f %%i in ('%PYTHON% -c "import sys;print(sys.executable)"') do set PYTHON_BIN_PATH=%%i
 
 set THROTTLED=0
 set COMPILATION_MODE=opt
@@ -40,38 +45,30 @@ for /f %%i in ('bazel info %BAZEL_INFO_FLAGS% output_path') do set "BAZEL_OUTPUT
 set BAZEL_OUTPUT_PATH=%BAZEL_OUTPUT_PATH:/=\%
 set BAZEL_OUT_DIR=%BAZEL_OUTPUT_PATH%\%CPU%-%COMPILATION_MODE%\bin
 
+:: Supported EdgeTPU devices, one of: usb, pci or all.
+set EDGETPU_BUS=all
 
-set TARGET=//tflite/public:edgetpu_direct_usb.dll
-set BAZEL_VS=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools
-set BAZEL_VC=C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools\VC
+set TARGET=//tflite/public:edgetpu_direct_%EDGETPU_BUS%.dll
 set BAZEL_BUILD_FLAGS= ^
 --experimental_repo_remote_exec ^
 --compilation_mode %COMPILATION_MODE% ^
 --define darwinn_portable=1 ^
---copt=/DSTRIP_LOG=1 ^
---copt=/DABSL_FLAGS_STRIP_NAMES ^
 --copt=/D_HAS_DEPRECATED_RESULT_OF ^
---copt=/D_HAS_DEPRECATED_ADAPTOR_TYPEDEFS ^
---copt=/GR- ^
---copt=/DWIN32_LEAN_AND_MEAN ^
---copt=/D_WINSOCKAPI_ ^
 --copt=/std:c++latest
-
-call "%BAZEL_VC%\Auxiliary\Build\vcvars64.bat"
 
 bazel build %BAZEL_BUILD_FLAGS% %LEFTOVER_ARGS% %TARGET%
 md %OUT_DIR%\direct\%CPU%
-copy %BAZEL_OUT_DIR%\tflite\public\edgetpu_direct_usb.dll ^
+copy %BAZEL_OUT_DIR%\tflite\public\edgetpu_direct_%EDGETPU_BUS%.dll ^
      %OUT_DIR%\direct\%CPU%\
-python %~dp0\rename_library.py ^
-  --input_dll %OUT_DIR%\direct\%CPU%\edgetpu_direct_usb.dll ^
+%PYTHON_BIN_PATH% %~dp0\rename_library.py ^
+  --input_dll %OUT_DIR%\direct\%CPU%\edgetpu_direct_%EDGETPU_BUS%.dll ^
   --output_dll %OUT_DIR%\direct\%CPU%\edgetpu.dll
 
 set BAZEL_BUILD_FLAGS=%BAZEL_BUILD_FLAGS% --copt=/DTHROTTLE_EDGE_TPU
 bazel build %BAZEL_BUILD_FLAGS% %LEFTOVER_ARGS% %TARGET%
 md %OUT_DIR%\throttled\%CPU%
-copy %BAZEL_OUT_DIR%\tflite\public\edgetpu_direct_usb.dll ^
+copy %BAZEL_OUT_DIR%\tflite\public\edgetpu_direct_%EDGETPU_BUS%.dll ^
      %OUT_DIR%\throttled\%CPU%\
-python %~dp0\rename_library.py ^
-  --input_dll %OUT_DIR%\throttled\%CPU%\edgetpu_direct_usb.dll ^
+%PYTHON_BIN_PATH% %~dp0\rename_library.py ^
+  --input_dll %OUT_DIR%\throttled\%CPU%\edgetpu_direct_%EDGETPU_BUS%.dll ^
   --output_dll %OUT_DIR%\throttled\%CPU%\edgetpu.dll

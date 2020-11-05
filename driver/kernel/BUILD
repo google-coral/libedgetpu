@@ -15,53 +15,57 @@
 # Description:
 # Kernel driver specific functionality.
 
+load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-cc_library(
+libedgetpu_cc_library(
     name = "kernel_mmu_mapper",
     srcs = ["kernel_mmu_mapper.cc"],
     hdrs = ["kernel_mmu_mapper.h"],
     deps = [
-        ":linux_gasket_ioctl",
+        ":gasket_ioctl",
         "//driver:hardware_structures",
         "//driver/memory:dma_direction",
         "//driver/memory:mmu_mapper",
         "//port",
+        "//port:fileio",
         "//port:std_mutex_lock",
         "//port:thread_annotations",
         "//port:tracing",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "kernel_event",
-    srcs = ["kernel_event.cc"],
     hdrs = ["kernel_event.h"],
     deps = [
         "//port",
+        "//port:fileio",
         "//port:std_mutex_lock",
         "//port:thread_annotations",
         "//port:tracing",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "kernel_event_handler",
     srcs = ["kernel_event_handler.cc"],
     hdrs = ["kernel_event_handler.h"],
     deps = [
-        ":kernel_event",
-        ":linux_gasket_ioctl",
+        ":gasket_ioctl",
+        "//driver/kernel:kernel_event",
         "//port",
+        "//port:fileio",
         "//port:std_mutex_lock",
         "//port:thread_annotations",
         "//port:tracing",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "kernel_interrupt_handler",
     srcs = ["kernel_interrupt_handler.cc"],
     hdrs = ["kernel_interrupt_handler.h"],
@@ -69,53 +73,62 @@ cc_library(
         "//driver/interrupt:interrupt_handler",
         "//driver/kernel:kernel_event_handler",
         "//port",
+        "//port:fileio",
         "//port:std_mutex_lock",
         "//port:thread_annotations",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "kernel_wire_interrupt_handler",
     srcs = ["kernel_wire_interrupt_handler.cc"],
     hdrs = ["kernel_wire_interrupt_handler.h"],
     deps = [
-        ":kernel_event_handler",
         "//driver/config",
         "//driver/interrupt:interrupt_handler",
         "//driver/interrupt:wire_interrupt_handler",
+        "//driver/kernel:kernel_event_handler",
         "//driver/registers",
         "//port",
+        "//port:fileio",
         "//port:std_mutex_lock",
         "//port:thread_annotations",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "kernel_coherent_allocator",
     srcs = ["kernel_coherent_allocator.cc"],
     hdrs = ["kernel_coherent_allocator.h"],
     deps = [
-        ":linux_gasket_ioctl",
+        ":gasket_ioctl",
         "//driver:hardware_structures",
         "//driver/mmio:coherent_allocator",
         "//port",
+        "//port:fileio",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "kernel_registers",
     srcs = ["kernel_registers.cc"],
     hdrs = ["kernel_registers.h"],
     deps = [
+        ":gasket_ioctl",
         "@com_google_absl//absl/strings:str_format",
         "//driver/registers",
         "//port",
+        "//port:fileio",
         "//port:std_mutex_lock",
         "//port:thread_annotations",
     ],
 )
 
-cc_library(
-    name = "linux_gasket_ioctl",
-    hdrs = ["linux_gasket_ioctl.h"],
+libedgetpu_cc_library(
+    name = "gasket_ioctl",
+    hdrs = [
+        "common_gasket_ioctl.inc",
+        "gasket_ioctl.h",
+    ],
+    deps = ["//driver/kernel/windows:gasket_ioctl_windows"],
 )

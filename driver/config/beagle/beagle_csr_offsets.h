@@ -1480,6 +1480,8 @@ const ScalarCoreCsrOffsets kBeagleScalarCoreCsrOffsets = {
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed1RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, contextControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, contextStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, contextSwitchCount
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, contextSwitchTimeoutCount
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_0_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_0_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_0_1RunControl
@@ -1541,6 +1543,30 @@ const ScalarCoreCsrOffsets kBeagleScalarCoreCsrOffsets = {
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, packageTdpAction
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, ThrottleStallCounter
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, cycleCount
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_ScalarCoreDatapath_0
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Mask_ScalarCoreDatapath_0
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Force_ScalarCoreDatapath_0
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // Error_Timestamp_ScalarCoreDatapath_0
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Info_ScalarCoreDatapath_0
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_ScalarCoreDatapath_1
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Mask_ScalarCoreDatapath_1
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Force_ScalarCoreDatapath_1
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // Error_Timestamp_ScalarCoreDatapath_1
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Info_ScalarCoreDatapath_1
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_ScalarCoreDatapath_2
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Mask_ScalarCoreDatapath_2
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Force_ScalarCoreDatapath_2
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // Error_Timestamp_ScalarCoreDatapath_2
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Info_ScalarCoreDatapath_2
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_ScalarCoreDatapath_3
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Mask_ScalarCoreDatapath_3
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Force_ScalarCoreDatapath_3
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // Error_Timestamp_ScalarCoreDatapath_3
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Info_ScalarCoreDatapath_3
 };
 
 const MemoryCsrOffsets kBeagleScmemoryMemoryCsrOffsets = {
@@ -1604,6 +1630,12 @@ const TileCsrOffsets kBeagleTileCsrOffsets = {
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, narrowMemoryContext_3
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, TileRingBusCreditSenderReset
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, TileRingBusCreditReceiverReset
+    0x40370,                         // NOLINT: Error_Tile
+    0x40378,                         // NOLINT: Error_Mask_Tile
+    0x40380,                         // NOLINT: Error_Force_Tile
+    0x40388,                         // NOLINT: Error_Timestamp_Tile
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_ContextId_Tile
+    0x40390,                         // NOLINT: Error_Info_Tile
 };
 
 const WireCsrOffsets kBeagleWireCsrOffsets = {

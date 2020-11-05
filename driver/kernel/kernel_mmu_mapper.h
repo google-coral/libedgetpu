@@ -15,11 +15,15 @@
 #ifndef DARWINN_DRIVER_KERNEL_KERNEL_MMU_MAPPER_H_
 #define DARWINN_DRIVER_KERNEL_KERNEL_MMU_MAPPER_H_
 
-#include <sys/ioctl.h>
 #include <mutex>  // NOLINT
+
+#ifndef _WIN32
+#include <sys/ioctl.h>
+#endif
 
 #include "driver/memory/dma_direction.h"
 #include "driver/memory/mmu_mapper.h"
+#include "port/fileio.h"
 #include "port/integral_types.h"
 #include "port/status.h"
 #include "port/statusor.h"
@@ -64,11 +68,11 @@ class KernelMmuMapper : public MmuMapper {
     // then may want to make appropriate locking the caller's responsibility.
 
     StdMutexLock lock(&mutex_);
-    if (fd_ != -1) {
+    if (fd_ != INVALID_FD_VALUE) {
       return ioctl(fd_, std::forward<Params>(params)...);
     } else {
       VLOG(4) << "Invalid file descriptor.";
-      return -1;
+      return INVALID_FD_VALUE;
     }
   }
 
@@ -77,7 +81,7 @@ class KernelMmuMapper : public MmuMapper {
   const std::string device_path_;
 
   // File descriptor of the opened device.
-  int fd_ GUARDED_BY(mutex_){-1};
+  FileDescriptor fd_ GUARDED_BY(mutex_){INVALID_FD_VALUE};
 
   // Mutex that guards fd_;
   mutable std::mutex mutex_;

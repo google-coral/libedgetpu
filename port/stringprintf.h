@@ -18,10 +18,12 @@
 
 #include "port/defs.h"
 
+// IWYU pragma: begin_exports
 #if DARWINN_PORT_USE_GOOGLE3
 #include "base/stringprintf.h"
 #else  // !DARWINN_PORT_USE_GOOGLE3
 #include "port/default/stringprintf.h"
 #endif  // DARWINN_PORT_USE_GOOGLE3
+// IWYU pragma: end_exports
 
 #endif  // DARWINN_PORT_STRINGPRINTF_H_

@@ -14,11 +14,6 @@
 
 #include "driver/beagle/beagle_kernel_top_level_handler.h"
 
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/types.h>
-#include <unistd.h>
-
 #include "api/driver_options_generated.h"
 #include "driver/beagle/beagle_ioctl.h"
 #include "port/errors.h"
@@ -80,7 +75,7 @@ util::Status BeagleKernelTopLevelHandler::EnableSoftwareClockGate() {
 
 util::Status BeagleKernelTopLevelHandler::Open() {
   StdMutexLock lock(&mutex_);
-  if (fd_ != -1) {
+  if (fd_ != INVALID_FD_VALUE) {
     return util::FailedPreconditionError("Device already open.");
   }
 
@@ -95,12 +90,12 @@ util::Status BeagleKernelTopLevelHandler::Open() {
 
 util::Status BeagleKernelTopLevelHandler::Close() {
   StdMutexLock lock(&mutex_);
-  if (fd_ == -1) {
+  if (fd_ == INVALID_FD_VALUE) {
     return util::FailedPreconditionError("Device not open.");
   }
 
   close(fd_);
-  fd_ = -1;
+  fd_ = INVALID_FD_VALUE;
 
   return util::Status();  // OK
 }

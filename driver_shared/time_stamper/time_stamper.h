@@ -12,14 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef DARWINN_DRIVER_TIME_STAMPER_TIME_STAMPER_H_
-#define DARWINN_DRIVER_TIME_STAMPER_TIME_STAMPER_H_
+#ifndef DARWINN_DRIVER_SHARED_TIME_STAMPER_TIME_STAMPER_H_
+#define DARWINN_DRIVER_SHARED_TIME_STAMPER_TIME_STAMPER_H_
 
 #include "port/integral_types.h"
 
 namespace platforms {
 namespace darwinn {
-namespace driver {
+
+namespace driver_shared {
 
 // Abstract class for timestamping. Make it a class so a stateful mock can be
 // used in tests.
@@ -66,8 +67,8 @@ class TimeStamper {
   }
 };
 
-}  // namespace driver
+}  // namespace driver_shared
 }  // namespace darwinn
 }  // namespace platforms
 
-#endif  // DARWINN_DRIVER_TIME_STAMPER_TIME_STAMPER_H_
+#endif  // DARWINN_DRIVER_SHARED_TIME_STAMPER_TIME_STAMPER_H_

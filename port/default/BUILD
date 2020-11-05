@@ -15,14 +15,23 @@
 # Description:
 #  Port of various google3 libraries and utilities.
 
+load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
+
 package(default_visibility = ["//visibility:public"])
 
 # All Google Owned Code except :
 # - certain files in port/default/ that are under Apache 2.0 license.
 licenses(["notice"])
 
+config_setting(
+    name = "windows",
+    values = {
+        "cpu": "x64_windows",
+    },
+)
+
 #  Independent headers that can be included by port_from_tf.
-cc_library(
+libedgetpu_cc_library(
     name = "port_base",
     hdrs = [
         "error_codes.h",
@@ -35,7 +44,7 @@ cc_library(
 )
 
 #  Port of various google3 libraries and utilities.
-cc_library(
+libedgetpu_cc_library(
     name = "port",
     srcs = [
         "status_macros.cc",
@@ -54,7 +63,6 @@ cc_library(
         "mutex.h",
         "math_util.h",
         "ptr_util.h",
-        "semaphore.h",
         "status.h",
         "status_macros.h",
         "statusor.h",
@@ -64,13 +72,17 @@ cc_library(
         "//:windows": ["aligned_malloc_windows.h"],
         "//conditions:default": ["aligned_malloc_default.h"],
     }),
+    linkstamp = select({
+        ":windows": None,  # Linkstamp doesn't work on Windows, https://github.com/bazelbuild/bazel/issues/6997
+        "//conditions:default": "builddata.cc",
+    }),
     deps = [
         ":thread_annotations",
         "//port/default/port_from_tf",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "thread_annotations",
     hdrs = [
         "thread_annotations.h",
@@ -80,14 +92,27 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
+    name = "semaphore",
+    hdrs = [
+        "semaphore.h",
+    ],
+    deps = [
+        "@com_google_absl//absl/synchronization",
+        "@com_google_absl//absl/time",
+        "//thread/fiber",
+        "//thread/fiber/semaphore:fifo_semaphore",
+    ],
+)
+
+libedgetpu_cc_library(
     name = "strcat",
     hdrs = [
         "strcat.h",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "unreachable",
     hdrs = [
         "unreachable.h",
@@ -97,7 +122,7 @@ cc_library(
     }),
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "cleanup",
     hdrs = ["cleanup.h"],
     deps = [
@@ -105,37 +130,40 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "cpu",
     hdrs = ["cpu.h"],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "restartable_thread",
     hdrs = ["restartable_thread.h"],
     deps = [
         "//firmware/common:log",
         "//firmware/common/callback",
         "//firmware/os:restartable_thread_interface",
+        "//thread/fiber",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "blocking_queue",
     hdrs = ["blocking_queue.h"],
     deps = [
+        "@com_google_absl//absl/memory",
         "//firmware/common:log",
-        "//firmware/datastruct:circular_queue",
+        "//firmware/common:status",
         "//firmware/os:queue_interface",
+        "//thread/fiber",
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "memory_barriers",
     hdrs = ["memory_barriers.h"],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "dma330",
     hdrs = ["dma330.h"],
     deps = [
@@ -144,5 +172,18 @@ cc_library(
         "//firmware/common:status",
         "//firmware/common/callback",
         "//firmware/driver/dma:dma330_interface",
+    ],
+)
+
+libedgetpu_cc_library(
+    name = "dma_manager",
+    hdrs = ["dma_manager.h"],
+    deps = [
+        ":port",
+        "//firmware/common:iomem",
+        "//firmware/common:status",
+        "//firmware/common/callback",
+        "//firmware/driver/dma:dma330_interface",
+        "//firmware/driver/dma:dma_manager_interface",
     ],
 )

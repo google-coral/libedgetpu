@@ -17,18 +17,13 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
-#include <sys/eventfd.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
 #include <string>
 #include <thread>  // NOLINT
 #include <utility>
 
 #include "driver/kernel/kernel_event.h"
-#include "driver/kernel/linux_gasket_ioctl.h"
 #include "port/errors.h"
 #include "port/integral_types.h"
-#include "port/ptr_util.h"
 #include "port/status.h"
 #include "port/status_macros.h"
 #include "port/std_mutex_lock.h"
@@ -42,13 +37,13 @@ namespace driver {
 KernelEventHandler::KernelEventHandler(const std::string& device_path,
                                        int num_events)
     : device_path_(device_path), num_events_(num_events) {
-  event_fds_.resize(num_events_, -1);
+  event_fds_.resize(num_events_, INVALID_FD_VALUE);
   events_.resize(num_events_);
 }
 
 util::Status KernelEventHandler::Open() {
   StdMutexLock lock(&mutex_);
-  if (fd_ != -1) {
+  if (fd_ != INVALID_FD_VALUE) {
     return util::FailedPreconditionError("Device already open.");
   }
 
@@ -59,7 +54,7 @@ util::Status KernelEventHandler::Open() {
   }
 
   for (int i = 0; i < num_events_; ++i) {
-    event_fds_[i] = eventfd(0, EFD_CLOEXEC);
+    event_fds_[i] = InitializeEventFd(i);
     events_[i].reset();
   }
 
@@ -68,48 +63,34 @@ util::Status KernelEventHandler::Open() {
 
 util::Status KernelEventHandler::Close() {
   StdMutexLock lock(&mutex_);
-  if (fd_ == -1) {
+  if (fd_ == INVALID_FD_VALUE) {
     return util::FailedPreconditionError("Device not open.");
   }
 
+  util::Status status;
   for (int i = 0; i < num_events_; ++i) {
     events_[i].reset();
-    close(event_fds_[i]);
+    status.Update(ReleaseEventFd(fd_, event_fds_[i], i));
   }
 
   close(fd_);
-  fd_ = -1;
+  fd_ = INVALID_FD_VALUE;
 
-  return util::Status();  // OK
-}
-
-util::Status KernelEventHandler::SetEventFd(int event_fd, int event_id) const {
-  gasket_interrupt_eventfd interrupt;
-  interrupt.interrupt = event_id;
-  interrupt.event_fd = event_fd;
-  if (ioctl(fd_, GASKET_IOCTL_SET_EVENTFD, &interrupt) != 0) {
-    return util::FailedPreconditionError(StringPrintf(
-        "Setting Event Fd Failed : %d (%s)", fd_, strerror(errno)));
-  }
-
-  VLOG(5) << StringPrintf("Set event fd : event_id:%d -> event_fd:%d, ",
-                          event_id, event_fd);
-
-  return util::Status();  // OK
+  return status;
 }
 
 util::Status KernelEventHandler::RegisterEvent(int event_id,
                                                KernelEvent::Handler handler) {
   StdMutexLock lock(&mutex_);
-  if (fd_ == -1) {
+  if (fd_ == INVALID_FD_VALUE) {
     return util::FailedPreconditionError("Device not open.");
   }
 
-  RETURN_IF_ERROR(SetEventFd(event_fds_[event_id], event_id));
+  RETURN_IF_ERROR(SetEventFd(fd_, event_fds_[event_id], event_id));
 
   // Enable events.
   events_[event_id] =
-      gtl::MakeUnique<KernelEvent>(event_fds_[event_id], std::move(handler));
+      CreateKernelEvent(event_fds_[event_id], std::move(handler));
 
   return util::Status();  // OK;
 }

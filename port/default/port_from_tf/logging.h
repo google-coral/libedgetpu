@@ -93,6 +93,8 @@ class LogMessageFatal : public LogMessage {
 
 #define _LOG_QFATAL _LOG_FATAL
 
+#define _LOG_DFATAL _LOG_FATAL
+
 // CHECK dies with a fatal error if condition is not true.  It is *not*
 // controlled by NDEBUG, so the check will be executed regardless of
 // compilation mode.  Therefore, it is safe to do things like:

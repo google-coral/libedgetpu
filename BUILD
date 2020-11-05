@@ -25,6 +25,13 @@ exports_files([
     "LICENSE",
 ])
 
+config_setting(
+    name = "opt",
+    values = {
+        "compilation_mode": "opt",
+    },
+)
+
 # If --define darwinn_portable=1, compile without google3 deps.
 config_setting(
     name = "darwinn_portable",

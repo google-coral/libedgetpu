@@ -18,9 +18,16 @@
 #include "port/defs.h"
 
 #if DARWINN_PORT_USE_GOOGLE3
-#include "util/task/statusor.h"
+#include "absl/status/statusor.h"
+// Darwinn 1.0 code relies on util:: namespace to be portable across google3 and
+// android. For now keep StatusOr at global "util" namespace.
+namespace util {
+template <typename T>
+using StatusOr = absl::StatusOr<T>;
+}  // namespace util
+
 #else  // !DARWINN_PORT_USE_GOOGLE3
-#include "port/default/statusor.h"
+#include "port/default/statusor.h"  // IWYU pragma: export
 #endif  // DARWINN_PORT_USE_GOOGLE3
 
 #endif  // DARWINN_PORT_STATUSOR_H_

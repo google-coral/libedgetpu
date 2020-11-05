@@ -92,6 +92,14 @@ struct TileCsrOffsets {
   // Ring bus credit control
   uint64 TileRingBusCreditSenderReset;
   uint64 TileRingBusCreditReceiverReset;
+
+  // Error Tile
+  uint64 Error_Tile;
+  uint64 Error_Mask_Tile;
+  uint64 Error_Force_Tile;
+  uint64 Error_Timestamp_Tile;
+  uint64 Error_ContextId_Tile;
+  uint64 Error_Info_Tile;
 };
 
 }  // namespace config

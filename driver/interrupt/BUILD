@@ -15,17 +15,19 @@
 # Description:
 #  Interrupt functionality.
 
+load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-cc_library(
+libedgetpu_cc_library(
     name = "interrupt_handler",
     hdrs = ["interrupt_handler.h"],
     deps = ["//port"],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "wire_interrupt_handler",
     srcs = ["wire_interrupt_handler.cc"],
     hdrs = ["wire_interrupt_handler.h"],
@@ -40,7 +42,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "interrupt_controller_interface",
     hdrs = ["interrupt_controller_interface.h"],
     deps = [
@@ -49,7 +51,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "dummy_interrupt_controller",
     hdrs = ["dummy_interrupt_controller.h"],
     deps = [
@@ -58,7 +60,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "interrupt_controller",
     srcs = ["interrupt_controller.cc"],
     hdrs = ["interrupt_controller.h"],
@@ -71,7 +73,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "grouped_interrupt_controller",
     srcs = ["grouped_interrupt_controller.cc"],
     hdrs = ["grouped_interrupt_controller.h"],
@@ -82,7 +84,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "top_level_interrupt_manager",
     srcs = ["top_level_interrupt_manager.cc"],
     hdrs = ["top_level_interrupt_manager.h"],

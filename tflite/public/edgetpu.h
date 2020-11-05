@@ -13,70 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
-//
-// This header file defines EdgeTpuManager, and EdgeTpuContext.
-// EdgeTpuContext is an object associated with one or more tflite::Interpreter.
-// Instances of this class should be allocated through
-// EdgeTpuManager::NewEdgeTpuContext.
-// More than one Interpreter instances can point to the same context. This means
-// the tasks from both would be executed under the same TPU context.
-// The lifetime of this context must be longer than all associated
-// tflite::Interpreter instances.
-//
-// Typical usage with NNAPI:
-//
-//   std::unique_ptr<tflite::Interpreter> interpreter;
-//   tflite::ops::builtin::BuiltinOpResolver resolver;
-//   auto model =
-//   tflite::FlatBufferModel::BuildFromFile(model_file_name.c_str());
-//
-//   // Registers edge TPU custom op handler with Tflite resolver.
-//   resolver.AddCustom(edgetpu::kCustomOp, edgetpu::RegisterCustomOp());
-//
-//   tflite::InterpreterBuilder(*model, resolver)(&interpreter);
-//
-//   interpreter->AllocateTensors();
-//      .... (Prepare input tensors)
-//   interpreter->Invoke();
-//      .... (retrieving the result from output tensors)
-//
-//   // Releases interpreter instance to free up resources associated with
-//   // this custom op.
-//   interpreter.reset();
-//
-// Typical usage with Non-NNAPI:
-//
-//   // Sets up the tpu_context.
-//   auto tpu_context =
-//       edgetpu::EdgeTpuManager::GetSingleton()->OpenDevice();
-//
-//   std::unique_ptr<tflite::Interpreter> interpreter;
-//   tflite::ops::builtin::BuiltinOpResolver resolver;
-//   auto model =
-//   tflite::FlatBufferModel::BuildFromFile(model_file_name.c_str());
-//
-//   // Registers edge TPU custom op handler with Tflite resolver.
-//   resolver.AddCustom(edgetpu::kCustomOp, edgetpu::RegisterCustomOp());
-//
-//   tflite::InterpreterBuilder(*model, resolver)(&interpreter);
-//
-//   // Binds a context with a specific interpreter.
-//   interpreter->SetExternalContext(kTfLiteEdgeTpuContext,
-//     tpu_context.get());
-//
-//   // Note that all edge TPU context set ups should be done before this
-//   // function is called.
-//   interpreter->AllocateTensors();
-//      .... (Prepare input tensors)
-//   interpreter->Invoke();
-//      .... (retrieving the result from output tensors)
-//
-//   // Releases interpreter instance to free up resources associated with
-//   // this custom op.
-//   interpreter.reset();
-//
-//   // Closes the edge TPU.
-//   tpu_context.reset();
+// @cond BEGIN doxygen exclude
+// This header file defines EdgeTpuManager and EdgeTpuContext.
+// See below for more details.
 
 #ifndef TFLITE_PUBLIC_EDGETPU_H_
 #define TFLITE_PUBLIC_EDGETPU_H_
@@ -101,26 +40,34 @@ limitations under the License.
 #else
 #define EDGETPU_EXPORT __attribute__((visibility("default")))
 #endif  // _WIN32
+// END doxygen exclude @endcond
 
 namespace edgetpu {
 
-// EdgeTPU custom op.
+// Edge TPU custom op.
 static const char kCustomOp[] = "edgetpu-custom-op";
 
+// The device interface used with the host
 enum class DeviceType {
+  // PCIe Gen2 x1
   kApexPci = 0,
+  // USB 2.0 or 3.1 Gen1
   kApexUsb = 1,
 };
 
 class EdgeTpuContext;
 
-// Singleton edge TPU manager for allocating new TPU contexts.
+// Singleton Edge TPU manager for allocating new TPU contexts.
 // Functions in this interface are thread-safe.
 class EDGETPU_EXPORT EdgeTpuManager {
  public:
+  // See EdgeTpuContext::GetDeviceOptions().
   using DeviceOptions = std::unordered_map<std::string, std::string>;
+  // Details about a particular Edge TPU
   struct DeviceEnumerationRecord {
+    // The Edge TPU device type, either PCIe or USB
     DeviceType type;
+    // System path for the Edge TPU device
     std::string path;
 
     // Returns true if two enumeration records point to the same device.
@@ -136,9 +83,11 @@ class EDGETPU_EXPORT EdgeTpuManager {
     }
   };
 
-  // Returns pointer to the singleton object, or nullptr if not supported on
+  // Returns a pointer to the singleton object, or nullptr if not supported on
   // this platform.
   static EdgeTpuManager* GetSingleton();
+
+  // @cond BEGIN doxygen exclude for deprecated APIs.
 
   // NewEdgeTpuContext family functions has been deprecated and will be removed
   // in the future. Please use OpenDevice for new code.
@@ -180,49 +129,63 @@ class EDGETPU_EXPORT EdgeTpuManager {
   virtual std::unique_ptr<EdgeTpuContext> NewEdgeTpuContext(
       DeviceType device_type, const std::string& device_path,
       const DeviceOptions& options) = 0;
+  // END doxygen exclude for deprecated APIs @endcond
+
 
   // Enumerates all connected Edge TPU devices.
   virtual std::vector<DeviceEnumerationRecord> EnumerateEdgeTpu() const = 0;
 
-  // OpenDevice family of functions return a shared_ptr to EdgeTpuContext, with
-  // the intention that the device can be shared among multiple software
-  // components.
-  //
-  // These functions seek shared ownership of the opened devices. As they
-  // cannot open devices already opened by NewEdgeTpuContext, and vice versa.
-  // The device would be closed after the last reference leaves scope.
-
   // Opens the default Edge TPU device.
+  //
+  // All `OpenDevice` functions return a shared_ptr to EdgeTpuContext, with
+  // the intention that the device can be shared among multiple software
+  // components. The device is closed after the last reference leaves scope.
   //
   // Multiple invocations of this function could return handle to the same
   // device, but there is no guarantee.
   //
-  // Returns a shared pointer to Edge TPU device. The shared_ptr could point to
+  // You cannot open devices opened by `NewEdgeTpuContext`, and vice versa.
+  //
+  // @return A shared pointer to Edge TPU device. The shared_ptr could point to
   // nullptr in case of error.
   virtual std::shared_ptr<EdgeTpuContext> OpenDevice() = 0;
 
   // Same as above, but the returned context is associated with the specified
   // type.
+  //
+  // @param device_type The DeviceType you want to open.
   virtual std::shared_ptr<EdgeTpuContext> OpenDevice(
       DeviceType device_type) = 0;
 
   // Same as above, but the returned context is associated with the specified
   // type and device path. If path is empty, any device of the specified type
   // could be returned.
+  //
+  // @param device_type The DeviceType you want to open.
+  // @param device_path A path to the device you want.
+  //
+  // @return A shared pointer to Edge TPU device. The shared_ptr could point to
+  // nullptr in case of error.
   virtual std::shared_ptr<EdgeTpuContext> OpenDevice(
       DeviceType device_type, const std::string& device_path) = 0;
 
-  // Same as above, but the specified options would used to create a new context
+  // Same as above, but the specified options are used to create a new context
   // if no existing device is compatible with the specified type and path.
   //
-  // If a device of compatible type and path can be found, the options could be
+  // If a device of compatible type and path is not found, the options could be
   // ignored. It is the caller's responsibility to verify if the returned
-  // context is desirable, through #EdgeTpuContext::GetDeviceOptions().
+  // context is desirable, through EdgeTpuContext::GetDeviceOptions().
   //
+  // @param device_type The DeviceType you want to open.
+  // @param device_path A path to the device you want.
+  // @param options Specific criteria for the device you want.
   // Available options are:
   //  - "Performance": ["Low", "Medium", "High", "Max"] (Default is "Max")
   //  - "Usb.AlwaysDfu": ["True", "False"] (Default is "False")
   //  - "Usb.MaxBulkInQueueLength": ["0",.., "255"] (Default is "32")
+  //
+  // @return A shared pointer to Edge TPU device. The shared_ptr could point to
+  // nullptr in case of error.
   virtual std::shared_ptr<EdgeTpuContext> OpenDevice(
       DeviceType device_type, const std::string& device_path,
       const DeviceOptions& options) = 0;
@@ -233,11 +196,13 @@ class EDGETPU_EXPORT EdgeTpuManager {
   virtual std::vector<std::shared_ptr<EdgeTpuContext>> GetOpenedDevices()
       const = 0;
 
-  // Sets verbosity of operating logs related to edge TPU.
-  // Verbosity level can be set to [0-10], in which 10 is the most verbose.
+  // Sets the verbosity of operating logs related to each Edge TPU.
+  //
+  // @param verbosity The verbosity level, which may be 0 to 10.
+  //  10 is the most verbose; 0 is the default.
   virtual TfLiteStatus SetVerbosity(int verbosity) = 0;
 
-  // Returns the version of EdgeTPU runtime stack.
+  // Returns the version of the Edge TPU runtime stack.
   virtual std::string Version() const = 0;
 
  protected:
@@ -245,12 +210,74 @@ class EDGETPU_EXPORT EdgeTpuManager {
   virtual ~EdgeTpuManager() = default;
 };
 
-// External context to be assigned through
-// tflite::Interpreter::SetExternalContext.
-// One should get hold of either shared_ptr from EdgeTpuManager::OpenDevice, or
-// unique_ptr from EdgeTpuManager::NewEdgeTpuContext, to ensure ownership, and
-// avoid using this pointer directly.
+// EdgeTpuContext is an object associated with one or more tflite::Interpreter.
+// Instances of this class should be allocated with EdgeTpuManager::OpenDevice.
+//
+// More than one Interpreter instances can point to the same context. This means
+// the tasks from both would be executed under the same TPU context.
+// The lifetime of this context must be longer than all associated
+// tflite::Interpreter instances.
+//
 // Functions in this interface are thread-safe.
+//
+// Typical usage with Coral:
+//
+//   ```
+//   // Sets up the tpu_context.
+//   auto tpu_context =
+//       edgetpu::EdgeTpuManager::GetSingleton()->OpenDevice();
+//
+//   std::unique_ptr<tflite::Interpreter> interpreter;
+//   tflite::ops::builtin::BuiltinOpResolver resolver;
+//   auto model =
+//   tflite::FlatBufferModel::BuildFromFile(model_file_name.c_str());
+//
+//   // Registers Edge TPU custom op handler with Tflite resolver.
+//   resolver.AddCustom(edgetpu::kCustomOp, edgetpu::RegisterCustomOp());
+//
+//   tflite::InterpreterBuilder(*model, resolver)(&interpreter);
+//
+//   // Binds a context with a specific interpreter.
+//   interpreter->SetExternalContext(kTfLiteEdgeTpuContext,
+//     tpu_context.get());
+//
+//   // Note that all edge TPU context set ups should be done before this
+//   // function is called.
+//   interpreter->AllocateTensors();
+//      .... (Prepare input tensors)
+//   interpreter->Invoke();
+//      .... (retrieving the result from output tensors)
+//
+//   // Releases interpreter instance to free up resources associated with
+//   // this custom op.
+//   interpreter.reset();
+//
+//   // Closes the edge TPU.
+//   tpu_context.reset();
+//   ```
+//
+// Typical usage with Android NNAPI:
+//
+//   ```
+//   std::unique_ptr<tflite::Interpreter> interpreter;
+//   tflite::ops::builtin::BuiltinOpResolver resolver;
+//   auto model =
+//   tflite::FlatBufferModel::BuildFromFile(model_file_name.c_str());
+//
+//   // Registers Edge TPU custom op handler with Tflite resolver.
+//   resolver.AddCustom(edgetpu::kCustomOp, edgetpu::RegisterCustomOp());
+//
+//   tflite::InterpreterBuilder(*model, resolver)(&interpreter);
+//
+//   interpreter->AllocateTensors();
+//      .... (Prepare input tensors)
+//   interpreter->Invoke();
+//      .... (retrieving the result from output tensors)
+//
+//   // Releases interpreter instance to free up resources associated with
+//   // this custom op.
+//   interpreter.reset();
+//   ```
 class EdgeTpuContext : public TfLiteExternalContext {
  public:
   virtual ~EdgeTpuContext() = 0;
@@ -276,7 +303,7 @@ class EdgeTpuContext : public TfLiteExternalContext {
 };
 
 // Returns pointer to an instance of TfLiteRegistration to handle
-// EdgeTPU custom ops, to be used with
+// Edge TPU custom ops, to be used with
 // tflite::ops::builtin::BuiltinOpResolver::AddCustom
 EDGETPU_EXPORT TfLiteRegistration* RegisterCustomOp();
 

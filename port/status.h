@@ -17,11 +17,13 @@
 
 #include "port/defs.h"
 
+// IWYU pragma: begin_exports
 #if DARWINN_PORT_USE_GOOGLE3
 #include "util/task/status.h"
 #else  // !DARWINN_PORT_USE_GOOGLE3
 #include "port/default/status.h"
 #endif  // DARWINN_PORT_USE_GOOGLE3
+// IWYU pragma: end_exports
 
 namespace platforms {
 namespace darwinn {

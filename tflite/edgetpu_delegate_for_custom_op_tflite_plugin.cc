@@ -14,6 +14,7 @@
 
 #include "absl/strings/match.h"
 #include "absl/strings/numbers.h"
+#include "absl/types/optional.h"
 #include "tflite/edgetpu_delegate_for_custom_op.h"
 #include "tflite/public/edgetpu.h"
 #include "tensorflow/lite/builtin_op_data.h"
@@ -30,7 +31,6 @@ typedef void (*ErrorHandler)(const char*);
 constexpr char kUsb[] = "usb";
 constexpr char kPci[] = "pci";
 constexpr char kOptionDevice[] = "device";
-constexpr int kAnyDevice = -1;
 
 bool MatchDevice(const std::string& s, const std::string& type, int* index) {
   const auto prefix(type + ":");
@@ -40,16 +40,25 @@ bool MatchDevice(const std::string& s, const std::string& type, int* index) {
   return true;
 }
 
-std::shared_ptr<EdgeTpuContext> GetEdgeTpuContext(
-    DeviceType type, int index, const EdgeTpuManager::DeviceOptions& options) {
-  auto* manager = EdgeTpuManager::GetSingleton();
-  if (index < 0) {
-    return manager->OpenDevice(type);
+std::shared_ptr<edgetpu::EdgeTpuContext> GetEdgeTpuContext(
+    absl::optional<DeviceType> device_type, absl::optional<int> device_index,
+    const edgetpu::EdgeTpuManager::DeviceOptions& options) {
+  auto* manager = edgetpu::EdgeTpuManager::GetSingleton();
+  if (!device_index.has_value()) {
+    return device_type.has_value() ? manager->OpenDevice(device_type.value())
+                                   : manager->OpenDevice();
   } else {
-    int i = 0;
-    for (auto& record : manager->EnumerateEdgeTpu())
-      if (record.type == type && i++ == index)
-        return manager->OpenDevice(record.type, record.path);
+    const int index = device_index.value();
+    auto tpus = manager->EnumerateEdgeTpu();
+    if (device_type.has_value()) {
+      int i = 0;
+      for (auto& record : tpus)
+        if (record.type == device_type.value() && i++ == index)
+          return manager->OpenDevice(record.type, record.path, options);
+    } else {
+      if (index < tpus.size())
+        return manager->OpenDevice(tpus[index].type, tpus[index].path, options);
+    }
     return nullptr;
   }
 }
@@ -61,13 +70,17 @@ std::shared_ptr<EdgeTpuContext> GetEdgeTpuContext(
     return EdgeTpuManager::GetSingleton()->OpenDevice();
   } else {
     const auto& device = it->second;
-    if (device == kUsb) {
-      return GetEdgeTpuContext(DeviceType::kApexUsb, kAnyDevice, options);
+    if (device.empty()) {
+      return GetEdgeTpuContext(absl::nullopt, absl::nullopt, options);
+    } else if (device == kUsb) {
+      return GetEdgeTpuContext(DeviceType::kApexUsb, absl::nullopt, options);
     } else if (device == kPci) {
-      return GetEdgeTpuContext(DeviceType::kApexPci, kAnyDevice, options);
+      return GetEdgeTpuContext(DeviceType::kApexPci, absl::nullopt, options);
     } else {
       int index;
-      if (MatchDevice(device, kUsb, &index)) {
+      if (MatchDevice(device, "", &index)) {
+        return GetEdgeTpuContext(absl::nullopt, index, options);
+      } else if (MatchDevice(device, kUsb, &index)) {
         return GetEdgeTpuContext(DeviceType::kApexUsb, index, options);
       } else if (MatchDevice(device, kPci, &index)) {
         return GetEdgeTpuContext(DeviceType::kApexPci, index, options);
@@ -77,22 +90,25 @@ std::shared_ptr<EdgeTpuContext> GetEdgeTpuContext(
     }
   }
 }
-
 }  // namespace
 
 extern "C" {
 
 // Recognized input options:
-//   "device": ["usb", "usb:<index>", "pci", "pci:<index>"]
+//   "device", possible values:
+//     ""             -- any TPU device
+//     ":<index>"     -- TPU device of any type according to enumeration order
+//     "usb"          -- any TPU device of USB type
+//     "usb:<index>"  -- TPU device of USB type according to enumeration order
+//     "pci"          -- any TPU device of PCIe type
+//     "pci:<index>"  -- TPU device of PCIe type according to enumeration order
 //
-// "usb" or "pci" define any available USB/PCI TPU device.
-// "usb:<index>" or "pci:<index>" define specific USB/PCI TPU device
-// according to the enumeration order from
-// `edgetpu::EdgeTpuManager::EnumerateEdgeTpu` call.
+// Enumeration order is defined by `edgetpu::EdgeTpuManager::EnumerateEdgeTpu`
+// call.
 //
 // All options are forwarded to `edgetpu::EdgeTpuManager::OpenDevice`
-// call when "device" has a form of "usb:<index>" or "pci:<index>", i.e. the
-// following are supported as well:
+// call when "device" has a form of ":<index>", "usb:<index>", or "pci:<index>",
+// i.e. the following are supported as well:
 //   "Performance": ["Low", "Medium", "High", "Max"] (Default is "Max")
 //   "Usb.AlwaysDfu": ["True", "False"] (Default is "False")
 //   "Usb.MaxBulkInQueueLength": ["0",.., "255"] (Default is "32")

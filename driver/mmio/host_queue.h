@@ -92,6 +92,13 @@ class HostQueue {
   // element, invoke registered callback.
   void ProcessStatusBlock() LOCKS_EXCLUDED(queue_mutex_);
 
+  // Process status block only if the host queue is open. This is only needed to
+  // work around an interrupt race condition in the Darwinn 1.0 stack.
+  // See: https://b.corp.google.com/issues/159997870#comment44
+  // TODO: Remove this work-around once the DV team has fully
+  // transitioned to the 2.0 stack for testing.
+  void ProcessStatusBlockIfOpen() LOCKS_EXCLUDED(open_mutex_, queue_mutex_);
+
   // Return available space in the queue.
   virtual int GetAvailableSpace() const LOCKS_EXCLUDED(queue_mutex_) {
     StdMutexLock lock(&queue_mutex_);
@@ -420,6 +427,47 @@ void HostQueue<Element, StatusBlock>::ProcessStatusBlock() {
 
   // Clear interrupt pending.
   CHECK_OK(RegisterWrite(csr_offsets_.queue_int_status, 0));
+
+  // Perform callbacks.
+  for (const auto& done : dones) {
+    done(error_status);
+  }
+}
+
+template <typename Element, typename StatusBlock>
+void HostQueue<Element, StatusBlock>::ProcessStatusBlockIfOpen() {
+  StdMutexLock lock(&open_mutex_);
+  if (!open_) {
+    return;
+  }
+
+  // Note: The logic from ProcessStatusBlock must be duplicated here as this
+  // does not require the instruction queue interrupt status to be cleared,
+  // whereas ProcessStatusBlock does.
+  //
+  // Other than clearing the instruction queue status, this should be identical
+  // to ProcessStatusBlock.
+  StdMutexLock callback_lock(&callback_mutex_);
+  int completed = 0;
+
+  StatusBlock status_block = *status_block_;
+  const int completed_until = status_block.completed_head_pointer;
+  const uint32 error_status = status_block.fatal_error;
+
+  std::vector<std::function<void(uint32)>> dones;
+  {
+    StdMutexLock lock(&queue_mutex_);
+    while (completed_head_ != completed_until) {
+      ++completed;
+
+      if (callbacks_[completed_head_]) {
+        dones.push_back(std::move(callbacks_[completed_head_]));
+      }
+      ++completed_head_;
+      completed_head_ &= (size_ - 1);
+    }
+    VLOG(3) << "Completed " << completed << " elements.";
+  }
 
   // Perform callbacks.
   for (const auto& done : dones) {

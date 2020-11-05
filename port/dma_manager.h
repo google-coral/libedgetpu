@@ -12,26 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef DARWINN_DRIVER_TIME_STAMPER_DRIVER_TIME_STAMPER_H_
-#define DARWINN_DRIVER_TIME_STAMPER_DRIVER_TIME_STAMPER_H_
+#ifndef DARWINN_PORT_DMA_MANAGER_H_
+#define DARWINN_PORT_DMA_MANAGER_H_
 
-#include "driver/time_stamper/time_stamper.h"
+#include "port/defs.h"
+
+#if DARWINN_PORT_FIRMWARE
+
+#include "firmware/driver/dma/dma_manager.h"
 
 namespace platforms {
 namespace darwinn {
-namespace driver {
 
-// Microsec-resolution monotonic clock.
-class DriverTimeStamper : public TimeStamper {
- public:
-  DriverTimeStamper() = default;
-  ~DriverTimeStamper() = default;
+using DmaManager = firmware::driver::dma::DmaManager;
 
-  int64 GetTimeNanoSeconds() const override;
-};
-
-}  // namespace driver
 }  // namespace darwinn
 }  // namespace platforms
 
-#endif  // DARWINN_DRIVER_TIME_STAMPER_DRIVER_TIME_STAMPER_H_
+#else  // !DARWINN_PORT_FIRMWARE
+
+#include "port/default/dma_manager.h"
+
+#endif  // DARWINN_PORT_FIRMWARE
+
+#endif  // DARWINN_PORT_DMA_MANAGER_H_

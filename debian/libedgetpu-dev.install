@@ -1,0 +1,2 @@
+tflite/public/edgetpu.h /usr/include
+tflite/public/edgetpu_c.h /usr/include

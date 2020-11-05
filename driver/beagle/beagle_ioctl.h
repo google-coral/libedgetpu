@@ -18,10 +18,7 @@
 #ifndef __APEX_IOCTL_H__
 #define __APEX_IOCTL_H__
 
-#include <linux/ioctl.h>
-#ifndef __KERNEL__
-#include <stdint.h>
-#endif
+#include "driver/kernel/gasket_ioctl.h"
 
 /* Clock Gating ioctl. */
 struct apex_gate_clock_ioctl {

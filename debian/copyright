@@ -1,0 +1,6 @@
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Source: https://github.com/google-coral/libedgetpu
+
+Files: *
+Copyright: Copyright 2018 Google, LLC <coral-support@google.com>
+License: Apache-2.0

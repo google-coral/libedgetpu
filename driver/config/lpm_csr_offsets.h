@@ -12,30 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef DARWINN_DRIVER_TIME_STAMPER_DRIVER_TIME_STAMPER_FACTORY_H_
-#define DARWINN_DRIVER_TIME_STAMPER_DRIVER_TIME_STAMPER_FACTORY_H_
+#ifndef DARWINN_DRIVER_CONFIG_LPM_CSR_OFFSETS_H_
+#define DARWINN_DRIVER_CONFIG_LPM_CSR_OFFSETS_H_
 
-#include "driver/time_stamper/driver_time_stamper.h"
-#include "driver/time_stamper/time_stamper_factory.h"
-#include "port/ptr_util.h"
+#include "port/integral_types.h"
 
 namespace platforms {
 namespace darwinn {
 namespace driver {
+namespace config {
 
-// Factory class for creating DriverTimeStamper objects.
-class DriverTimeStamperFactory : public TimeStamperFactory {
- public:
-  DriverTimeStamperFactory() = default;
-  virtual ~DriverTimeStamperFactory() = default;
-
-  std::unique_ptr<TimeStamper> CreateTimeStamper() override {
-    return gtl::MakeUnique<DriverTimeStamper>();
-  }
+// This struct holds various CSR offsets for lpm programming. Members are
+// intentionally named to match the GCSR register names.
+struct LpmCsrOffsets {
+  uint64 psm_0_dmem_cfg;
+  uint64 psm_0_dmem_start;
+  uint64 psm_0_dmem_status;
+  uint64 psm_1_dmem_cfg;
+  uint64 psm_1_dmem_start;
+  uint64 psm_1_dmem_status;
 };
 
+}  // namespace config
 }  // namespace driver
 }  // namespace darwinn
 }  // namespace platforms
 
-#endif  // DARWINN_DRIVER_TIME_STAMPER_DRIVER_TIME_STAMPER_FACTORY_H_
+#endif  // DARWINN_DRIVER_CONFIG_LPM_CSR_OFFSETS_H_

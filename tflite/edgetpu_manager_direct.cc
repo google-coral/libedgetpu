@@ -476,9 +476,15 @@ std::shared_ptr<EdgeTpuContext> EdgeTpuManagerDirect::OpenDeviceInternal(
       }
     }
 
-    std::unique_ptr<EdgeTpuDriverWrapper> driver_wrapper =
-        MakeDriverWrapper(request_device_type, extended_device_path, options,
-                          /*exclusive_ownership=*/false);
+    EdgeTpuManager::DeviceOptions device_options(options);
+    if (request_device_type == edgetpu::DeviceType::kApexUsb &&
+        device_options.find("Usb.MaxBulkInQueueLength") ==
+            device_options.end()) {
+      device_options["Usb.MaxBulkInQueueLength"] = "8";
+    }
+    std::unique_ptr<EdgeTpuDriverWrapper> driver_wrapper = MakeDriverWrapper(
+        request_device_type, extended_device_path, device_options,
+        /*exclusive_ownership=*/false);
 
     if (!driver_wrapper) {
       // Returns a null pointer on error.

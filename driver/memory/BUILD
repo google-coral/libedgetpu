@@ -15,11 +15,13 @@
 # Description:
 #  Memory management related functionality.
 
+load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
+
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-cc_library(
+libedgetpu_cc_library(
     name = "address_utilities",
     hdrs = ["address_utilities.h"],
     deps = [
@@ -28,7 +30,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "mmu_mapper",
     srcs = ["mmu_mapper.cc"],
     hdrs = ["mmu_mapper.h"],
@@ -42,7 +44,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "address_space",
     hdrs = ["address_space.h"],
     deps = [
@@ -53,7 +55,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "mmio_address_space",
     srcs = ["mmio_address_space.cc"],
     hdrs = ["mmio_address_space.h"],
@@ -70,7 +72,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "buddy_address_space",
     srcs = ["buddy_address_space.cc"],
     hdrs = ["buddy_address_space.h"],
@@ -88,13 +90,13 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "address_space_allocator",
     hdrs = ["address_space_allocator.h"],
     deps = ["//port"],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "buddy_allocator",
     srcs = ["buddy_allocator.cc"],
     hdrs = ["buddy_allocator.h"],
@@ -108,7 +110,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "fake_mmu_mapper",
     srcs = ["fake_mmu_mapper.cc"],
     hdrs = ["fake_mmu_mapper.h"],
@@ -123,14 +125,14 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "dma_direction",
     hdrs = ["dma_direction.h"],
     deps = [
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "nop_address_space",
     srcs = ["nop_address_space.cc"],
     hdrs = ["nop_address_space.h"],
@@ -143,7 +145,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "dual_address_space",
     srcs = ["dual_address_space.cc"],
     hdrs = ["dual_address_space.h"],
@@ -157,7 +159,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "dram_allocator",
     hdrs = ["dram_allocator.h"],
     deps = [
@@ -166,7 +168,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "null_dram_allocator",
     hdrs = ["null_dram_allocator.h"],
     deps = [
@@ -176,7 +178,7 @@ cc_library(
     ],
 )
 
-cc_library(
+libedgetpu_cc_library(
     name = "fake_dram_allocator",
     srcs = ["fake_dram_allocator.cc"],
     hdrs = ["fake_dram_allocator.h"],

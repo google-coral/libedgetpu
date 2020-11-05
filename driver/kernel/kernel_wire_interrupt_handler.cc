@@ -34,9 +34,9 @@ namespace driver {
 
 KernelWireInterruptHandler::KernelWireInterruptHandler(
     Registers* registers, const config::WireCsrOffsets& wire_csr_offsets,
-    const std::string& device_path, int num_wires)
+    std::unique_ptr<KernelEventHandler> event_handler, int num_wires)
     : wire_handler_(registers, wire_csr_offsets, num_wires),
-      event_handler_(device_path, num_wires),
+      event_handler_(std::move(event_handler)),
       num_wires_(num_wires) {}
 
 util::Status KernelWireInterruptHandler::Open() {
@@ -44,12 +44,13 @@ util::Status KernelWireInterruptHandler::Open() {
   auto wire_handler_closer = MakeCleanup(
       [this]() NO_THREAD_SAFETY_ANALYSIS { CHECK_OK(wire_handler_.Close()); });
 
-  RETURN_IF_ERROR(event_handler_.Open());
-  auto event_handler_closer = MakeCleanup(
-      [this]() NO_THREAD_SAFETY_ANALYSIS { CHECK_OK(event_handler_.Close()); });
+  RETURN_IF_ERROR(event_handler_->Open());
+  auto event_handler_closer = MakeCleanup([this]() NO_THREAD_SAFETY_ANALYSIS {
+    CHECK_OK(event_handler_->Close());
+  });
 
   for (int wire = 0; wire < num_wires_; ++wire) {
-    RETURN_IF_ERROR(event_handler_.RegisterEvent(wire, [this, wire]() {
+    RETURN_IF_ERROR(event_handler_->RegisterEvent(wire, [this, wire]() {
       wire_handler_.InvokeAllPendingInterrupts(wire);
     }));
   }
@@ -63,7 +64,7 @@ util::Status KernelWireInterruptHandler::Open() {
 
 util::Status KernelWireInterruptHandler::Close(bool in_error) {
   util::Status status;
-  status.Update(event_handler_.Close());
+  status.Update(event_handler_->Close());
   status.Update(wire_handler_.Close());
   return status;
 }

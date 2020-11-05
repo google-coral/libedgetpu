@@ -14,7 +14,6 @@
 
 #include "driver/interrupt/wire_interrupt_handler.h"
 
-#include <unistd.h>
 #include <mutex>  // NOLINT
 #include <string>
 #include <thread>  // NOLINT
@@ -117,8 +116,6 @@ void WireInterruptHandler::MaskInterrupt(int interrupt_id, bool mask) {
 void WireInterruptHandler::InvokeInterruptWithMask(int interrupt_id) {
   StdMutexLock lock(&mutex_);
   if (interrupts_[interrupt_id]) {
-    // Mask and unmask interrupt due to b/111367622.
-    // This is Noronha-specific, but shouldn't hurt for other architectures.
     MaskInterrupt(interrupt_id, true);
     interrupts_[interrupt_id]();
     MaskInterrupt(interrupt_id, false);

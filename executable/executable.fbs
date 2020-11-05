@@ -414,10 +414,10 @@ table Executable {
   parameter_caching_token:uint64;
 
   // If set, parameters in this model will be loaded in the TPU DRAM for higher
-  // performance. TPU DRAM is available on some architectures (e.g. Noronha).
-  // TPU DRAM is a scarce resource, therefore only selected models can have this
-  // option enabled (e.g. RNN-T for Noronha). If this option is enabled and
-  // enough TPU DRAM is not available an error is returned at run time.
+  // performance. TPU DRAM is available on some architectures. TPU DRAM is a
+  // scarce resource, therefore only selected models can have this option
+  // enabled. If this option is enabled and enough TPU DRAM is not available an
+  // error is returned at run time.
   use_tpu_dram_for_parameters:bool = false;
 
   // Estimated runtime in cycles for this model.

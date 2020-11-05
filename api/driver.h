@@ -85,8 +85,7 @@ class Driver {
   // integer values may be different from those in NNAPI or other APIs. The
   // values here are defined in the order of priority when there are multiple
   // models requesting different preferences (e.g. sustained speed takes
-  // priority over low power). For more information, please see:
-  // http://go/noronha-execution-preference
+  // priority over low power).
   enum class ExecutionPreference {
     // Run at the absolute maximum performance.
     kSingleFastAnswer = 0,

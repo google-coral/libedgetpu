@@ -15,9 +15,10 @@
 #ifndef DARWINN_PORT_DEFAULT_BUILDDATA_H_
 #define DARWINN_PORT_DEFAULT_BUILDDATA_H_
 
-#if defined(_WIN32)
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
+
+#if defined(_WIN32)
 #define COMPILER_VERSION "MSVC " TOSTRING(_MSC_FULL_VER)
 #elif defined(__GNUC__)
 #define COMPILER_VERSION __VERSION__
@@ -27,7 +28,7 @@
 
 struct BuildData {
   static const char* BuildLabel() {
-    return "COMPILER=" COMPILER_VERSION ",DATE=" __DATE__ ",TIME=" __TIME__ ",CL_NUMBER=317268237";
+    return "COMPILER=" COMPILER_VERSION ",DATE=" __DATE__ ",TIME=" __TIME__;
   }
 };
 

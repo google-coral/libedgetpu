@@ -12,18 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "driver/time_stamper/driver_time_stamper.h"
+#ifndef DARWINN_PORT_FILEIO_H_
+#define DARWINN_PORT_FILEIO_H_
 
-#include "port/time.h"
+#if defined(_WIN32)
+#include "port/fileio_windows.h"
+#else
+#include "port/fileio_linux.h"
+#endif  // defined(_WIN32)
 
-namespace platforms {
-namespace darwinn {
-namespace driver {
-
-int64 DriverTimeStamper::GetTimeNanoSeconds() const {
-  return GetCurrentTimeNanos();
-}
-
-}  // namespace driver
-}  // namespace darwinn
-}  // namespace platforms
+#endif  // DARWINN_PORT_FILEIO_H_

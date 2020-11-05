@@ -17,12 +17,13 @@
 
 #include <functional>
 #include <memory>
-#include <mutex>   // NOLINT
+#include <mutex>  // NOLINT
 #include <string>
 #include <thread>  // NOLINT
 #include <vector>
 
 #include "driver/kernel/kernel_event.h"
+#include "port/fileio.h"
 #include "port/status.h"
 #include "port/thread_annotations.h"
 
@@ -34,7 +35,7 @@ namespace driver {
 class KernelEventHandler {
  public:
   KernelEventHandler(const std::string& device_path, int num_events);
-  ~KernelEventHandler() = default;
+  virtual ~KernelEventHandler() = default;
 
   util::Status Open() LOCKS_EXCLUDED(mutex_);
   util::Status Close() LOCKS_EXCLUDED(mutex_);
@@ -43,11 +44,29 @@ class KernelEventHandler {
   util::Status RegisterEvent(int event_id, KernelEvent::Handler handler)
       LOCKS_EXCLUDED(mutex_);
 
- private:
+ protected:
   // Maps the specified event number with the specified id.
-  util::Status SetEventFd(int event_fd, int event_id) const
-      SHARED_LOCKS_REQUIRED(mutex_);
+  virtual util::Status SetEventFd(FileDescriptor fd, FileDescriptor event_fd,
+                                  int event_id) const
+      SHARED_LOCKS_REQUIRED(mutex_) = 0;
 
+  // Performs platform specific event object handle initialization
+  virtual FileDescriptor InitializeEventFd(int event_id) const
+      SHARED_LOCKS_REQUIRED(mutex_) = 0;
+
+  // Releases platform specific resources associated with event object handle
+  virtual util::Status ReleaseEventFd(FileDescriptor fd,
+                                      FileDescriptor event_fd,
+                                      int event_id) const
+      SHARED_LOCKS_REQUIRED(mutex_) = 0;
+
+  // Creates platform specific KernelEvent backing object
+  virtual std::unique_ptr<KernelEvent> CreateKernelEvent(
+      FileDescriptor event_fd, KernelEvent::Handler handler) = 0;
+
+  const std::string& GetDevicePath() const { return device_path_; }
+
+ private:
   // Device path.
   const std::string device_path_;
 
@@ -58,10 +77,10 @@ class KernelEventHandler {
   mutable std::mutex mutex_;
 
   // File descriptor of the opened device.
-  int fd_ GUARDED_BY(mutex_){-1};
+  FileDescriptor fd_ GUARDED_BY(mutex_){INVALID_FD_VALUE};
 
   // Event FD list.
-  std::vector<int> event_fds_ GUARDED_BY(mutex_);
+  std::vector<FileDescriptor> event_fds_ GUARDED_BY(mutex_);
 
   // Registered events.
   std::vector<std::unique_ptr<KernelEvent>> events_ GUARDED_BY(mutex_);

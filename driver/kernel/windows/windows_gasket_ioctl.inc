@@ -96,6 +96,7 @@ struct gasket_address_map_ioctl {
 #ifndef __KERNEL__
 
 #include "port/logging.h"
+#include "port/stringprintf.h"
 
 namespace platforms {
 namespace darwinn {

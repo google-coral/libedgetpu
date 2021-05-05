@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <cstdlib>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <memory>
 #include <utility>
@@ -71,7 +71,7 @@ int GetEnv(const char* env_var, int default_value) {
   return default_value;
 }
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__EMSCRIPTEN__)
 constexpr int kDefaultUsbMaxNumAsyncTransfers = 1;
 #else
 constexpr int kDefaultUsbMaxNumAsyncTransfers = 3;
@@ -191,7 +191,7 @@ class BeagleUsbDriverProvider : public DriverProvider {
 
   std::vector<Device> Enumerate() override;
   bool CanCreate(const Device& device) override;
-  util::StatusOr<std::unique_ptr<api::Driver>> CreateDriver(
+  StatusOr<std::unique_ptr<api::Driver>> CreateDriver(
       const Device& device, const api::DriverOptions& options) override;
 
  private:
@@ -233,13 +233,12 @@ bool BeagleUsbDriverProvider::CanCreate(const Device& device) {
   return device.type == Device::Type::USB && device.chip == Chip::kBeagle;
 }
 
-util::StatusOr<std::unique_ptr<api::Driver>>
-BeagleUsbDriverProvider::CreateDriver(
+StatusOr<std::unique_ptr<api::Driver>> BeagleUsbDriverProvider::CreateDriver(
     const Device& device, const api::DriverOptions& driver_options) {
   TRACE_SCOPE("BeagleUsbDriverProvider::CreateDriver");
 
   if (!CanCreate(device)) {
-    return util::NotFoundError("Unsupported device.");
+    return NotFoundError("Unsupported device.");
   }
 
   auto config = gtl::MakeUnique<config::BeagleChipConfig>();

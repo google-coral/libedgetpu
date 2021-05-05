@@ -31,10 +31,9 @@ class KernelCoherentAllocatorLinux : public KernelCoherentAllocator {
 
  private:
   // Maps and unmaps kernel allocated memory block to user space.
-  util::StatusOr<char *> Map(FileDescriptor fd, size_t size_bytes,
-                             uint64 dma_address) override;
-  util::Status Unmap(FileDescriptor fd, char *mem_base,
-                     size_t size_bytes) override;
+  StatusOr<char *> Map(FileDescriptor fd, size_t size_bytes,
+                       uint64 dma_address) override;
+  Status Unmap(FileDescriptor fd, char *mem_base, size_t size_bytes) override;
 };
 
 }  // namespace driver

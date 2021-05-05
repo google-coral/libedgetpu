@@ -23,18 +23,18 @@ namespace darwinn {
 namespace driver {
 
 // Performs DFU on device with specified firmware image.
-util::Status UsbUpdateDfuDevice(UsbDfuCommands* dfu_device,
-                                UsbDeviceInterface::ConstBuffer firmware_image,
-                                bool skip_verify);
+Status UsbUpdateDfuDevice(UsbDfuCommands* dfu_device,
+                          UsbDeviceInterface::ConstBuffer firmware_image,
+                          bool skip_verify);
 
 // TODO: remove this function, as it's only used by the remote
 // interface.
 // Tries to perform DFU on all USB devices of the same vendor and
 // product ID.
-util::Status UsbUpdateAllDfuDevices(UsbManager* usb_manager, uint16_t vendor_id,
-                                    uint16_t product_id,
-                                    const std::string& firmware_filename,
-                                    bool skip_verify);
+Status UsbUpdateAllDfuDevices(UsbManager* usb_manager, uint16_t vendor_id,
+                              uint16_t product_id,
+                              const std::string& firmware_filename,
+                              bool skip_verify);
 
 }  // namespace driver
 }  // namespace darwinn

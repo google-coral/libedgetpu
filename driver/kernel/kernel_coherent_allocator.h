@@ -42,17 +42,17 @@ class KernelCoherentAllocator : public CoherentAllocator {
 
  protected:
   // Maps and unmaps kernel allocated memory block to user space.
-  virtual util::StatusOr<char *> Map(FileDescriptor fd, size_t size_bytes,
-                                     uint64 dma_address) = 0;
-  virtual util::Status Unmap(FileDescriptor fd, char *mem_base,
-                             size_t size_bytes) = 0;
+  virtual StatusOr<char *> Map(FileDescriptor fd, size_t size_bytes,
+                               uint64 dma_address) = 0;
+  virtual Status Unmap(FileDescriptor fd, char *mem_base,
+                       size_t size_bytes) = 0;
 
  private:
   // Implements Open.
-  util::StatusOr<char *> DoOpen(size_t size_bytes) override;
+  StatusOr<char *> DoOpen(size_t size_bytes) override;
 
   // Implements close.
-  util::Status DoClose(char *mem_base, size_t size_bytes) override;
+  Status DoClose(char *mem_base, size_t size_bytes) override;
 
   // File descriptor of the opened device.
   FileDescriptor fd_{INVALID_FD_VALUE};

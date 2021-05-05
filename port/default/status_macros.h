@@ -29,7 +29,6 @@
 
 namespace platforms {
 namespace darwinn {
-namespace util {
 namespace status_macros {
 
 // Stream object used to collect error messages in MAKE_ERROR macros
@@ -176,15 +175,14 @@ class StatusAdaptorForMacros {
 };
 
 }  // namespace status_macros
-}  // namespace util
 }  // namespace darwinn
 }  // namespace platforms
 
-#define RET_CHECK(condition)                                                  \
-  while (PREDICT_FALSE(!(condition)))                                         \
-  return ::platforms::darwinn::util::status_macros::MakeErrorStream(          \
-             __FILE__, __LINE__, ::platforms::darwinn::util::error::INTERNAL) \
-      .with_log_stack_trace()                                                 \
+#define RET_CHECK(condition)                                            \
+  while (PREDICT_FALSE(!(condition)))                                   \
+  return ::platforms::darwinn::status_macros::MakeErrorStream(          \
+             __FILE__, __LINE__, ::platforms::darwinn::error::INTERNAL) \
+      .with_log_stack_trace()                                           \
       .add_ret_check_failure(#condition)
 
 #define ASSIGN_OR_ASSERT_OK(lhs, rexpr) \
@@ -224,19 +222,19 @@ class StatusAdaptorForMacros {
   lhs = std::move(statusor.ValueOrDie())
 
 // For propagating errors when calling a function.
-#define RETURN_IF_ERROR(expr)                                  \
-  do {                                                         \
-    const ::platforms::darwinn::util::Status _status = (expr); \
-    if (PREDICT_FALSE(!_status.ok())) return _status;          \
+#define RETURN_IF_ERROR(expr)                            \
+  do {                                                   \
+    const ::platforms::darwinn::Status _status = (expr); \
+    if (PREDICT_FALSE(!_status.ok())) return _status;    \
   } while (0)
 
-#define RETURN_WITH_CONTEXT_IF_ERROR(expr, ...)                           \
-  do {                                                                    \
-    ::platforms::darwinn::util::Status _status = (expr);                  \
-    if (PREDICT_FALSE(!_status.ok())) {                                   \
-      ::platforms::darwinn::util::AppendToMessage(&_status, __VA_ARGS__); \
-      return _status;                                                     \
-    }                                                                     \
+#define RETURN_WITH_CONTEXT_IF_ERROR(expr, ...)                     \
+  do {                                                              \
+    ::platforms::darwinn::Status _status = (expr);                  \
+    if (PREDICT_FALSE(!_status.ok())) {                             \
+      ::platforms::darwinn::AppendToMessage(&_status, __VA_ARGS__); \
+      return _status;                                               \
+    }                                                               \
   } while (0)
 
 #endif  // DARWINN_PORT_DEFAULT_STATUS_MACROS_H_

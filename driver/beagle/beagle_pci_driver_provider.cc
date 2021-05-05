@@ -58,11 +58,10 @@ bool BeaglePciDriverProvider::CanCreate(const Device& device) {
   return device.type == Device::Type::PCI && device.chip == Chip::kBeagle;
 }
 
-util::StatusOr<std::unique_ptr<api::Driver>>
-BeaglePciDriverProvider::CreateDriver(const Device& device,
-                                      const api::DriverOptions& options) {
+StatusOr<std::unique_ptr<api::Driver>> BeaglePciDriverProvider::CreateDriver(
+    const Device& device, const api::DriverOptions& options) {
   if (!CanCreate(device)) {
-    return util::NotFoundError("Unsupported device.");
+    return NotFoundError("Unsupported device.");
   }
 
   // TODO: Following queue size could come from a config.

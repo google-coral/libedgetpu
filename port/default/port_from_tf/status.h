@@ -27,7 +27,6 @@ limitations under the License.
 
 namespace platforms {
 namespace darwinn {
-namespace util {
 
 /// Denotes success or failure of a call.
 class Status {
@@ -140,7 +139,14 @@ inline std::string* CheckOpHelper(Status v, const char* msg) {
   while (false && (Status::OK() == (val))) LOG(FATAL)
 #endif
 
+// TODO: Remove the following once DarwiNN clients removed util.
+namespace util {
+
+using Status = ::platforms::darwinn::Status;
+using ::platforms::darwinn::OkStatus;
+
 }  // namespace util
+
 }  // namespace darwinn
 }  // namespace platforms
 

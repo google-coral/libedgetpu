@@ -25,14 +25,14 @@ namespace platforms {
 namespace darwinn {
 namespace driver {
 
-util::Status RealTimeDmaScheduler::Open() { return backing_scheduler_->Open(); }
+Status RealTimeDmaScheduler::Open() { return backing_scheduler_->Open(); }
 
-util::Status RealTimeDmaScheduler::Close(api::Driver::ClosingMode mode) {
+Status RealTimeDmaScheduler::Close(api::Driver::ClosingMode mode) {
   ResetTiming();
   return backing_scheduler_->Close(mode);
 }
 
-util::Status RealTimeDmaScheduler::Submit(std::shared_ptr<TpuRequest> request) {
+Status RealTimeDmaScheduler::Submit(std::shared_ptr<TpuRequest> request) {
   StdMutexLock lock(&mutex_);
   if (!real_time_mode_) {
     return backing_scheduler_->Submit(request);
@@ -55,11 +55,11 @@ util::Status RealTimeDmaScheduler::Submit(std::shared_ptr<TpuRequest> request) {
   if (cur_timing.max_execution_time_ms == 0) {
     if (cur_timing.fps != 0) {
       // FPS > 0, and 0 MET: ill-formed Timing information.
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           "Unable to submit under real-time mode. "
           "Ill-formed timing information: FPS > 0 but MET == 0.");
     }
-    return util::DeadlineExceededError(
+    return DeadlineExceededError(
         "Normal process without MET cannot be scheduled in real-time mode.");
   }
 
@@ -99,7 +99,7 @@ util::Status RealTimeDmaScheduler::Submit(std::shared_ptr<TpuRequest> request) {
     time_booked_us_ += cur_timing.max_execution_time_us();
     return backing_scheduler_->Submit(request);
   } else {
-    return util::DeadlineExceededError(
+    return DeadlineExceededError(
         "The request cannot be scheduled within given time budget.");
   }
 }
@@ -121,10 +121,10 @@ int64 RealTimeDmaScheduler::GetLastArrivalTime(
   }
 }
 
-util::Status RealTimeDmaScheduler::RemoveExecutableTiming(
+Status RealTimeDmaScheduler::RemoveExecutableTiming(
     const ExecutableReference* executable) {
   if (executable == nullptr) {
-    return util::InvalidArgumentError("Null executable refernce.");
+    return InvalidArgumentError("Null executable reference.");
   }
 
   StdMutexLock lock(&mutex_);
@@ -132,14 +132,14 @@ util::Status RealTimeDmaScheduler::RemoveExecutableTiming(
   // binaries they might not have the estimated clock cycle information and thus
   // may or may not have been registered here.
   inference_timings_.erase(executable);
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status RealTimeDmaScheduler::SetExecutableTiming(
+Status RealTimeDmaScheduler::SetExecutableTiming(
     const ExecutableReference* executable, const api::Timing& timing) {
   VLOG(3) << "RealTimeDmaScheduler: received timing setting: " << timing.Dump();
   if (!executable) {
-    return util::InvalidArgumentError("Null executable refernce.");
+    return InvalidArgumentError("Null executable reference.");
   }
 
   api::Timing candidate_timing = timing;
@@ -166,7 +166,7 @@ util::Status RealTimeDmaScheduler::SetExecutableTiming(
     if (candidate_timing.fps < 0 ||
         candidate_timing.max_execution_time_ms < 0 ||
         candidate_timing.tolerance_ms < 0) {
-      return util::InvalidArgumentError("Bad timing value(s).");
+      return InvalidArgumentError("Bad timing value(s).");
     }
   }
 
@@ -178,11 +178,11 @@ util::Status RealTimeDmaScheduler::SetExecutableTiming(
                      timing_internal.frame_time_us());
     // If FPS > 0, MET has to be > 0.
     if (timing_internal.max_execution_time_ms == 0) {
-      return util::InvalidArgumentError(StringPrintf(
+      return InvalidArgumentError(StringPrintf(
           "Invalid max execution time: %dms.", timing.max_execution_time_ms));
     }
     if (frame_time_us < timing_internal.max_execution_time_us()) {
-      return util::InvalidArgumentError(absl::StrFormat(
+      return InvalidArgumentError(absl::StrFormat(
           "Max execution time (%lldus) exceeds frame time (%lldus).",
           timing_internal.max_execution_time_us(), frame_time_us));
     }
@@ -190,7 +190,7 @@ util::Status RealTimeDmaScheduler::SetExecutableTiming(
     // expected finish time beyond one frame).
     if (timing_internal.tolerance_us() >
         (frame_time_us - timing_internal.max_execution_time_us())) {
-      return util::InvalidArgumentError(absl::StrFormat(
+      return InvalidArgumentError(absl::StrFormat(
           "Invalid tolerance (%lldus). Needs to be less than %lldus to fit in "
           "one frame.",
           timing_internal.tolerance_us(),
@@ -201,27 +201,27 @@ util::Status RealTimeDmaScheduler::SetExecutableTiming(
   inference_timings_[executable] = timing_internal;
   VLOG(3) << "RealTimeDmaScheduler: applied timing setting: "
           << timing_internal.Dump();
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::StatusOr<api::Timing> RealTimeDmaScheduler::GetExecutableTiming(
+StatusOr<api::Timing> RealTimeDmaScheduler::GetExecutableTiming(
     const ExecutableReference* executable) const {
   StdMutexLock lock(&mutex_);
 
   if (!executable) {
-    return util::InvalidArgumentError("Null executable refernce.");
+    return InvalidArgumentError("Null executable reference.");
   }
 
   auto found = inference_timings_.find(executable);
   if (found == inference_timings_.end()) {
-    return util::NotFoundError(
+    return NotFoundError(
         "Given executable reference has no associated timing information.");
   } else {
     return found->second;
   }
 }
 
-util::Status RealTimeDmaScheduler::NotifyRequestCompletion() {
+Status RealTimeDmaScheduler::NotifyRequestCompletion() {
   // TODO: update MET dynamically.
   return backing_scheduler_->NotifyRequestCompletion();
 }

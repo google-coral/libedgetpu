@@ -44,10 +44,10 @@ class WireInterruptHandler : public InterruptHandler {
   WireInterruptHandler(const WireInterruptHandler&) = delete;
   WireInterruptHandler& operator=(const WireInterruptHandler&) = delete;
 
-  util::Status Open() LOCKS_EXCLUDED(mutex_) override;
-  util::Status Close(bool in_error) LOCKS_EXCLUDED(mutex_) override;
+  Status Open() LOCKS_EXCLUDED(mutex_) override;
+  Status Close(bool in_error) LOCKS_EXCLUDED(mutex_) override;
 
-  util::Status Register(Interrupt interrupt, Handler handler)
+  Status Register(Interrupt interrupt, Handler handler)
       LOCKS_EXCLUDED(mutex_) override;
 
   // Checks the pending bit array and invoke interrupts.
@@ -69,10 +69,10 @@ class WireInterruptHandler : public InterruptHandler {
   uint64 ReadMaskArray();
 
   // Performs CSR write access.
-  util::Status WriteMaskArray(uint64 value);
+  Status WriteMaskArray(uint64 value);
 
   // Validates that interrupt handler is |open|.
-  util::Status ValidateOpenState(bool open) const SHARED_LOCKS_REQUIRED(mutex_);
+  Status ValidateOpenState(bool open) const SHARED_LOCKS_REQUIRED(mutex_);
 
   // Handles single wire interrupt on platform devices.
   void HandlePlatformSingleWireInterrupt();
@@ -115,8 +115,8 @@ class PollingWireInterruptHandler : public WireInterruptHandler {
   PollingWireInterruptHandler& operator=(const PollingWireInterruptHandler&) =
       delete;
 
-  util::Status Open() LOCKS_EXCLUDED(mutex_) override;
-  util::Status Close(bool in_error) LOCKS_EXCLUDED(mutex_) override;
+  Status Open() LOCKS_EXCLUDED(mutex_) override;
+  Status Close(bool in_error) LOCKS_EXCLUDED(mutex_) override;
 
  private:
   // Returns true, if polling is enabled.

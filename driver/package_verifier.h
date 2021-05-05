@@ -22,6 +22,7 @@
 #include "port/errors.h"
 #include "port/integral_types.h"
 #include "port/openssl.h"
+#include "port/status.h"
 #include "port/statusor.h"
 #include "port/stringprintf.h"
 
@@ -36,7 +37,7 @@ class PackageVerifier {
   virtual ~PackageVerifier() = default;
 
   // Verifies the executable package provided its buffer.
-  virtual util::Status VerifySignature(const void* package_buffer) const = 0;
+  virtual Status VerifySignature(const void* package_buffer) const = 0;
 };
 
 // A noop implementation of ExecutableVerifier that errors out on all calls.
@@ -44,17 +45,17 @@ class NoopPackageVerifier : public PackageVerifier {
  public:
   NoopPackageVerifier() = default;
   ~NoopPackageVerifier() override = default;
-  util::Status VerifySignature(const void* package_buffer) const override;
+  Status VerifySignature(const void* package_buffer) const override;
 };
 
 // Makes an ExecutableVerifier provided a public key. If the key is empty a noop
 // verifier will be returned that errors on Verify.
-util::StatusOr<std::unique_ptr<PackageVerifier>> MakeExecutableVerifier(
+StatusOr<std::unique_ptr<PackageVerifier>> MakeExecutableVerifier(
     const std::string& public_key);
 
 // Makes an ExecutableVerifier provided a file path to the public key. If the
 // path is empty a noop verifier will be returned that errors on Verify.
-util::StatusOr<std::unique_ptr<PackageVerifier>> MakeExecutableVerifierFromFile(
+StatusOr<std::unique_ptr<PackageVerifier>> MakeExecutableVerifierFromFile(
     const std::string& public_key_path);
 
 }  // namespace driver

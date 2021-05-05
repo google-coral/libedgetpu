@@ -50,9 +50,9 @@ constexpr int kMaxNumRetriesForCommands = 5;
 // Automatic retries for checking if device is available after Close.
 constexpr int kMaxNumRetriesForClose = 3;
 
-util::Status ConvertLibUsbError(int error, const char* context) {
+Status ConvertLibUsbError(int error, const char* context) {
   if (error >= 0) {
-    return util::Status();  // OK.
+    return Status();  // OK.
   }
 
   std::string logline = StringPrintf("USB error %d [%s]", error, context);
@@ -61,34 +61,34 @@ util::Status ConvertLibUsbError(int error, const char* context) {
 
   switch (error) {
     case LIBUSB_ERROR_INVALID_PARAM:
-      return util::InvalidArgumentError(logline);
+      return InvalidArgumentError(logline);
     case LIBUSB_ERROR_ACCESS:
-      return util::PermissionDeniedError(logline);
+      return PermissionDeniedError(logline);
     case LIBUSB_ERROR_NO_MEM:
-      return util::ResourceExhaustedError(logline);
+      return ResourceExhaustedError(logline);
     case LIBUSB_ERROR_NO_DEVICE:
-      return util::UnavailableError(logline);
+      return UnavailableError(logline);
     case LIBUSB_ERROR_NOT_FOUND:
-      return util::NotFoundError(logline);
+      return NotFoundError(logline);
     case LIBUSB_ERROR_BUSY:
-      return util::DeadlineExceededError(logline);
+      return DeadlineExceededError(logline);
     case LIBUSB_ERROR_TIMEOUT:
-      return util::DeadlineExceededError(logline);
+      return DeadlineExceededError(logline);
     case LIBUSB_ERROR_OVERFLOW:
-      return util::DataLossError(logline);
+      return DataLossError(logline);
     case LIBUSB_ERROR_INTERRUPTED:
-      return util::CancelledError(logline);
+      return CancelledError(logline);
     case LIBUSB_ERROR_NOT_SUPPORTED:
-      return util::UnimplementedError(logline);
+      return UnimplementedError(logline);
     default:
-      return util::UnknownError(logline);
+      return UnknownError(logline);
   }
 }
 
-util::Status ConvertLibUsbTransferStatus(libusb_transfer_status status,
-                                         const char* context) {
+Status ConvertLibUsbTransferStatus(libusb_transfer_status status,
+                                   const char* context) {
   if (status == LIBUSB_TRANSFER_COMPLETED) {
-    return util::Status();  // OK.
+    return Status();  // OK.
   }
 
   std::string logline =
@@ -98,25 +98,24 @@ util::Status ConvertLibUsbTransferStatus(libusb_transfer_status status,
 
   switch (status) {
     case LIBUSB_TRANSFER_TIMED_OUT:
-      return util::DeadlineExceededError(logline);
+      return DeadlineExceededError(logline);
     case LIBUSB_TRANSFER_CANCELLED:
-      return util::CancelledError(logline);
+      return CancelledError(logline);
     case LIBUSB_TRANSFER_STALL:
-      return util::InvalidArgumentError(logline);
+      return InvalidArgumentError(logline);
     case LIBUSB_TRANSFER_NO_DEVICE:
-      return util::NotFoundError(logline);
+      return NotFoundError(logline);
     case LIBUSB_TRANSFER_OVERFLOW:
-      return util::DataLossError(logline);
+      return DataLossError(logline);
     default:
-      return util::UnknownError(logline);
+      return UnknownError(logline);
   }
 }
 
 // Automatically retries a libusb command on error.
 template <typename LibUsbCommand>
-util::Status AutoRetryLibUsbCommand(const LibUsbCommand& func,
-                                    const char* context,
-                                    int* command_result = nullptr) {
+Status AutoRetryLibUsbCommand(const LibUsbCommand& func, const char* context,
+                              int* command_result = nullptr) {
   int result = 0;
   for (int attempt_count = 0; attempt_count < kMaxNumRetriesForCommands;
        ++attempt_count) {
@@ -138,9 +137,8 @@ util::Status AutoRetryLibUsbCommand(const LibUsbCommand& func,
 // Find if a device exists at a given bus/port combination, with retries.
 // Used to detect if a device has finished being released by the OS during
 // Close.
-util::Status FindDeviceByBusAndPortWithRetries(libusb_context* context,
-                                               int bus_number,
-                                               int port_number) {
+Status FindDeviceByBusAndPortWithRetries(libusb_context* context,
+                                         int bus_number, int port_number) {
   for (int attempt_count = 0; attempt_count < kMaxNumRetriesForClose;
        ++attempt_count) {
     libusb_device** device_list;
@@ -160,13 +158,13 @@ util::Status FindDeviceByBusAndPortWithRetries(libusb_context* context,
       }
     }
     if (found) {
-      return util::Status();
+      return Status();
     } else {
       Sleep(1);
     }
   }
 
-  return util::NotFoundError(StringPrintf(
+  return NotFoundError(StringPrintf(
       "Could not find device on bus %d and port %d.", bus_number, port_number));
 }
 
@@ -177,6 +175,10 @@ LocalUsbDevice::LocalUsbDevice(libusb_device_handle* handle, bool use_zero_copy,
     : use_zero_copy_(use_zero_copy),
       libusb_handle_(handle),
       libusb_context_(context) {
+#if !LIBUSB_HAS_MEM_ALLOC
+  (void)use_zero_copy_;
+#endif  // LIBUSB_HAS_MEM_ALLOC
+
   CHECK(handle != nullptr);
   CHECK(context != nullptr);
   VLOG(10) << __func__;
@@ -195,11 +197,11 @@ LocalUsbDevice::~LocalUsbDevice() {
   (void)Close(CloseAction::kNoReset);
 }
 
-util::Status LocalUsbDevice::CheckForNullHandle(const char* context) const {
+Status LocalUsbDevice::CheckForNullHandle(const char* context) const {
   if (libusb_handle_ == nullptr) {
-    return util::FailedPreconditionError(context);
+    return FailedPreconditionError(context);
   }
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
 void LocalUsbDevice::TryCancelAllTransfers() {
@@ -233,7 +235,7 @@ void LocalUsbDevice::DoCancelAllTransfers() {
 }
 
 // TODO use status update to record the first failure.
-util::Status LocalUsbDevice::Close(CloseAction action) {
+Status LocalUsbDevice::Close(CloseAction action) {
   TRACE_SCOPE("LocalUsbDevice::Close");
 
   StdMutexLock lock(&mutex_);
@@ -319,10 +321,10 @@ util::Status LocalUsbDevice::Close(CloseAction action) {
 
   VLOG(9) << StringPrintf("%s: final clean up completed", __func__);
 
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
-util::Status LocalUsbDevice::SetConfiguration(int configuration) {
+Status LocalUsbDevice::SetConfiguration(int configuration) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(CheckForNullHandle(__func__));
@@ -345,7 +347,7 @@ util::Status LocalUsbDevice::SetConfiguration(int configuration) {
       __func__);
 }
 
-util::Status LocalUsbDevice::ClaimInterface(int interface_number) {
+Status LocalUsbDevice::ClaimInterface(int interface_number) {
   TRACE_SCOPE("LocalUsbDevice::ClaimInterface");
   VLOG(10) << __func__;
 
@@ -362,10 +364,10 @@ util::Status LocalUsbDevice::ClaimInterface(int interface_number) {
       __func__));
 
   claimed_interfaces_.insert(interface_number);
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
-util::Status LocalUsbDevice::ReleaseInterface(int interface_number) {
+Status LocalUsbDevice::ReleaseInterface(int interface_number) {
   TRACE_SCOPE("LocalUsbDevice::ReleaseInterface");
   VLOG(10) << __func__;
 
@@ -384,16 +386,15 @@ util::Status LocalUsbDevice::ReleaseInterface(int interface_number) {
         __func__));
 
     claimed_interfaces_.erase(iterator);
-    return util::Status();  // OK.
+    return Status();  // OK.
   }
-  return util::NotFoundError(__func__);
+  return NotFoundError(__func__);
 }
 
-util::Status LocalUsbDevice::GetDescriptor(DescriptorType desc_type,
-                                           uint8_t desc_index,
-                                           MutableBuffer data_in,
-                                           size_t* num_bytes_transferred,
-                                           const char* context) {
+Status LocalUsbDevice::GetDescriptor(DescriptorType desc_type,
+                                     uint8_t desc_index, MutableBuffer data_in,
+                                     size_t* num_bytes_transferred,
+                                     const char* context) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(CheckForNullHandle(__func__));
@@ -413,7 +414,7 @@ util::Status LocalUsbDevice::GetDescriptor(DescriptorType desc_type,
       context, &result));
 
   *num_bytes_transferred = static_cast<size_t>(result);
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
 UsbDeviceInterface::DeviceSpeed LocalUsbDevice::GetDeviceSpeed() const {
@@ -439,16 +440,16 @@ UsbDeviceInterface::DeviceSpeed LocalUsbDevice::GetDeviceSpeed() const {
   }
 }
 
-util::Status LocalUsbDevice::SendControlCommand(const SetupPacket& command,
-                                                TimeoutMillis timeout_msec,
-                                                const char* context) {
+Status LocalUsbDevice::SendControlCommand(const SetupPacket& command,
+                                          TimeoutMillis timeout_msec,
+                                          const char* context) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(CheckForNullHandle(__func__));
 
   // Length must be 0.
   if (command.length != 0) {
-    return util::InvalidArgumentError("Length must be 0");
+    return InvalidArgumentError("Length must be 0");
   }
 
   // This alias is created to circumvent thread safety analysis.
@@ -467,9 +468,10 @@ util::Status LocalUsbDevice::SendControlCommand(const SetupPacket& command,
       __func__);
 }
 
-util::Status LocalUsbDevice::SendControlCommandWithDataOut(
-    const SetupPacket& command, ConstBuffer data_out,
-    TimeoutMillis timeout_msec, const char* context) {
+Status LocalUsbDevice::SendControlCommandWithDataOut(const SetupPacket& command,
+                                                     ConstBuffer data_out,
+                                                     TimeoutMillis timeout_msec,
+                                                     const char* context) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(CheckForNullHandle(__func__));
@@ -500,12 +502,12 @@ util::Status LocalUsbDevice::SendControlCommandWithDataOut(
   CHECK_LE(result, command.length);
 
   if (result != command.length) {
-    return util::DataLossError(__func__);
+    return DataLossError(__func__);
   }
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
-util::Status LocalUsbDevice::SendControlCommandWithDataIn(
+Status LocalUsbDevice::SendControlCommandWithDataIn(
     const SetupPacket& command, MutableBuffer data_in,
     size_t* num_bytes_transferred, TimeoutMillis timeout_msec,
     const char* context) {
@@ -539,13 +541,12 @@ util::Status LocalUsbDevice::SendControlCommandWithDataIn(
   CHECK_LE(result, command.length);
 
   *num_bytes_transferred = static_cast<size_t>(result);
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
-util::Status LocalUsbDevice::BulkOutTransfer(uint8_t endpoint,
-                                             ConstBuffer data_out,
-                                             TimeoutMillis timeout_msec,
-                                             const char* context) {
+Status LocalUsbDevice::BulkOutTransfer(uint8_t endpoint, ConstBuffer data_out,
+                                       TimeoutMillis timeout_msec,
+                                       const char* context) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(CheckForNullHandle(__func__));
@@ -568,17 +569,16 @@ util::Status LocalUsbDevice::BulkOutTransfer(uint8_t endpoint,
     CHECK_LE(static_cast<size_t>(amount_transferred), data_out.length());
 
     if (static_cast<size_t>(amount_transferred) != data_out.length()) {
-      return util::DataLossError(__func__);
+      return DataLossError(__func__);
     }
   }
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
-util::Status LocalUsbDevice::BulkInTransfer(uint8_t endpoint,
-                                            MutableBuffer data_in,
-                                            size_t* num_bytes_transferred,
-                                            TimeoutMillis timeout_msec,
-                                            const char* context) {
+Status LocalUsbDevice::BulkInTransfer(uint8_t endpoint, MutableBuffer data_in,
+                                      size_t* num_bytes_transferred,
+                                      TimeoutMillis timeout_msec,
+                                      const char* context) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(CheckForNullHandle(__func__));
@@ -603,14 +603,14 @@ util::Status LocalUsbDevice::BulkInTransfer(uint8_t endpoint,
     CHECK_LE(*num_bytes_transferred, data_in.length());
   }
 
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
-util::Status LocalUsbDevice::InterruptInTransfer(uint8_t endpoint,
-                                                 MutableBuffer data_in,
-                                                 size_t* num_bytes_transferred,
-                                                 TimeoutMillis timeout_msec,
-                                                 const char* context) {
+Status LocalUsbDevice::InterruptInTransfer(uint8_t endpoint,
+                                           MutableBuffer data_in,
+                                           size_t* num_bytes_transferred,
+                                           TimeoutMillis timeout_msec,
+                                           const char* context) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(CheckForNullHandle(__func__));
@@ -635,7 +635,7 @@ util::Status LocalUsbDevice::InterruptInTransfer(uint8_t endpoint,
     CHECK_LE(*num_bytes_transferred, data_in.length());
   }
 
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
 void LocalUsbDevice::UnregisterCompletedTransfer(libusb_transfer* transfer) {
@@ -700,11 +700,11 @@ void LocalUsbDevice::DestroyFailedAsyncTransfer(
   libusb_free_transfer(transfer_control);
 }
 
-util::Status LocalUsbDevice::AsyncBulkOutTransfer(uint8_t endpoint,
-                                                  ConstBuffer data_out,
-                                                  TimeoutMillis timeout_msec,
-                                                  DataOutDone callback,
-                                                  const char* context) {
+Status LocalUsbDevice::AsyncBulkOutTransfer(uint8_t endpoint,
+                                            ConstBuffer data_out,
+                                            TimeoutMillis timeout_msec,
+                                            DataOutDone callback,
+                                            const char* context) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(CheckForNullHandle(__func__));
@@ -729,7 +729,7 @@ util::Status LocalUsbDevice::AsyncBulkOutTransfer(uint8_t endpoint,
   transfer_control->flags |=
       (LIBUSB_TRANSFER_SHORT_NOT_OK | LIBUSB_TRANSFER_FREE_TRANSFER);
 
-  util::Status status =
+  Status status =
       ConvertLibUsbError(libusb_submit_transfer(transfer_control), __func__);
 
   if (!status.ok()) {
@@ -740,11 +740,11 @@ util::Status LocalUsbDevice::AsyncBulkOutTransfer(uint8_t endpoint,
   return status;
 }
 
-util::Status LocalUsbDevice::AsyncBulkInTransfer(uint8_t endpoint,
-                                                 MutableBuffer data_in,
-                                                 TimeoutMillis timeout_msec,
-                                                 DataInDone callback,
-                                                 const char* context) {
+Status LocalUsbDevice::AsyncBulkInTransfer(uint8_t endpoint,
+                                           MutableBuffer data_in,
+                                           TimeoutMillis timeout_msec,
+                                           DataInDone callback,
+                                           const char* context) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
 
@@ -767,7 +767,7 @@ util::Status LocalUsbDevice::AsyncBulkInTransfer(uint8_t endpoint,
 
   transfer_control->flags |= LIBUSB_TRANSFER_FREE_TRANSFER;
 
-  util::Status status =
+  Status status =
       ConvertLibUsbError(libusb_submit_transfer(transfer_control), __func__);
 
   if (!status.ok()) {
@@ -777,9 +777,11 @@ util::Status LocalUsbDevice::AsyncBulkInTransfer(uint8_t endpoint,
   return status;
 }
 
-util::Status LocalUsbDevice::AsyncInterruptInTransfer(
-    uint8_t endpoint, MutableBuffer data_in, TimeoutMillis timeout_msec,
-    DataInDone callback, const char* context) {
+Status LocalUsbDevice::AsyncInterruptInTransfer(uint8_t endpoint,
+                                                MutableBuffer data_in,
+                                                TimeoutMillis timeout_msec,
+                                                DataInDone callback,
+                                                const char* context) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
 
@@ -802,7 +804,7 @@ util::Status LocalUsbDevice::AsyncInterruptInTransfer(
 
   transfer_control->flags |= LIBUSB_TRANSFER_FREE_TRANSFER;
 
-  util::Status status =
+  Status status =
       ConvertLibUsbError(libusb_submit_transfer(transfer_control), __func__);
 
   if (!status.ok()) {
@@ -812,8 +814,8 @@ util::Status LocalUsbDevice::AsyncInterruptInTransfer(
   return status;
 }
 
-util::StatusOr<LocalUsbDevice::MutableBuffer>
-LocalUsbDevice::AllocateTransferBuffer(size_t buffer_size) {
+StatusOr<LocalUsbDevice::MutableBuffer> LocalUsbDevice::AllocateTransferBuffer(
+    size_t buffer_size) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
 
@@ -821,7 +823,7 @@ LocalUsbDevice::AllocateTransferBuffer(size_t buffer_size) {
 
   uint8_t* ptr = DoAllocateTransferBuffer(buffer_size);
   if (ptr == nullptr) {
-    return util::ResourceExhaustedError(__func__);
+    return ResourceExhaustedError(__func__);
   }
 
   auto result = transfer_buffers_.insert(
@@ -841,7 +843,7 @@ uint8_t* LocalUsbDevice::DoAllocateTransferBuffer(size_t buffer_size) {
   return new uint8_t[buffer_size];
 }
 
-util::Status LocalUsbDevice::ReleaseTransferBuffer(MutableBuffer buffer) {
+Status LocalUsbDevice::ReleaseTransferBuffer(MutableBuffer buffer) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
 
@@ -859,7 +861,7 @@ util::Status LocalUsbDevice::ReleaseTransferBuffer(MutableBuffer buffer) {
   return DoReleaseTransferBuffer(buffer);
 }
 
-util::Status LocalUsbDevice::DoReleaseTransferBuffer(MutableBuffer buffer) {
+Status LocalUsbDevice::DoReleaseTransferBuffer(MutableBuffer buffer) {
 #if LIBUSB_HAS_MEM_ALLOC
   if (use_zero_copy_) {
     // Release memory block through libusb and return from here.
@@ -872,32 +874,31 @@ util::Status LocalUsbDevice::DoReleaseTransferBuffer(MutableBuffer buffer) {
   // Use plain old delete [] to release the memory block.
   delete[] buffer.data();
 
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
 LocalUsbDeviceFactory::LocalUsbDeviceFactory(bool use_zero_copy)
     : use_zero_copy_(use_zero_copy) {}
 
-util::StatusOr<LocalUsbDeviceFactory::ParsedPath>
+StatusOr<LocalUsbDeviceFactory::ParsedPath>
 LocalUsbDeviceFactory::ParsePathString(const std::string& path) {
   ParsedPath result;
   unsigned int bus_number;
   const size_t prefix_length = strlen(kUsbPathPrefix);
   if (path.length() <= prefix_length) {
-    return util::InvalidArgumentError(
-        "Path must be longer than the proper prefix");
+    return InvalidArgumentError("Path must be longer than the proper prefix");
   }
 
   std::stringstream path_stingstream(path.substr(prefix_length));
 
   path_stingstream >> bus_number;
   if (path_stingstream.fail()) {
-    return util::InvalidArgumentError("Path must begin with bus number");
+    return InvalidArgumentError("Path must begin with bus number");
   }
   if (path_stingstream.peek() == '-') {
     path_stingstream.ignore();
   } else {
-    return util::InvalidArgumentError("Missing separator after bus number");
+    return InvalidArgumentError("Missing separator after bus number");
   }
   // TODO: check for valid bus number range.
   result.bus_number = static_cast<uint8>(bus_number);
@@ -905,7 +906,7 @@ LocalUsbDeviceFactory::ParsePathString(const std::string& path) {
   unsigned int port;
   while (path_stingstream >> port) {
     if (path_stingstream.fail()) {
-      return util::InvalidArgumentError("Path must contain port numbers");
+      return InvalidArgumentError("Path must contain port numbers");
     }
 
     // TODO: check for valid port number range.
@@ -937,9 +938,8 @@ std::string LocalUsbDeviceFactory::ComposePathString(
   return result.str();
 }
 
-util::StatusOr<std::vector<std::string>>
-LocalUsbDeviceFactory::EnumerateDevices(uint16_t vendor_id,
-                                        uint16_t product_id) {
+StatusOr<std::vector<std::string>> LocalUsbDeviceFactory::EnumerateDevices(
+    uint16_t vendor_id, uint16_t product_id) {
   TRACE_SCOPE("LocalUsbDeviceFactory::EnumerateDevices");
   VLOG(6) << StringPrintf("%s: vendor:0x%x, product:0x%x", __func__, vendor_id,
                           product_id);
@@ -947,10 +947,10 @@ LocalUsbDeviceFactory::EnumerateDevices(uint16_t vendor_id,
   libusb_context* context = nullptr;
   const int libusb_init_error = libusb_init(&context);
   if (libusb_init_error != 0) {
-    return util::FailedPreconditionError("libusb initialization failed");
+    return FailedPreconditionError("libusb initialization failed");
   }
 
-  util::Status libusb_option_status =
+  Status libusb_option_status =
       ConvertLibUsbError(SetLibUsbOptions(context), "SetLibUsbOptions");
   RETURN_IF_ERROR(libusb_option_status);
 
@@ -1007,8 +1007,8 @@ LocalUsbDeviceFactory::EnumerateDevices(uint16_t vendor_id,
   return device_paths;
 }
 
-util::StatusOr<std::unique_ptr<UsbDeviceInterface>>
-LocalUsbDeviceFactory::OpenDevice(const std::string& path, TimeoutMillis) {
+StatusOr<std::unique_ptr<UsbDeviceInterface>> LocalUsbDeviceFactory::OpenDevice(
+    const std::string& path, TimeoutMillis) {
   TRACE_SCOPE("LocalUsbDeviceFactory::OpenDevice");
   VLOG(6) << StringPrintf("%s: [%s]", __func__, path.c_str());
 
@@ -1017,10 +1017,10 @@ LocalUsbDeviceFactory::OpenDevice(const std::string& path, TimeoutMillis) {
   libusb_context* context = nullptr;
   const int libusb_init_error = libusb_init(&context);
   if (libusb_init_error != 0) {
-    return util::FailedPreconditionError("libusb initialization failed");
+    return FailedPreconditionError("libusb initialization failed");
   }
 
-  util::Status libusb_option_status =
+  Status libusb_option_status =
       ConvertLibUsbError(SetLibUsbOptions(context), "SetLibUsbOptions");
   if (!libusb_option_status.ok()) {
     return libusb_option_status;
@@ -1075,7 +1075,7 @@ LocalUsbDeviceFactory::OpenDevice(const std::string& path, TimeoutMillis) {
     RETURN_IF_ERROR(ConvertLibUsbError(
         libusb_open(found_device, &libusb_handle), __func__));
   } else {
-    return util::NotFoundError(__func__);
+    return NotFoundError(__func__);
   }
 
   VLOG(6) << StringPrintf("%s: device opened %p", __func__, libusb_handle);

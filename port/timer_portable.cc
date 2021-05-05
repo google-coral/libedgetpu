@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "port/timer.h"
-
-#include <sys/timerfd.h>
-#include <unistd.h>
-
 #include "port/errors.h"
 #include "port/stringprintf.h"
+#include "port/timer.h"
 
 namespace platforms {
 namespace darwinn {
 namespace api {
+
+#if defined(__linux__)
 
 Timer::Timer() {
   fd_ = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC);
@@ -32,7 +30,7 @@ Timer::Timer() {
 
 Timer::~Timer() { close(fd_); }
 
-util::Status Timer::Set(int64 nanos) {
+Status Timer::Set(int64 nanos) {
   itimerspec spec = {
       .it_interval =
           {
@@ -48,26 +46,53 @@ util::Status Timer::Set(int64 nanos) {
 
   int return_code = timerfd_settime(fd_, 0, &spec, nullptr);
   if (return_code != 0) {
-    return util::InternalError(
+    return InternalError(
         StringPrintf("Failed to set timer: %s", strerror(errno)));
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::StatusOr<uint64> Timer::Wait() {
+StatusOr<uint64> Timer::Wait() {
   uint64 expirations;
   size_t bytes_read = read(fd_, &expirations, sizeof(uint64));
   if (errno == EINTR) {
     return 0;
   }
   if (bytes_read != sizeof(uint64)) {
-    return util::InternalError(StringPrintf(
-        "Timer read failed (%zu bytes read): %s", bytes_read, strerror(errno)));
+    return InternalError(StringPrintf("Timer read failed (%zu bytes read): %s",
+                                      bytes_read, strerror(errno)));
   }
 
   return expirations;
 }
+
+#else
+
+Timer::Timer() = default;
+
+Timer::~Timer() = default;
+
+Status Timer::Set(int64 nanos) {
+  std::lock_guard<std::mutex> guard(mutex_);
+
+  deadline_ = nanos == 0 ? Clock::time_point{Clock::duration::max()}
+                         : Clock::now() + std::chrono::nanoseconds(nanos);
+  deadline_set_.notify_all();
+  return OkStatus();
+}
+
+StatusOr<uint64> Timer::Wait() {
+  while (true) {
+    std::unique_lock<std::mutex> lock(mutex_);
+    auto now = Clock::now();
+    if (now >= deadline_ || deadline_set_.wait_for(lock, deadline_ - now) ==
+                                std::cv_status::timeout)
+      return 1;
+  }
+}
+
+#endif
 
 }  // namespace api
 }  // namespace darwinn

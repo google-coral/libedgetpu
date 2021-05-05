@@ -14,9 +14,11 @@
 
 #include "api/layer_information.h"
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
+#include "absl/types/optional.h"
 #include "api/buffer.h"
 #include "api/tensor_util.h"
 #include "executable/executable_generated.h"
@@ -34,26 +36,26 @@ namespace {
 
 // Performs sanity check for the output shape information. Returns error if
 // slice layout information is invalid.
-util::Status SanityCheckShapeInformation(const OutputShapeInfo& shape_info,
-                                         int data_type_size) {
+Status SanityCheckShapeInformation(const OutputShapeInfo& shape_info,
+                                   int data_type_size) {
   for (int i = 0; i < shape_info.slice_layout()->size(); ++i) {
     // Each slice shape is stored in its own slice layout. Make sure the layout
     // is valid.
     const auto& slice_layout = *shape_info.slice_layout()->Get(i);
     if (!tensor_util::IsValidLayout(slice_layout)) {
-      return util::FailedPreconditionError(
+      return FailedPreconditionError(
           StringPrintf("Invalid shape for slice %d: %s", i,
                        tensor_util::DumpLayout(slice_layout).c_str()));
     }
     const int slice_offset = shape_info.slice_offset()->Get(i);
     if (slice_offset % data_type_size != 0) {
-      return util::FailedPreconditionError(StringPrintf(
+      return FailedPreconditionError(StringPrintf(
           "Slice offset [%d] is not aliged to data type size [%d].",
           slice_offset, data_type_size));
     }
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 // Copies elements in source shape to dest address. Destination layout is in
@@ -122,10 +124,10 @@ bool LayerInformation::SignedDataType() const {
   }
 }
 
-util::Status LayerInformation::TransformSignedDataType(Buffer buffer) const {
+Status LayerInformation::TransformSignedDataType(Buffer buffer) const {
   const auto data_type_size = DataTypeSize();
   if (buffer.size_bytes() < ActualSizeBytes()) {
-    return util::InvalidArgumentError(StringPrintf(
+    return InvalidArgumentError(StringPrintf(
         "Provided buffer size (%zu) is less than actual size_bytes (%d).",
         buffer.size_bytes(), ActualSizeBytes()));
   }
@@ -144,7 +146,7 @@ util::Status LayerInformation::TransformSignedDataType(Buffer buffer) const {
     }
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 InputLayerInformation::InputLayerInformation(const Layer* layer)
@@ -201,8 +203,8 @@ bool OutputLayerInformation::NeedsRelayout() const {
 }
 
 // TODO Add unit tests for this method.
-util::Status OutputLayerInformation::Relayout(unsigned char* dest,
-                                              const unsigned char* src) const {
+Status OutputLayerInformation::Relayout(unsigned char* dest,
+                                        const unsigned char* src) const {
   const auto data_type_size = DataTypeSize();
   const int z_bytes = z_dim() * data_type_size;
   const int executions = execution_count_per_inference();
@@ -215,7 +217,7 @@ util::Status OutputLayerInformation::Relayout(unsigned char* dest,
     // memcopy when relayout is not needed.
     if (!NeedsRelayout()) {
       memcpy(dest, src, batch_dim() * y_dim() * x_dim() * z_bytes);
-      return util::OkStatus();
+      return OkStatus();
     }
 
     if (output_layer_->shape_info()) {
@@ -230,7 +232,7 @@ util::Status OutputLayerInformation::Relayout(unsigned char* dest,
     if (dest != src) {
       memcpy(dest, src, ActualSizeBytes());
     }
-    return util::OkStatus();
+    return OkStatus();
   }
 
   if (y_dim() == 1 && x_dim() == 1) {
@@ -370,10 +372,10 @@ util::Status OutputLayerInformation::Relayout(unsigned char* dest,
 #undef RELAYOUT_WITH_Z_BYTES_SPECIALIZATION
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status OutputLayerInformation::RelayoutWithShapeInformation(
+Status OutputLayerInformation::RelayoutWithShapeInformation(
     unsigned char* dest, const unsigned char* src) const {
   CHECK_EQ(execution_count_per_inference(), 1)
       << "Multiple inference execution not supported in the new relayout "
@@ -404,28 +406,94 @@ util::Status OutputLayerInformation::RelayoutWithShapeInformation(
               dest_address, data_type_size, tensor_util::kBatch);
   }
 
-  return util::OkStatus();
+  return OkStatus();
+}
+
+TensorShapeT OutputLayerInformation::GetMergedOutputShape() const {
+  const auto* shape_info = output_layer_->shape_info();
+  const auto& slice_layouts = *shape_info->slice_layout();
+
+  std::vector<const TensorShape*> shapes;
+  for (int i = 0; i < slice_layouts.size(); ++i) {
+    const TensorLayout& slice_layout = *slice_layouts.Get(i);
+    shapes.push_back(slice_layout.shape());
+  }
+  return tensor_util::GetMinimumBoundingShape(shapes);
 }
 
 int OutputLayerInformation::GetBufferIndex(
     const std::vector<int>& element_position) const {
   const auto* shape_info = output_layer_->shape_info();
   if (!shape_info) {
-    CHECK_EQ(element_position.size(), 4);
+    CHECK_EQ(element_position.size(), 5);
     CHECK_EQ(element_position[tensor_util::kBatch], 0);
     return GetBufferIndex(/*y=*/element_position[tensor_util::kY],
                           /*x=*/element_position[tensor_util::kX],
                           /*z=*/element_position[tensor_util::kZ]);
   }
 
+  const auto& device_shape = *layer()->shape();
+
+  // The function is used in 1.0 pipeline to get index of an element in device
+  // shape, so the given position should have the same # of dimensions as device
+  // shape.
+  const int device_shape_dim_size = device_shape.dimension()->size();
+  CHECK_EQ(device_shape_dim_size, element_position.size());
+
   const int data_type_size = DataTypeSize();
   const auto& slice_layouts = *shape_info->slice_layout();
+
+  const auto merged_shape = GetMergedOutputShape();
+
+  // Compute if each dimension of device_shape is valid or not. For example, a
+  // 4D shape of 4x1x1x10 might be optimized to a 2D shape of 4x10. So that the
+  // two dimensions in the middle (YX) are marked as invalid and Batch and Z
+  // dimensions are marked as valid.
+  std::vector<absl::optional<int>> valid_positions(device_shape_dim_size);
+  int marked_dimension_idx = device_shape_dim_size;
+  auto dim_it = merged_shape.dimension.rbegin();
+
+  for (int dim_idx = marked_dimension_idx - 1; dim_idx >= 0; --dim_idx) {
+    if (dim_it == merged_shape.dimension.rend()) {
+      continue;
+    }
+    const auto& d = device_shape.dimension()->Get(dim_idx);
+    if (dim_idx == 0) {
+      CHECK_EQ(dim_it->start(), d->start());
+      CHECK_EQ(dim_it->end(), d->end());
+      ++dim_it;
+      valid_positions[dim_idx] = element_position[dim_idx];
+      continue;
+    }
+    if (dim_it->end() == d->end() && dim_it->start() == d->start()) {
+      valid_positions[dim_idx] = element_position[dim_idx];
+      ++dim_it;
+    } else {
+      CHECK_EQ(d->end(), d->start());
+    }
+  }
+
   for (int i = 0; i < slice_layouts.size(); ++i) {
     const TensorLayout& slice_layout = *slice_layouts.Get(i);
     const TensorShape& slice_shape = *slice_layout.shape();
-    if (tensor_util::IsElementInShape(slice_shape, element_position)) {
+    const auto legalized_position = tensor_util::LegalizePositionDimension(
+        valid_positions, slice_shape.dimension()->size());
+
+    if (VLOG_IS_ON(10)) {
+      std::string position_string;
+      for (int index : element_position) {
+        position_string += StringPrintf("[%d]", index);
+      }
+      position_string += "->";
+      for (int index : legalized_position) {
+        position_string += StringPrintf("[%d]", index);
+      }
+      VLOG(10) << "Position legalized: " << position_string;
+    }
+
+    if (tensor_util::IsElementInShape(slice_shape, legalized_position)) {
       const int index = tensor_util::GetMemoryIndexFromPosition(
-          slice_layout, element_position);
+          slice_layout, legalized_position);
       const int slice_base_offset_in_bytes = shape_info->slice_offset()->Get(i);
       CHECK_EQ(slice_base_offset_in_bytes % data_type_size, 0);
       const int slice_base_offset_in_elements =

@@ -36,9 +36,9 @@ class KernelInterruptHandler : public InterruptHandler {
       std::unique_ptr<KernelEventHandler> event_handler);
   ~KernelInterruptHandler() override = default;
 
-  util::Status Open() override;
-  util::Status Close(bool in_error) override;
-  util::Status Register(Interrupt interrupt, Handler handler) override;
+  Status Open() override;
+  Status Close(bool in_error) override;
+  Status Register(Interrupt interrupt, Handler handler) override;
 
  private:
   // Backing event handler.

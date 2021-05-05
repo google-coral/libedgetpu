@@ -47,14 +47,12 @@ class KernelRegisters : public Registers {
   ~KernelRegisters() override;
 
   // Overrides from registers.h
-  util::Status Open() LOCKS_EXCLUDED(mutex_) override;
-  util::Status Close() LOCKS_EXCLUDED(mutex_) override;
-  util::Status Write(uint64 offset, uint64 value)
-      LOCKS_EXCLUDED(mutex_) override;
-  util::StatusOr<uint64> Read(uint64 offset) LOCKS_EXCLUDED(mutex_) override;
-  util::Status Write32(uint64 offset, uint32 value)
-      LOCKS_EXCLUDED(mutex_) override;
-  util::StatusOr<uint32> Read32(uint64 offset) LOCKS_EXCLUDED(mutex_) override;
+  Status Open() LOCKS_EXCLUDED(mutex_) override;
+  Status Close() LOCKS_EXCLUDED(mutex_) override;
+  Status Write(uint64 offset, uint64 value) LOCKS_EXCLUDED(mutex_) override;
+  StatusOr<uint64> Read(uint64 offset) LOCKS_EXCLUDED(mutex_) override;
+  Status Write32(uint64 offset, uint32 value) LOCKS_EXCLUDED(mutex_) override;
+  StatusOr<uint32> Read32(uint64 offset) LOCKS_EXCLUDED(mutex_) override;
 
  protected:
   struct MappedRegisterRegion {
@@ -64,8 +62,7 @@ class KernelRegisters : public Registers {
   };
 
   // Acquires the lock and maps CSR offset.
-  util::StatusOr<uint8*> LockAndGetMappedOffset(uint64 offset,
-                                                int alignment) const
+  StatusOr<uint8*> LockAndGetMappedOffset(uint64 offset, int alignment) const
       LOCKS_EXCLUDED(mutex_);
 
   // Returns the reference to the mapped regions.
@@ -76,18 +73,18 @@ class KernelRegisters : public Registers {
 
   // Maps and returns user mode space VA for device BARs range described by
   // region.offset and region.size.
-  virtual util::StatusOr<uint64*> MapRegion(FileDescriptor fd,
-                                            const MappedRegisterRegion& region,
-                                            bool read_only) = 0;
+  virtual StatusOr<uint64*> MapRegion(FileDescriptor fd,
+                                      const MappedRegisterRegion& region,
+                                      bool read_only) = 0;
 
   // Unmaps device BARs range described by region.offset and region.size
   // which was previously mapped to region.registers user mode space VA.
-  virtual util::Status UnmapRegion(FileDescriptor fd,
-                                   const MappedRegisterRegion& region) = 0;
+  virtual Status UnmapRegion(FileDescriptor fd,
+                             const MappedRegisterRegion& region) = 0;
 
  private:
   // Maps CSR offset to virtual address without acquiring the lock.
-  util::StatusOr<uint8*> GetMappedOffset(uint64 offset, int alignment) const
+  StatusOr<uint8*> GetMappedOffset(uint64 offset, int alignment) const
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Device path.

@@ -19,7 +19,6 @@
 
 namespace platforms {
 namespace darwinn {
-namespace util {
 namespace status_macros {
 
 // TODO: Implement
@@ -139,6 +138,5 @@ void MakeErrorStream::Impl::CheckNotDone() const {
 }
 
 }  // namespace status_macros
-}  // namespace util
 }  // namespace darwinn
 }  // namespace platforms

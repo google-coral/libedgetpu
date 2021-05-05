@@ -19,6 +19,7 @@
 
 // IWYU pragma: begin_exports
 #if DARWINN_PORT_USE_GOOGLE3
+#include "absl/status/status.h"
 #include "util/task/status.h"
 #else  // !DARWINN_PORT_USE_GOOGLE3
 #include "port/default/status.h"
@@ -28,13 +29,30 @@
 namespace platforms {
 namespace darwinn {
 
+// Defines platforms::darwinn::Status, which points to absl status in google3,
+// and the DarwiNN own definitions in portable environments.
 #if DARWINN_PORT_USE_GOOGLE3
+using ::absl::OkStatus;
 using StatusCode = ::absl::StatusCode;
+using Status = ::absl::Status;
 #else   // !DARWINN_PORT_USE_GOOGLE3
-using StatusCode = util::error::Code;
+using StatusCode = error::Code;
+using Status = ::platforms::darwinn::Status;
 #endif  // DARWINN_PORT_USE_GOOGLE3
 
 }  // namespace darwinn
 }  // namespace platforms
+
+// TODO: Remove the following once DarwiNN clients removed util.
+namespace util {
+
+#if DARWINN_PORT_USE_GOOGLE3
+using ::absl::OkStatus;
+using Status = ::absl::Status;
+#else   // !DARWINN_PORT_USE_GOOGLE3
+using Status = ::platforms::darwinn::Status;
+#endif  // DARWINN_PORT_USE_GOOGLE3
+
+}  // namespace util
 
 #endif  // DARWINN_PORT_STATUS_H_

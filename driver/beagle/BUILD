@@ -15,8 +15,6 @@
 # Description:
 #  Beagle Specific functionality.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_binary", "libedgetpu_cc_library")
-
 package(default_visibility = ["//visibility:public"])
 
 # Google Owned Code
@@ -51,7 +49,7 @@ BEAGLE_USB_DRIVER_DEPS = [
 
 # Provides Beagle USB Driver for internal (=no_external_release) usage.
 # libUSB is statically linked in this version.
-libedgetpu_cc_library(
+cc_library(
     name = "beagle_usb_driver_provider_no_external_release",
     srcs = ["beagle_usb_driver_provider.cc"],
     deps = BEAGLE_USB_DRIVER_DEPS + [
@@ -62,7 +60,7 @@ libedgetpu_cc_library(
 
 # Provides Beagle USB Driver.
 # libUSB is dynamically linked in this version.
-libedgetpu_cc_library(
+cc_library(
     name = "beagle_usb_driver_provider",
     srcs = ["beagle_usb_driver_provider.cc"],
     deps = BEAGLE_USB_DRIVER_DEPS + [
@@ -103,7 +101,7 @@ BEAGLE_PCI_DRIVER_PROVIDER_DEPS = [
     "//port:fileio",
 ]
 
-libedgetpu_cc_library(
+cc_library(
     name = "beagle_pci_driver_provider",
     srcs = ["beagle_pci_driver_provider.cc"],
     hdrs = ["beagle_pci_driver_provider.h"],
@@ -111,7 +109,7 @@ libedgetpu_cc_library(
 )
 
 # Provides Beagle PCI Driver for Linux.
-libedgetpu_cc_library(
+cc_library(
     name = "beagle_pci_driver_provider_linux",
     srcs = ["beagle_pci_driver_provider_linux.cc"],
     deps = BEAGLE_PCI_DRIVER_PROVIDER_DEPS + [
@@ -124,7 +122,7 @@ libedgetpu_cc_library(
 )
 
 # Provides Beagle PCI Driver for Windows.
-libedgetpu_cc_library(
+cc_library(
     name = "beagle_pci_driver_provider_windows",
     srcs = ["beagle_pci_driver_provider_windows.cc"],
     tags = [
@@ -143,7 +141,7 @@ libedgetpu_cc_library(
 
 # Provides Beagle USB/PCI Driver for Linux. Used by an Android side script to
 # populate dependencies for a unified Beagle provider in Beagle NNAPI HAL.
-libedgetpu_cc_library(
+cc_library(
     name = "beagle_all_driver_provider_linux",
     srcs = [
         "beagle_pci_driver_provider.cc",
@@ -172,7 +170,7 @@ libedgetpu_cc_library(
 )
 
 # Provides Beagle USB/PCI Driver for Windows.
-libedgetpu_cc_library(
+cc_library(
     name = "beagle_all_driver_provider_windows",
     srcs = [
         "beagle_pci_driver_provider.cc",
@@ -205,7 +203,7 @@ libedgetpu_cc_library(
     alwayslink = 1,
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "beagle_top_level_interrupt_manager",
     srcs = ["beagle_top_level_interrupt_manager.cc"],
     hdrs = ["beagle_top_level_interrupt_manager.h"],
@@ -219,7 +217,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "beagle_top_level_handler",
     srcs = ["beagle_top_level_handler.cc"],
     hdrs = ["beagle_top_level_handler.h"],
@@ -233,13 +231,13 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "beagle_ioctl",
     hdrs = ["beagle_ioctl.h"],
     deps = ["//driver/kernel:gasket_ioctl"],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "beagle_kernel_top_level_handler",
     srcs = ["beagle_kernel_top_level_handler.cc"],
     hdrs = ["beagle_kernel_top_level_handler.h"],
@@ -255,7 +253,7 @@ libedgetpu_cc_library(
 )
 
 # Standalone shared library that can be linked into a binary built elsewhere.
-libedgetpu_cc_binary(
+cc_binary(
     name = "libbeagle-usb.so",
 
     # Setting DT_SONAME for the result .so.
@@ -273,7 +271,7 @@ libedgetpu_cc_binary(
 )
 
 # Standalone shared library that can be linked into a binary built elsewhere.
-libedgetpu_cc_binary(
+cc_binary(
     name = "libbeagle-pci.so",
 
     # Setting DT_SONAME for the result .so.

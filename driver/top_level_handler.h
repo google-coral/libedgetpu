@@ -27,39 +27,47 @@ class TopLevelHandler {
   virtual ~TopLevelHandler() = default;
 
   // Opens reset handler.
-  virtual util::Status Open() {
-    return util::Status();  // OK
+  virtual Status Open() {
+    return Status();  // OK
   }
 
   // Closes reset handler.
-  virtual util::Status Close() {
-    return util::Status();  // OK
+  virtual Status Close() {
+    return Status();  // OK
   }
 
   // Quits from reset state.
-  virtual util::Status QuitReset() {
-    return util::Status();  // OK
+  virtual Status QuitReset() {
+    return Status();  // OK
   }
 
   // Goes into reset state.
-  virtual util::Status EnableReset() {
-    return util::Status();  // OK
+  virtual Status EnableReset() {
+    return Status();  // OK
   }
 
   // Enables/disables software clock gating - implementation must be idempotent.
-  virtual util::Status EnableSoftwareClockGate() {
-    return util::Status();  // OK
+  virtual Status EnableSoftwareClockGate() {
+    return Status();  // OK
   }
-  virtual util::Status DisableSoftwareClockGate() {
-    return util::Status();  // OK
+  virtual Status DisableSoftwareClockGate() {
+    return Status();  // OK
   }
 
   // Enables/disables hardware clock gating - implementation must be idempotent.
-  virtual util::Status EnableHardwareClockGate() {
-    return util::Status();  // OK
+  virtual Status EnableHardwareClockGate() {
+    return Status();  // OK
   }
-  virtual util::Status DisableHardwareClockGate() {
-    return util::Status();  // OK
+  virtual Status DisableHardwareClockGate() {
+    return Status();  // OK
+  }
+
+  virtual Status LpmCoreToActive() {
+    return Status();  // OK
+  }
+
+  virtual Status LpmCoreToRailGate() {
+    return Status();  // OK
   }
 };
 

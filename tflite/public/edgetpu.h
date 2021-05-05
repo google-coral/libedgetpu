@@ -124,8 +124,14 @@ class EDGETPU_EXPORT EdgeTpuManager {
   //
   // Available options are:
   //  - "Performance": ["Low", "Medium", "High", "Max"] (Default is "Max")
+  //    Adjust internal clock rate to achieve different performance / power
+  //    balance.
   //  - "Usb.AlwaysDfu": ["True", "False"] (Default is "False")
+  //    Always perform device firmware update after reset. DFU is usually only
+  //    necessary after power cycle.
   //  - "Usb.MaxBulkInQueueLength": ["0",.., "255"] (Default is "32")
+  //    Larger queue length may improve USB performance on the direction from
+  //    device to host.
   virtual std::unique_ptr<EdgeTpuContext> NewEdgeTpuContext(
       DeviceType device_type, const std::string& device_path,
       const DeviceOptions& options) = 0;
@@ -181,8 +187,14 @@ class EDGETPU_EXPORT EdgeTpuManager {
   // @param options Specific criteria for the device you want.
   // Available options are:
   //  - "Performance": ["Low", "Medium", "High", "Max"] (Default is "Max")
+  //    Adjust internal clock rate to achieve different performance / power
+  //    balance.
   //  - "Usb.AlwaysDfu": ["True", "False"] (Default is "False")
+  //    Always perform device firmware update after reset. DFU is usually only
+  //    necessary after power cycle.
   //  - "Usb.MaxBulkInQueueLength": ["0",.., "255"] (Default is "32")
+  //    Larger queue length may improve USB performance on the direction from
+  //    device to host.
   //
   // @return A shared pointer to Edge TPU device. The shared_ptr could point to
   // nullptr in case of error.
@@ -213,7 +225,7 @@ class EDGETPU_EXPORT EdgeTpuManager {
 // EdgeTpuContext is an object associated with one or more tflite::Interpreter.
 // Instances of this class should be allocated with EdgeTpuManager::OpenDevice.
 //
-// More than one Interpreter instances can point to the same context. This means
+// Two (or more) Interpreter instances can point to the same context. This means
 // the tasks from both would be executed under the same TPU context.
 // The lifetime of this context must be longer than all associated
 // tflite::Interpreter instances.

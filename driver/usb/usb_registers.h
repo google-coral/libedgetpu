@@ -31,19 +31,19 @@ class UsbRegisters : public Registers {
   UsbRegisters() = default;
   // This version without argument should never be used. Use the version with
   // pointer to USB deviec instead.
-  util::Status Open() override;
+  Status Open() override;
   // Enable the USB register object the actually communicate with the underlying
   // device.
-  util::Status Open(UsbMlCommands* usb_device);
-  util::Status Close() override;
+  Status Open(UsbMlCommands* usb_device);
+  Status Close() override;
 
   // Accesses 64-bit registers.
-  util::Status Write(uint64 offset, uint64 value) override;
-  util::StatusOr<uint64> Read(uint64 offset) override;
+  Status Write(uint64 offset, uint64 value) override;
+  StatusOr<uint64> Read(uint64 offset) override;
 
   // Accesses 32-bit registers.
-  util::Status Write32(uint64 offset, uint32 value) override;
-  util::StatusOr<uint32> Read32(uint64 offset) override;
+  Status Write32(uint64 offset, uint32 value) override;
+  StatusOr<uint32> Read32(uint64 offset) override;
 
  private:
   // Underlying device.

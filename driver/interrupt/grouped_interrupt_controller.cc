@@ -33,26 +33,25 @@ GroupedInterruptController::GroupedInterruptController(
         return std::move(*interrupt_controllers);
       }()) {}
 
-util::Status GroupedInterruptController::EnableInterrupts() {
+Status GroupedInterruptController::EnableInterrupts() {
   for (auto& interrupt_controller : interrupt_controllers_) {
     RETURN_IF_ERROR(interrupt_controller->EnableInterrupts());
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status GroupedInterruptController::DisableInterrupts() {
+Status GroupedInterruptController::DisableInterrupts() {
   for (auto& interrupt_controller : interrupt_controllers_) {
     RETURN_IF_ERROR(interrupt_controller->DisableInterrupts());
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status GroupedInterruptController::ClearInterruptStatus(int id) {
+Status GroupedInterruptController::ClearInterruptStatus(int id) {
   if (id < interrupt_controllers_.size()) {
     return interrupt_controllers_[id]->ClearInterruptStatus();
   }
-  return util::FailedPreconditionError(
-      StringPrintf("Unknown interrupt id: %d", id));
+  return FailedPreconditionError(StringPrintf("Unknown interrupt id: %d", id));
 }
 
 }  // namespace driver

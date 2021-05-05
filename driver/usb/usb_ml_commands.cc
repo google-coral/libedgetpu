@@ -49,8 +49,7 @@ UsbMlCommands::UsbMlCommands(std::unique_ptr<UsbDeviceInterface> device,
 
 UsbMlCommands::~UsbMlCommands() { VLOG(10) << __func__; }
 
-util::Status UsbMlCommands::DfuDetach(int interface_number,
-                                      uint16_t timeout_msec) {
+Status UsbMlCommands::DfuDetach(int interface_number, uint16_t timeout_msec) {
   VLOG(10) << StringPrintf("%s interface %d, timeout %u msec", __func__,
                            interface_number, timeout_msec);
 
@@ -76,7 +75,7 @@ util::Status UsbMlCommands::DfuDetach(int interface_number,
   return Close(CloseAction::kGracefulPortReset);
 }
 
-util::StatusOr<UsbMlCommands::Register32> UsbMlCommands::ReadRegister32(
+StatusOr<UsbMlCommands::Register32> UsbMlCommands::ReadRegister32(
     uint32_t offset) {
   VLOG(10) << StringPrintf("%s offset 0x%x", __func__, offset);
 
@@ -105,7 +104,7 @@ util::StatusOr<UsbMlCommands::Register32> UsbMlCommands::ReadRegister32(
       &num_bytes_transferred, __func__));
 
   if (num_bytes_transferred != sizeof(result)) {
-    return util::UnknownError("Invalid register data");
+    return UnknownError("Invalid register data");
   }
 
   VLOG(7) << StringPrintf("%s [0x%X] == 0x%" PRIX32, __func__, offset, result);
@@ -113,7 +112,7 @@ util::StatusOr<UsbMlCommands::Register32> UsbMlCommands::ReadRegister32(
   return result;
 }
 
-util::StatusOr<UsbMlCommands::Register64> UsbMlCommands::ReadRegister64(
+StatusOr<UsbMlCommands::Register64> UsbMlCommands::ReadRegister64(
     uint32_t offset) {
   VLOG(10) << StringPrintf("%s offset 0x%x", __func__, offset);
 
@@ -142,7 +141,7 @@ util::StatusOr<UsbMlCommands::Register64> UsbMlCommands::ReadRegister64(
       &num_bytes_transferred, __func__));
 
   if (num_bytes_transferred != sizeof(result)) {
-    return util::UnknownError("Invalid register data");
+    return UnknownError("Invalid register data");
   }
 
   VLOG(7) << StringPrintf("%s [0x%X] == 0x%" PRIX64, __func__, offset, result);
@@ -150,7 +149,7 @@ util::StatusOr<UsbMlCommands::Register64> UsbMlCommands::ReadRegister64(
   return result;
 }
 
-util::Status UsbMlCommands::WriteRegister32(uint32_t offset, Register32 value) {
+Status UsbMlCommands::WriteRegister32(uint32_t offset, Register32 value) {
   VLOG(7) << StringPrintf("%s [0x%X] := 0x%" PRIX32, __func__, offset, value);
 
   SetupPacket command{
@@ -175,7 +174,7 @@ util::Status UsbMlCommands::WriteRegister32(uint32_t offset, Register32 value) {
       __func__);
 }
 
-util::Status UsbMlCommands::WriteRegister64(uint32_t offset, Register64 value) {
+Status UsbMlCommands::WriteRegister64(uint32_t offset, Register64 value) {
   VLOG(7) << StringPrintf("%s [0x%X] := 0x%" PRIX64, __func__, offset, value);
 
   SetupPacket command{
@@ -222,20 +221,19 @@ std::vector<uint8_t> UsbMlCommands::PrepareHeader(DescriptorTag tag,
   return header_packet;
 }
 
-util::Status UsbMlCommands::WriteHeader(DescriptorTag tag, uint32_t length) {
+Status UsbMlCommands::WriteHeader(DescriptorTag tag, uint32_t length) {
   std::vector<uint8_t> header_packet = PrepareHeader(tag, length);
   return BulkOutTransfer(kSingleBulkOutEndpoint, ConstBuffer(header_packet),
                          __func__);
 }
 
-util::Status UsbMlCommands::AsyncReadEvent(const EventInDone& callback) {
+Status UsbMlCommands::AsyncReadEvent(const EventInDone& callback) {
   auto event_data =
       std::make_shared<std::vector<uint8_t>>(kEventRawDataSizeInBytes);
   CHECK(event_data);
   return AsyncBulkInTransfer(
       kEventInEndpoint, MutableBuffer(event_data->data(), event_data->size()),
-      [event_data, callback](util::Status status,
-                             size_t num_bytes_transferred) {
+      [event_data, callback](Status status, size_t num_bytes_transferred) {
         EventDescriptor event_descriptor;
         if (!status.ok()) {
           callback(status, event_descriptor);
@@ -244,7 +242,7 @@ util::Status UsbMlCommands::AsyncReadEvent(const EventInDone& callback) {
         if (num_bytes_transferred != kEventRawDataSizeInBytes) {
           VLOG(1) << StringPrintf("%s data lost. calling with empty event",
                                   __func__);
-          callback(util::DataLossError(__func__), event_descriptor);
+          callback(DataLossError(__func__), event_descriptor);
           return;
         }
         memcpy(&event_descriptor.offset, event_data->data(),
@@ -270,23 +268,21 @@ util::Status UsbMlCommands::AsyncReadEvent(const EventInDone& callback) {
       __func__);
 }
 
-util::Status UsbMlCommands::AsyncReadInterrupt(
-    const InterruptInDone& callback) {
+Status UsbMlCommands::AsyncReadInterrupt(const InterruptInDone& callback) {
   auto interrupt_data =
       std::make_shared<std::vector<uint8_t>>(kInterruptRawDataSizeInBytes);
   CHECK(interrupt_data);
   return AsyncInterruptInTransfer(
       kInterruptInEndpoint,
       MutableBuffer(interrupt_data->data(), interrupt_data->size()),
-      [interrupt_data, callback](util::Status status,
-                                 size_t num_bytes_transferred) {
+      [interrupt_data, callback](Status status, size_t num_bytes_transferred) {
         InterruptInfo interrupt_info = {0};
         if (!status.ok()) {
           callback(status, interrupt_info);
           return;
         }
         if (num_bytes_transferred != kInterruptRawDataSizeInBytes) {
-          callback(util::DataLossError(__func__), interrupt_info);
+          callback(DataLossError(__func__), interrupt_info);
           return;
         }
         memcpy(&interrupt_info.raw_data, interrupt_data->data(),

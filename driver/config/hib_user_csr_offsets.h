@@ -25,6 +25,16 @@ namespace config {
 // This struct holds various CSR offsets for user space in HIB. Members are
 // intentionally named to match the GCSR register names.
 struct HibUserCsrOffsets {
+  // Security programming
+  uint64 axi_auser_scid;
+  uint64 axi_auser_stream_id_output_actv;
+  uint64 axi_auser_stream_id_instruction;
+  uint64 axi_auser_stream_id_input_actv;
+  uint64 axi_auser_stream_id_param;
+  uint64 axi_aruser_overrides;
+  uint64 axi_awuser_overrides;
+  uint64 axi_overrides;
+
   // Interrupt control and status for top level.
   uint64 top_level_int_control;
   uint64 top_level_int_status;

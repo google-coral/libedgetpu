@@ -16,6 +16,7 @@
 
 #include <algorithm>
 
+#include "absl/strings/match.h"
 #include "api/layer_information.h"
 #include "driver/package_registry.h"
 #include "port/errors.h"
@@ -26,13 +27,13 @@
 #include "tflite/public/edgetpu.h"
 #include "tensorflow/lite/context.h"
 
-#define RETURN_IF_NOT_EQ(a, b)                                             \
-  do {                                                                     \
-    if ((a) != (b)) {                                                      \
-      return util::InternalError(StringPrintf("%s:%d %s != %s (%d != %d)", \
-                                              __FILE__, __LINE__, #a, #b,  \
-                                              (int)(a), (int)(b)));        \
-    }                                                                      \
+#define RETURN_IF_NOT_EQ(a, b)                                                 \
+  do {                                                                         \
+    if ((a) != (b)) {                                                          \
+      return InternalError(StringPrintf("%s:%d %s != %s (%d != %d)", __FILE__, \
+                                        __LINE__, #a, #b, (int)(a),            \
+                                        (int)(b)));                            \
+    }                                                                          \
   } while (0)
 
 namespace platforms {
@@ -54,7 +55,7 @@ bool IsUint16ClassifierLayer(const api::OutputLayerInformation* output_layer) {
 
 // Returns the number of bytes occupied by a value of the given data type.
 // Note that only a subset of data types are currently supported.
-util::StatusOr<int> SizeOfDataType(TfLiteType data_type) {
+StatusOr<int> SizeOfDataType(TfLiteType data_type) {
   switch (data_type) {
     case kTfLiteUInt8:
     case kTfLiteInt8:
@@ -73,7 +74,7 @@ util::StatusOr<int> SizeOfDataType(TfLiteType data_type) {
       return sizeof(float);
 
     default:
-      return util::InternalError(StringPrintf(
+      return InternalError(StringPrintf(
           "Unsupported data type in custom op handler: %d", data_type));
   }
 }
@@ -83,7 +84,7 @@ util::StatusOr<int> SizeOfDataType(TfLiteType data_type) {
 // ReFormatOutputs is capable of converting from the DarwiNN type to the
 // corresponding TFLite type.
 // Note that only a subset of data types are currently supported.
-util::Status ValidateDataType(
+Status ValidateDataType(
     TfLiteType tf_lite_type, darwinn::DataType darwinn_type,
     const api::OutputLayerInformation* optional_output_layer) {
   switch (darwinn_type) {
@@ -97,7 +98,7 @@ util::Status ValidateDataType(
     case DataType_FIXED_POINT16:
       if (optional_output_layer != nullptr && tf_lite_type == kTfLiteUInt8 &&
           IsUint16ClassifierLayer(optional_output_layer)) {
-        return util::OkStatus();
+        return OkStatus();
       }
       RETURN_IF_NOT_EQ(tf_lite_type, kTfLiteInt16);
       break;
@@ -113,7 +114,7 @@ util::Status ValidateDataType(
     case DataType_SINGLE:
       if (optional_output_layer != nullptr && tf_lite_type == kTfLiteUInt8 &&
           IsFloat32ClassifierLayer(optional_output_layer)) {
-        return util::OkStatus();
+        return OkStatus();
       }
       RETURN_IF_NOT_EQ(tf_lite_type, kTfLiteFloat32);
       break;
@@ -123,17 +124,17 @@ util::Status ValidateDataType(
       break;
 
     default:
-      return util::InternalError(
+      return InternalError(
           StringPrintf("Unsupported layer data type in custom op handler: %d",
                        darwinn_type));
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 // Validates input and output count, type and sizes against DarwiNN executable.
 // Also resizes output tensors to the correct batch size.
-util::Status ValidateInputsAndOutputs(
+Status ValidateInputsAndOutputs(
     TfLiteContext* context, TfLiteNode* node,
     const driver::ExecutableLayersInfo* executable_layers_info) {
   int batches = 0;
@@ -180,9 +181,16 @@ util::Status ValidateInputsAndOutputs(
   }
 
   // Validate outputs.
-  RETURN_IF_NOT_EQ(executable_layers_info->NumOutputLayers(),
-                   node->outputs->size);
   for (int i = 0; i < executable_layers_info->NumOutputLayers(); ++i) {
+    const std::string kVariableSuffix = "_variable_output";
+    if (absl::EndsWith(executable_layers_info->OutputLayer(i)->name(),
+                       kVariableSuffix)) {
+      continue;
+    }
+    if (i >= node->outputs->size) {
+      return InvalidArgumentError(
+          "Execuable has more outputs than TfLite node.");
+    }
     TfLiteTensor* output = GetOutput(context, node, i);
     ASSIGN_OR_RETURN(const int size_of_data_type, SizeOfDataType(output->type));
     const int single_output_size =
@@ -214,7 +222,7 @@ util::Status ValidateInputsAndOutputs(
   }
 
   user_data->SetBatches(batches);
-  return util::OkStatus();
+  return OkStatus();
 }
 
 }  // namespace
@@ -249,8 +257,7 @@ TfLiteIntArray* CustomOpUserData::GetInputs(TfLiteNode* node) const {
   }
 }
 
-const TfLiteTensor* GetInput(TfLiteContext* context, TfLiteNode* node,
-                             int index) {
+TfLiteTensor* GetInput(TfLiteContext* context, TfLiteNode* node, int index) {
   CustomOpUserData* user_data =
       reinterpret_cast<CustomOpUserData*>(node->user_data);
 
@@ -270,7 +277,7 @@ TfLiteStatus CustomOpPrepare(TfLiteContext* context, TfLiteNode* node) {
   const auto* executable_layers_info = user_data->GetExecutableLayersInfo();
   CHECK_NE(executable_layers_info, nullptr);
 
-  util::Status status =
+  Status status =
       ValidateInputsAndOutputs(context, node, executable_layers_info);
   if (!status.ok()) {
     context->ReportError(context, status.ToString().c_str());
@@ -284,10 +291,10 @@ void CustomOpFree(TfLiteContext* context, void* buffer) {
   delete reinterpret_cast<CustomOpUserData*>(buffer);
 }
 
-util::Status ReFormatOutputs(TfLiteTensor* output, int output_tensor_offset,
-                             int output_tensor_size,
-                             const api::OutputLayerInformation* output_layer,
-                             const unsigned char* output_data) {
+Status ReFormatOutputs(TfLiteTensor* output, int output_tensor_offset,
+                       int output_tensor_size,
+                       const api::OutputLayerInformation* output_layer,
+                       const unsigned char* output_data) {
   // Although we have 8-bit classifier now, the following is kept for backwards
   // compatibility with executables which were generated the old way.
   if (output->type == kTfLiteUInt8 && IsFloat32ClassifierLayer(output_layer)) {
@@ -310,7 +317,7 @@ util::Status ReFormatOutputs(TfLiteTensor* output, int output_tensor_offset,
            output_tensor_size);
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 }  // namespace tflite

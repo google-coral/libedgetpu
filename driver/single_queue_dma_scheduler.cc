@@ -32,26 +32,26 @@ namespace platforms {
 namespace darwinn {
 namespace driver {
 
-util::Status SingleQueueDmaScheduler::ValidateOpenState(bool is_open) const {
+Status SingleQueueDmaScheduler::ValidateOpenState(bool is_open) const {
   if (is_open_ != is_open) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Bad state: expected=%d, actual=%d", is_open, is_open_));
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status SingleQueueDmaScheduler::Open() {
+Status SingleQueueDmaScheduler::Open() {
   StdMutexLock lock(&mutex_);
   if (!IsEmptyLocked()) {
-    return util::FailedPreconditionError("DMA queues are not empty");
+    return FailedPreconditionError("DMA queues are not empty");
   }
   RETURN_IF_ERROR(ValidateOpenState(/*is_open=*/false));
   is_open_ = true;
   RETURN_IF_ERROR(watchdog_->Deactivate());
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status SingleQueueDmaScheduler::Close(api::Driver::ClosingMode mode) {
+Status SingleQueueDmaScheduler::Close(api::Driver::ClosingMode mode) {
   {
     StdMutexLock lock(&mutex_);
     RETURN_IF_ERROR(ValidateOpenState(/*is_open=*/true));
@@ -60,7 +60,7 @@ util::Status SingleQueueDmaScheduler::Close(api::Driver::ClosingMode mode) {
     }
   }
 
-  util::Status status;
+  Status status;
   status.Update(CancelPendingRequests());
   if (mode == api::Driver::ClosingMode::kAsap) {
     status.Update(CancelActiveRequests());
@@ -73,8 +73,7 @@ util::Status SingleQueueDmaScheduler::Close(api::Driver::ClosingMode mode) {
   return status;
 }
 
-util::Status SingleQueueDmaScheduler::Submit(
-    std::shared_ptr<TpuRequest> request) {
+Status SingleQueueDmaScheduler::Submit(std::shared_ptr<TpuRequest> request) {
   TRACE_SCOPE("SingleQueueDmaScheduler::Submit");
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateOpenState(/*is_open=*/true));
@@ -84,10 +83,10 @@ util::Status SingleQueueDmaScheduler::Submit(
   ASSIGN_OR_RETURN(auto dmas, request->GetDmaInfos());
   pending_tasks_.push_back({std::move(request), std::move(dmas)});
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::StatusOr<DmaDescriptorType> SingleQueueDmaScheduler::PeekNextDma() const {
+StatusOr<DmaDescriptorType> SingleQueueDmaScheduler::PeekNextDma() const {
   TRACE_SCOPE("SingleQueueDmaScheduler::PeekNextDma");
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateOpenState(/*is_open=*/true));
@@ -102,7 +101,7 @@ util::StatusOr<DmaDescriptorType> SingleQueueDmaScheduler::PeekNextDma() const {
   }
 }
 
-util::StatusOr<DmaInfo*> SingleQueueDmaScheduler::GetNextDma() {
+StatusOr<DmaInfo*> SingleQueueDmaScheduler::GetNextDma() {
   TRACE_SCOPE("SingleQueueDmaScheduler::GetNextDma");
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateOpenState(/*is_open=*/true));
@@ -139,11 +138,11 @@ util::StatusOr<DmaInfo*> SingleQueueDmaScheduler::GetNextDma() {
   return next_dma;
 }
 
-util::Status SingleQueueDmaScheduler::NotifyDmaCompletion(DmaInfo* dma_info) {
+Status SingleQueueDmaScheduler::NotifyDmaCompletion(DmaInfo* dma_info) {
   TRACE_SCOPE("SingleQueueDmaScheduler::NotifyDmaCompletion");
   if (!dma_info->IsActive()) {
     const auto dma_dump = dma_info->Dump();
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Cannot complete inactive DMA: %s", dma_dump.c_str()));
   }
 
@@ -160,12 +159,12 @@ util::Status SingleQueueDmaScheduler::NotifyDmaCompletion(DmaInfo* dma_info) {
   StdMutexLock lock(&mutex_);
   wait_active_dmas_complete_.notify_all();
   if (pending_dmas_.empty()) {
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   const auto& pending_front = pending_dmas_.front();
   if (pending_front.info->type() != DmaDescriptorType::kLocalFence) {
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   // Clear local fence if completed.
@@ -175,10 +174,10 @@ util::Status SingleQueueDmaScheduler::NotifyDmaCompletion(DmaInfo* dma_info) {
                             pending_front.request->id());
     pending_dmas_.pop();
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status SingleQueueDmaScheduler::NotifyRequestCompletion() {
+Status SingleQueueDmaScheduler::NotifyRequestCompletion() {
   TRACE_SCOPE("SingleQueueDmaScheduler::NotifyRequestCompletion");
 
   // This region holds the lock since it needs to deal with task and DMA queues.
@@ -191,7 +190,7 @@ util::Status SingleQueueDmaScheduler::NotifyRequestCompletion() {
 
     RETURN_IF_ERROR(ValidateOpenState(/*is_open=*/true));
     if (active_tasks_.empty()) {
-      return util::FailedPreconditionError("No active request to complete");
+      return FailedPreconditionError("No active request to complete");
     }
 
     // Requests are always handled in FIFO order.
@@ -207,7 +206,7 @@ util::Status SingleQueueDmaScheduler::NotifyRequestCompletion() {
           pending_front.info->MarkCompleted();
           pending_dmas_.pop();
         } else {
-          return util::FailedPreconditionError(
+          return FailedPreconditionError(
               StringPrintf("Request[%d] is completing while DMAs are pending.",
                            completed_request->id()));
         }
@@ -231,24 +230,24 @@ util::Status SingleQueueDmaScheduler::NotifyRequestCompletion() {
   }
 
   if (request_to_be_notified) {
-    RETURN_IF_ERROR(request_to_be_notified->NotifyCompletion(util::OkStatus()));
+    RETURN_IF_ERROR(request_to_be_notified->NotifyCompletion(OkStatus()));
     VLOG(3) << StringPrintf("Request[%d]: Completed",
                             request_to_be_notified->id());
     wait_active_requests_complete_.notify_all();
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status SingleQueueDmaScheduler::CancelPendingRequests() {
-  util::Status status;
+Status SingleQueueDmaScheduler::CancelPendingRequests() {
+  Status status;
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateOpenState(/*is_open=*/true));
   status.Update(CancelTaskQueue(pending_tasks_));
   return status;
 }
 
-util::Status SingleQueueDmaScheduler::WaitActiveRequests() {
+Status SingleQueueDmaScheduler::WaitActiveRequests() {
   TRACE_SCOPE("SingleQueueDmaScheduler::WaitActiveRequests");
   StdCondMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateOpenState(/*is_open=*/true));
@@ -257,7 +256,7 @@ util::Status SingleQueueDmaScheduler::WaitActiveRequests() {
                             completed_tasks_.size() + active_tasks_.size());
     wait_active_requests_complete_.wait(lock);
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 int64 SingleQueueDmaScheduler::MaxRemainingCycles() const {
@@ -272,7 +271,7 @@ int64 SingleQueueDmaScheduler::MaxRemainingCycles() const {
   return cycles;
 }
 
-util::Status SingleQueueDmaScheduler::HandleCompletedTasks() {
+Status SingleQueueDmaScheduler::HandleCompletedTasks() {
   TRACE_SCOPE("SingleQueueDmaScheduler::HandleCompletedTasks");
 
   std::vector<std::shared_ptr<TpuRequest>> completed_requests;
@@ -286,7 +285,7 @@ util::Status SingleQueueDmaScheduler::HandleCompletedTasks() {
     StdMutexLock lock(&mutex_);
 
     if (completed_tasks_.empty()) {
-      return util::OkStatus();
+      return OkStatus();
     }
 
     completed_tasks_.front().dmas.remove_if(
@@ -311,20 +310,20 @@ util::Status SingleQueueDmaScheduler::HandleCompletedTasks() {
   }
 
   for (auto& request : completed_requests) {
-    RETURN_IF_ERROR(request->NotifyCompletion(util::OkStatus()));
+    RETURN_IF_ERROR(request->NotifyCompletion(OkStatus()));
   }
 
   if (notify) {
     wait_active_requests_complete_.notify_all();
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status SingleQueueDmaScheduler::HandleActiveTasks() {
+Status SingleQueueDmaScheduler::HandleActiveTasks() {
   TRACE_SCOPE("SingleQueueDmaScheduler::HandleActiveTasks");
   if (active_tasks_.empty()) {
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   auto& front_task = active_tasks_.front();
@@ -332,7 +331,7 @@ util::Status SingleQueueDmaScheduler::HandleActiveTasks() {
       [](const DmaInfo& dma_info) { return dma_info.IsCompleted(); });
 
   if (front_task.dmas.empty()) {
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   auto& front_dma = front_task.dmas.front();
@@ -340,10 +339,10 @@ util::Status SingleQueueDmaScheduler::HandleActiveTasks() {
   if (front_dma.type() == DmaDescriptorType::kLocalFence) {
     front_dma.MarkCompleted();
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status SingleQueueDmaScheduler::CloseActiveDmas() {
+Status SingleQueueDmaScheduler::CloseActiveDmas() {
   TRACE_SCOPE("SingleQueueDmaScheduler::CloseActiveDmas");
   StdCondMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateOpenState(/*is_open=*/true));
@@ -374,11 +373,11 @@ util::Status SingleQueueDmaScheduler::CloseActiveDmas() {
 
     wait_active_dmas_complete_.wait(lock);
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status SingleQueueDmaScheduler::CancelActiveRequests() {
-  util::Status status;
+Status SingleQueueDmaScheduler::CancelActiveRequests() {
+  Status status;
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateOpenState(/*is_open=*/true));
 
@@ -393,8 +392,8 @@ util::Status SingleQueueDmaScheduler::CancelActiveRequests() {
   return status;
 }
 
-util::Status SingleQueueDmaScheduler::CancelTaskQueue(std::deque<Task>& tasks) {
-  util::Status status;
+Status SingleQueueDmaScheduler::CancelTaskQueue(std::deque<Task>& tasks) {
+  Status status;
   while (!tasks.empty()) {
     status.Update(tasks.front().request->Cancel());
     tasks.pop_front();
@@ -402,11 +401,11 @@ util::Status SingleQueueDmaScheduler::CancelTaskQueue(std::deque<Task>& tasks) {
   return status;
 }
 
-util::StatusOr<std::shared_ptr<TpuRequest>>
+StatusOr<std::shared_ptr<TpuRequest>>
 SingleQueueDmaScheduler::GetOldestActiveRequest() const {
   StdMutexLock lock(&mutex_);
   if (active_tasks_.empty()) {
-    return util::UnknownError(
+    return UnknownError(
         "No requests active when querying for oldest active request.");
   }
 

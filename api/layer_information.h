@@ -96,7 +96,7 @@ class LayerInformation {
 
   // Converts unsigned values for a provided buffer of this layer to signed and
   // vice versa.
-  util::Status TransformSignedDataType(Buffer buffer) const;
+  Status TransformSignedDataType(Buffer buffer) const;
 
  protected:
   explicit LayerInformation(const Layer* layer);
@@ -153,16 +153,19 @@ class OutputLayerInformation : public LayerInformation {
   //
   // TODO Move this method down to driver internal classes once all
   // dependencies are removed.
-  util::Status Relayout(unsigned char* dest, const unsigned char* src) const;
+  Status Relayout(unsigned char* dest, const unsigned char* src) const;
 
   // Returns true if relayout is needed.
   bool NeedsRelayout() const;
 
+  // Returns merged shape for output shapes.
+  TensorShapeT GetMergedOutputShape() const;
+
  private:
   // Re-layouts the output activation stream from the tiles into a desired
   // format in the host memory.
-  util::Status RelayoutWithShapeInformation(unsigned char* dest,
-                                            const unsigned char* src) const;
+  Status RelayoutWithShapeInformation(unsigned char* dest,
+                                      const unsigned char* src) const;
 
   const OutputLayer* output_layer_;
 };

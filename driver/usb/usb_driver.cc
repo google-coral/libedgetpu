@@ -204,7 +204,7 @@ UsbDriver::UsbDriver(
 UsbDriver::UsbDriver(
     const api::DriverOptions& driver_options,
     std::unique_ptr<config::ChipConfig> chip_config,
-    std::function<util::StatusOr<std::unique_ptr<UsbDeviceInterface>>()>
+    std::function<StatusOr<std::unique_ptr<UsbDeviceInterface>>()>
         device_factory,
     std::unique_ptr<UsbRegisters> registers,
     std::unique_ptr<TopLevelInterruptManager> top_level_interrupt_manager,
@@ -231,23 +231,22 @@ UsbDriver::~UsbDriver() {
   }
 }
 
-util::Status UsbDriver::ValidateState(State expected_state) const {
+Status UsbDriver::ValidateState(State expected_state) const {
   return ValidateStates({expected_state});
 }
 
-util::Status UsbDriver::ValidateStates(
+Status UsbDriver::ValidateStates(
     const std::vector<State>& expected_states) const {
   for (auto& state : expected_states) {
     if (state_ == state) {
-      return util::Status();  // OK
+      return Status();  // OK
     }
   }
 
-  return util::FailedPreconditionError(
-      StringPrintf("Unexpected state %d.", state_));
+  return FailedPreconditionError(StringPrintf("Unexpected state %d.", state_));
 }
 
-util::Status UsbDriver::SetState(State next_state) {
+Status UsbDriver::SetState(State next_state) {
   driver_state_changed_.notify_all();
 
   if ((next_state == kClosing) || (next_state == kPaused)) {
@@ -264,53 +263,53 @@ util::Status UsbDriver::SetState(State next_state) {
       if ((next_state == kOpen) || (next_state == kClosing)) {
         // There is nothing special to do.
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       } else if (next_state == kPaused) {
         VLOG(7) << StringPrintf("%s try enable clock gating", __func__);
         RETURN_IF_ERROR(top_level_handler_->EnableSoftwareClockGate());
 
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
 
     case kPaused:
       if (next_state == kPaused) {
         // We're already paused. Do nothing.
-        return util::Status();  // OK
+        return Status();  // OK
       } else if ((next_state == kOpen) || (next_state == kClosing)) {
         // Disable clock gating so we can access the chip.
         VLOG(7) << StringPrintf("%s try disable clock gating", __func__);
         RETURN_IF_ERROR(top_level_handler_->DisableSoftwareClockGate());
 
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
 
     case kClosing:
       if (next_state == kClosed) {
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
 
     case kClosed:
       if (next_state == kOpen) {
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
   }
 
   // Illegal state transition.
-  return util::FailedPreconditionError(StringPrintf(
+  return FailedPreconditionError(StringPrintf(
       "Invalid state transition. current=%d, next=%d.", state_, next_state));
 }
 
 // TODO: review the sequence with hardware team and convert them to
 // use named constants.
-util::Status UsbDriver::InitializeChip() {
+Status UsbDriver::InitializeChip() {
   TRACE_SCOPE("UsbDriver::InitializeChip");
 
   ASSIGN_OR_RETURN(auto omc_reg, registers_->Read32(apex_csr_offsets_.omc0_00));
@@ -344,7 +343,7 @@ util::Status UsbDriver::InitializeChip() {
       break;
 
     default:
-      return util::FailedPreconditionError("Unrecognized USB operating mode");
+      return FailedPreconditionError("Unrecognized USB operating mode");
   }
 
   if ((!options_.usb_force_largest_bulk_in_chunk_size) &&
@@ -374,34 +373,34 @@ util::Status UsbDriver::InitializeChip() {
         registers_->Write(usb_csr_offsets_.outfeed_chunk_length, 0x80));
   }
 
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
-util::Status UsbDriver::RegisterAndEnableAllInterrupts() {
+Status UsbDriver::RegisterAndEnableAllInterrupts() {
   // TODO: Register interrupts to interrupt EP.
   RETURN_IF_ERROR(fatal_error_interrupt_controller_->EnableInterrupts());
   RETURN_IF_ERROR(top_level_interrupt_manager_->EnableInterrupts());
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status UsbDriver::DisableAllInterrupts() {
+Status UsbDriver::DisableAllInterrupts() {
   RETURN_IF_ERROR(top_level_interrupt_manager_->DisableInterrupts());
   RETURN_IF_ERROR(fatal_error_interrupt_controller_->DisableInterrupts());
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-void UsbDriver::HandleEvent(const util::Status& status,
+void UsbDriver::HandleEvent(const Status& status,
                             const UsbMlCommands::EventDescriptor& event_info) {
   if (status.ok()) {
     // TODO: analyze if there is any failure case we can recover from.
     CHECK_OK(HandleDmaDescriptor(
         event_info.tag, event_info.offset, event_info.length,
         options_.usb_enable_bulk_descriptors_from_device));
-  } else if (util::IsDeadlineExceeded(status)) {
+  } else if (IsDeadlineExceeded(status)) {
     VLOG(10) << StringPrintf("%s timed out, ignore.", __func__);
-  } else if (util::IsCancelled(status)) {
+  } else if (IsCancelled(status)) {
     VLOG(10) << StringPrintf("%s cancelled, ignore.", __func__);
   } else {
     LOG(FATAL) << StringPrintf("%s failed. %s", __func__,
@@ -409,14 +408,14 @@ void UsbDriver::HandleEvent(const util::Status& status,
   }
 }
 
-util::Status UsbDriver::CheckHibError() {
+Status UsbDriver::CheckHibError() {
   // Indicates no HIB Fatal Error.
   constexpr uint64 kHibErrorStatusNone = 0;
 
   ASSIGN_OR_RETURN(uint64 hib_error_status,
                    registers_->Read(hib_user_csr_offsets_.hib_error_status));
   if (hib_error_status == kHibErrorStatusNone) {
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   ASSIGN_OR_RETURN(
@@ -429,12 +428,11 @@ util::Status UsbDriver::CheckHibError() {
       static_cast<unsigned long long>(                    // NOLINT(runtime/int)
           hib_first_error_status));
   LOG(ERROR) << error_string;
-  return util::InternalError(error_string);
+  return InternalError(error_string);
 }
 
 void UsbDriver::HandleInterrupt(
-    const util::Status& status,
-    const UsbMlCommands::InterruptInfo& interrupt_info) {
+    const Status& status, const UsbMlCommands::InterruptInfo& interrupt_info) {
   if (status.ok()) {
     VLOG(10) << StringPrintf("%s interrupt received.", __func__);
 
@@ -464,7 +462,7 @@ void UsbDriver::HandleInterrupt(
       }
     }
 
-  } else if (util::IsCancelled(status)) {
+  } else if (IsCancelled(status)) {
     VLOG(10) << StringPrintf("%s cancelled, ignore.", __func__);
   } else {
     VLOG(1) << status.message();
@@ -515,7 +513,7 @@ uint32_t UsbDriver::GetCredits(UsbMlCommands::DescriptorTag tag) {
 }
 
 // TODO: breaks up this function according to functionality.
-util::StatusOr<bool> UsbDriver::ProcessIo() {
+StatusOr<bool> UsbDriver::ProcessIo() {
   TRACE_SCOPE("UsbDriver::ProcessIO");
   static constexpr int kNumBulkOutTags = 3;
   static constexpr uint8_t tag_to_bulk_out_endpoint_id[kNumBulkOutTags] = {
@@ -697,7 +695,7 @@ util::StatusOr<bool> UsbDriver::ProcessIo() {
         // To make sure the query result for credits is accurate, we have to
         // use sync transfer. Because we only send data according to credits
         // available, there is no way we could get a timeout error.
-        util::Status status = usb_device_->BulkOutTransfer(
+        Status status = usb_device_->BulkOutTransfer(
             tag_to_bulk_out_endpoint_id[tag], transfer_buffer, __func__);
         if (status.ok()) {
           io_request.NotifyTransferComplete(transfer_size);
@@ -730,9 +728,9 @@ util::StatusOr<bool> UsbDriver::ProcessIo() {
           tag_to_bulk_out_with_unsent_chunk[tag] = true;
         }
 
-        util::Status async_request_status = usb_device_->AsyncBulkOutTransfer(
+        Status async_request_status = usb_device_->AsyncBulkOutTransfer(
             tag_to_bulk_out_endpoint_id[tag], transfer_buffer,
-            [this, &io_request, tag, transfer_size](util::Status status) {
+            [this, &io_request, tag, transfer_size](Status status) {
               // Inject a functor into a completion queue driven by the worker
               // thread. Note that the reference to io_request could have been
               // invalidated when the async transfer is cancelled.
@@ -782,10 +780,10 @@ util::StatusOr<bool> UsbDriver::ProcessIo() {
           io_request.SetHeader(usb_device_->PrepareHeader(
               io_request.GetTag(), io_request.GetBuffer().size_bytes()));
 
-          util::Status async_request_status = usb_device_->AsyncBulkOutTransfer(
+          Status async_request_status = usb_device_->AsyncBulkOutTransfer(
               UsbMlCommands::kSingleBulkOutEndpoint,
               UsbMlCommands::ConstBuffer(io_request.header()),
-              [this, &io_request, tag](util::Status status) {
+              [this, &io_request, tag](Status status) {
                 // Inject a functor into a completion queue driven by the worker
                 // thread. Note that the reference to io_request could have been
                 // invalidated when the async transfer is cancelled.
@@ -836,9 +834,9 @@ util::StatusOr<bool> UsbDriver::ProcessIo() {
           tag_to_bulk_out_with_unsent_chunk[tag] = true;
         }
 
-        util::Status async_request_status = usb_device_->AsyncBulkOutTransfer(
+        Status async_request_status = usb_device_->AsyncBulkOutTransfer(
             UsbMlCommands::kSingleBulkOutEndpoint, transfer_buffer,
-            [this, &io_request, tag, transfer_size](util::Status status) {
+            [this, &io_request, tag, transfer_size](Status status) {
               // Inject a functor into a completion queue driven by the worker
               // thread. Note that the reference to io_request could have been
               // invalidated when the async transfer is cancelled.
@@ -993,10 +991,10 @@ util::StatusOr<bool> UsbDriver::ProcessIo() {
 
         ++num_active_transfers;
 
-        util::Status async_request_status = usb_device_->AsyncBulkInTransfer(
+        Status async_request_status = usb_device_->AsyncBulkInTransfer(
             UsbMlCommands::kBulkInEndpoint, transfer_buffer,
             [this, &io_request, tag, transfer_size](
-                util::Status status, size_t num_bytes_transferred) {
+                Status status, size_t num_bytes_transferred) {
               // Inject a functor into a completion queue driven by the worker
               // thread. Note that the reference to io_request could have been
               // invalidated when the async transfer is cancelled.
@@ -1044,10 +1042,10 @@ util::StatusOr<bool> UsbDriver::ProcessIo() {
   return is_task_state_changed;
 }
 
-util::Status UsbDriver::HandleDmaDescriptor(UsbMlCommands::DescriptorTag tag,
-                                            uint64_t device_virtual_address,
-                                            uint32_t size_bytes,
-                                            bool bulk_events_enabled) {
+Status UsbDriver::HandleDmaDescriptor(UsbMlCommands::DescriptorTag tag,
+                                      uint64_t device_virtual_address,
+                                      uint32_t size_bytes,
+                                      bool bulk_events_enabled) {
   DeviceBuffer buffer(device_virtual_address, size_bytes);
   VLOG(10) << StringPrintf(
       "Digesting descriptor from device tag[%d], data[0x%llx], size[%zu]",
@@ -1094,7 +1092,7 @@ util::Status UsbDriver::HandleDmaDescriptor(UsbMlCommands::DescriptorTag tag,
     }
 
     io_request.SetMatched();
-    return util::Status();  // OK.
+    return Status();  // OK.
   }
 
   // If there is no matching hint, then USB driver should process the
@@ -1127,10 +1125,10 @@ util::Status UsbDriver::HandleDmaDescriptor(UsbMlCommands::DescriptorTag tag,
       LOG(FATAL) << StringPrintf("Unknown descriptor from device");
   }
 
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
-void UsbDriver::HandleQueuedBulkIn(const util::Status& status, int buffer_index,
+void UsbDriver::HandleQueuedBulkIn(const Status& status, int buffer_index,
                                    size_t num_bytes_transferred) {
   if (status.ok()) {
     // Enqueue the filled buffer with actual data size.
@@ -1212,9 +1210,9 @@ void UsbDriver::WorkerThreadFunc() {
         VLOG(7) << StringPrintf("%s Re-installing event reader", __func__);
         reevaluation_needed = true;
         background_ops[kReadEvent] = true;
-        util::Status status = usb_device_->AsyncReadEvent(
+        Status status = usb_device_->AsyncReadEvent(
             [this, &background_ops](
-                util::Status status,
+                Status status,
                 const UsbMlCommands::EventDescriptor& event_info) {
               StdMutexLock queue_lock(&callback_mutex_);
               callback_queue_.push([this, &background_ops, status, event_info] {
@@ -1234,9 +1232,9 @@ void UsbDriver::WorkerThreadFunc() {
         VLOG(7) << StringPrintf("%s Re-installing interrupt reader", __func__);
         background_ops[kReadInterrupt] = true;
         reevaluation_needed = true;
-        util::Status status = usb_device_->AsyncReadInterrupt(
+        Status status = usb_device_->AsyncReadInterrupt(
             [this, &background_ops](
-                util::Status status,
+                Status status,
                 const UsbMlCommands::InterruptInfo& interrupt_info) {
               StdMutexLock queue_lock(&callback_mutex_);
               callback_queue_.push(
@@ -1273,9 +1271,9 @@ void UsbDriver::WorkerThreadFunc() {
           // Clear data to prevent data leakage from request to request.
           memset(transfer_buffer.data(), 0, transfer_buffer.size());
 
-          util::Status async_request_status = usb_device_->AsyncBulkInTransfer(
+          Status async_request_status = usb_device_->AsyncBulkInTransfer(
               UsbMlCommands::kBulkInEndpoint, transfer_buffer,
-              [this, buffer_index](util::Status status,
+              [this, buffer_index](Status status,
                                    size_t num_bytes_transferred) {
                 // This functor is executed directly from underlying completion
                 // callback thread. We need to transfer it to be processed in
@@ -1332,10 +1330,10 @@ void UsbDriver::WorkerThreadFunc() {
   VLOG(7) << StringPrintf("%s leaving worker thread", __func__);
 }
 
-util::StatusOr<std::unique_ptr<UsbDeviceInterface>>
+StatusOr<std::unique_ptr<UsbDeviceInterface>>
 UsbDriver::CreateRawUsbDeviceWithRetry() {
   TRACE_SCOPE("UsbDriver::CreateRawUsbDeviceWithRetry");
-  util::Status result;
+  Status result;
   for (int i = 0; i < kMaxNumOfRetryAfterReset; ++i) {
     TRACE_SCOPE("UsbDriver::CreateRawUsbDeviceWithRetry:try");
 
@@ -1360,7 +1358,7 @@ UsbDriver::CreateRawUsbDeviceWithRetry() {
   return result;
 }
 
-util::Status UsbDriver::OpenMlUsbDevice() {
+Status UsbDriver::OpenMlUsbDevice() {
   TRACE_SCOPE("UsbDriver::OpenMlUsbDevice");
 
   VLOG(7) << "Opening device expecting application mode";
@@ -1370,11 +1368,10 @@ util::Status UsbDriver::OpenMlUsbDevice() {
   usb_device_ = gtl::MakeUnique<UsbMlCommands>(std::move(raw_usb_device),
                                                options_.usb_timeout_millis);
 
-  return usb_device_ ? util::Status()
-                     : util::UnknownError("Failed to create ML device");
+  return usb_device_ ? Status() : UnknownError("Failed to create ML device");
 }
 
-util::Status UsbDriver::PrepareUsbDevice() {
+Status UsbDriver::PrepareUsbDevice() {
   TRACE_SCOPE("UsbDriver::PrepareUsbDevice");
 
   // 1) Send DFU Detach command if already in application mode
@@ -1419,7 +1416,7 @@ util::Status UsbDriver::PrepareUsbDevice() {
     expect_app_mode_after_reset = false;
     VLOG(7) << "Device is in DFU mode";
   } else {
-    return util::FailedPreconditionError("Unrecognized USB Vendor/Product ID");
+    return FailedPreconditionError("Unrecognized USB Vendor/Product ID");
   }
 
   VLOG(7) << "Resetting device";
@@ -1467,7 +1464,7 @@ util::Status UsbDriver::PrepareUsbDevice() {
         break;
 
       default:
-        return util::FailedPreconditionError("Unrecognized operating mode");
+        return FailedPreconditionError("Unrecognized operating mode");
     }
 
     RETURN_IF_ERROR(UsbUpdateDfuDevice(
@@ -1485,7 +1482,7 @@ util::Status UsbDriver::PrepareUsbDevice() {
   return OpenMlUsbDevice();
 }
 
-util::Status UsbDriver::DoOpen(bool debug_mode) {
+Status UsbDriver::DoOpen(bool debug_mode) {
   TRACE_SCOPE("UsbDriver::DoOpen");
 
   StdMutexLock state_lock(&mutex_);
@@ -1493,19 +1490,19 @@ util::Status UsbDriver::DoOpen(bool debug_mode) {
 
   if (options_.usb_enable_queued_bulk_in_requests) {
     if (!options_.usb_enable_overlapping_bulk_in_and_out) {
-      return util::FailedPreconditionError(
+      return FailedPreconditionError(
           "Overlapping bulk-in/out must be enabled for queued bulk-in "
           "feature");
     }
 
     constexpr unsigned int k1kBMask = 1024 - 1;
     if (options_.usb_bulk_in_max_chunk_size_in_bytes & k1kBMask) {
-      return util::OutOfRangeError(
+      return OutOfRangeError(
           "Bulk-in buffer max chunk size must be 1024-byte aligned");
     }
 
     if (options_.usb_bulk_in_queue_capacity <= 0) {
-      return util::OutOfRangeError("Bulk-in queue capacity must be positive");
+      return OutOfRangeError("Bulk-in queue capacity must be positive");
     }
   } else {
     options_.usb_bulk_in_queue_capacity = 0;
@@ -1516,22 +1513,21 @@ util::Status UsbDriver::DoOpen(bool debug_mode) {
   } else {
     // No device factory is provided. An instance must already be supplied.
     if (usb_device_ == nullptr) {
-      return util::FailedPreconditionError(
+      return FailedPreconditionError(
           "Either device factory or device instance must be supplied");
     }
   }
 
   switch (usb_device_->GetDeviceSpeed()) {
     case UsbStandardCommands::DeviceSpeed::kLow:
-      return util::FailedPreconditionError("USB Low speed is not supported");
+      return FailedPreconditionError("USB Low speed is not supported");
 
     case UsbStandardCommands::DeviceSpeed::kFull:
     case UsbStandardCommands::DeviceSpeed::kHigh:
       if (options_.usb_fail_if_slower_than_superspeed) {
-        return util::FailedPreconditionError(
-            "Connection speed is too slow, fail.");
+        return FailedPreconditionError("Connection speed is too slow, fail.");
       } else if (options_.mode != OperatingMode::kSingleEndpoint) {
-        return util::FailedPreconditionError(
+        return FailedPreconditionError(
             "Connection speed is incompatible with operating mode, fail");
       }
       break;
@@ -1583,8 +1579,7 @@ util::Status UsbDriver::DoOpen(bool debug_mode) {
   for (int i = 0; i < options_.usb_bulk_in_queue_capacity; ++i) {
     auto chunk = DoMakeBuffer(options_.usb_bulk_in_max_chunk_size_in_bytes);
     if (!chunk.IsValid()) {
-      return util::ResourceExhaustedError(
-          "Bulk-in buffer chunk allocation failure");
+      return ResourceExhaustedError("Bulk-in buffer chunk allocation failure");
     }
 
     // Save the Buffer object into a container, so it will be destroyed when
@@ -1613,10 +1608,10 @@ util::Status UsbDriver::DoOpen(bool debug_mode) {
   dma_scheduler_closer.release();
   top_level_handler_closer.release();
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status UsbDriver::DoClose(bool in_error, api::Driver::ClosingMode mode) {
+Status UsbDriver::DoClose(bool in_error, api::Driver::ClosingMode mode) {
   TRACE_SCOPE("UsbDriver::DoClose");
 
   if (mode != api::Driver::ClosingMode::kGraceful) {
@@ -1668,15 +1663,15 @@ util::Status UsbDriver::DoClose(bool in_error, api::Driver::ClosingMode mode) {
     RETURN_IF_ERROR(SetState(kClosed));
   }
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status UsbDriver::DoCancelAndWaitRequests(bool in_error) {
+Status UsbDriver::DoCancelAndWaitRequests(bool in_error) {
   RETURN_IF_ERROR(dma_scheduler_.CancelPendingRequests());
   if (!in_error) {
     RETURN_IF_ERROR(dma_scheduler_.WaitActiveRequests());
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 Buffer UsbDriver::DoMakeBuffer(size_t size_bytes) const {
@@ -1689,8 +1684,8 @@ Buffer UsbDriver::DoMakeBuffer(size_t size_bytes) const {
   return buffer;
 }
 
-util::StatusOr<MappedDeviceBuffer> UsbDriver::DoMapBuffer(
-    const Buffer& buffer, DmaDirection direction) {
+StatusOr<MappedDeviceBuffer> UsbDriver::DoMapBuffer(const Buffer& buffer,
+                                                    DmaDirection direction) {
   if (buffer.IsValid()) {
     ASSIGN_OR_RETURN(auto device_buffer, address_space_.MapMemory(buffer));
     // TODO : this is dangerous: the std::bind captures a raw pointer to
@@ -1705,7 +1700,7 @@ util::StatusOr<MappedDeviceBuffer> UsbDriver::DoMapBuffer(
   return MappedDeviceBuffer();
 }
 
-util::StatusOr<std::shared_ptr<TpuRequest>> UsbDriver::DoCreateRequest(
+StatusOr<std::shared_ptr<TpuRequest>> UsbDriver::DoCreateRequest(
     const std::shared_ptr<Request> parent_request,
     const ExecutableReference* executable_ref, TpuRequest::RequestType type) {
   StdMutexLock lock(&mutex_);
@@ -1717,10 +1712,10 @@ util::StatusOr<std::shared_ptr<TpuRequest>> UsbDriver::DoCreateRequest(
     // If we disable bulk in/out descriptors from device, the hint must be
     // complete.
     if (!executable_ref->executable().dma_hints()->fully_deterministic()) {
-      return util::FailedPreconditionError(StringPrintf(
-          "Executable '%s' must have fully deterministic DMA "
-          "hints when DMA descriptors from device are disabled.",
-          executable_ref->executable().name()->c_str()));
+      return FailedPreconditionError(
+          StringPrintf("Executable '%s' must have fully deterministic DMA "
+                       "hints when DMA descriptors from device are disabled.",
+                       executable_ref->executable().name()->c_str()));
     }
   }
 
@@ -1732,7 +1727,7 @@ util::StatusOr<std::shared_ptr<TpuRequest>> UsbDriver::DoCreateRequest(
       chip_config_->GetChipStructures().minimum_alignment_bytes, type)};
 }
 
-util::Status UsbDriver::DoSubmit(std::shared_ptr<TpuRequest> request) {
+Status UsbDriver::DoSubmit(std::shared_ptr<TpuRequest> request) {
   TRACE_SCOPE("UsbDriver::DoSubmit");
   StdMutexLock state_lock(&mutex_);
   RETURN_IF_ERROR(ValidateStates({kOpen}));
@@ -1747,25 +1742,25 @@ util::Status UsbDriver::DoSubmit(std::shared_ptr<TpuRequest> request) {
   RETURN_IF_ERROR(SetState(kOpen));
 
   TRACE_WITHIN_SCOPE("UsbDriver::DoSubmit::Finished");
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status UsbDriver::DoSetRealtimeMode(bool on) {
+Status UsbDriver::DoSetRealtimeMode(bool on) {
   // TODO: Implementing real-time scheduler support for USB as
   // well.
-  return util::FailedPreconditionError(
+  return FailedPreconditionError(
       "This driver does not support real-time mode.");
 }
 
-util::Status UsbDriver::DoSetExecutableTiming(
-    const ExecutableReference* executable, const api::Timing& timing) {
+Status UsbDriver::DoSetExecutableTiming(const ExecutableReference* executable,
+                                        const api::Timing& timing) {
   // TODO: Implementing real-time scheduler support for USB as
   // well.
-  return util::FailedPreconditionError(
+  return FailedPreconditionError(
       "This driver does not support real-time mode.");
 }
 
-void UsbDriver::CheckFatalError(const util::Status& status) {
+void UsbDriver::CheckFatalError(const Status& status) {
   // TODO: Forward to the client application for handling.
   CHECK_OK(status) << "Driver fatal error";
 }

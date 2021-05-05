@@ -39,40 +39,40 @@ CoherentAllocator::CoherentAllocator(int alignment_bytes, size_t size_bytes)
 CoherentAllocator::CoherentAllocator()
     : CoherentAllocator(kDefaultAlignmentBytes, kDefaultMaxCoherentBytes) {}
 
-util::Status CoherentAllocator::Open() {
+Status CoherentAllocator::Open() {
   StdMutexLock lock(&mutex_);
   if (coherent_memory_base_ != nullptr) {
-    return util::FailedPreconditionError("Device already open.");
+    return FailedPreconditionError("Device already open.");
   }
 
   ASSIGN_OR_RETURN(coherent_memory_base_, DoOpen(total_size_bytes_));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::StatusOr<char *> CoherentAllocator::DoOpen(size_t size_bytes) {
+StatusOr<char *> CoherentAllocator::DoOpen(size_t size_bytes) {
   char *mem_base =
       static_cast<char *>(aligned_malloc(total_size_bytes_, alignment_bytes_));
   if (mem_base == nullptr) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Could not malloc %zu bytes.", total_size_bytes_));
   }
   memset(mem_base, 0, size_bytes);
   return mem_base;  // OK
 }
 
-util::StatusOr<Buffer> CoherentAllocator::Allocate(size_t size_bytes) {
+StatusOr<Buffer> CoherentAllocator::Allocate(size_t size_bytes) {
   StdMutexLock lock(&mutex_);
   if (size_bytes == 0) {
-    return util::FailedPreconditionError("Allocate null size.");
+    return FailedPreconditionError("Allocate null size.");
   }
 
   if (coherent_memory_base_ == nullptr) {
-    return util::FailedPreconditionError("Not Opened.");
+    return FailedPreconditionError("Not Opened.");
   }
 
   if ((allocated_bytes_ + size_bytes) > total_size_bytes_) {
-    return util::FailedPreconditionError(StringPrintf(
+    return FailedPreconditionError(StringPrintf(
         "CoherentAllocator: Allocate size = %zu and no memory (total = %zu).",
         size_bytes, total_size_bytes_));
   }
@@ -87,14 +87,14 @@ util::StatusOr<Buffer> CoherentAllocator::Allocate(size_t size_bytes) {
   return Buffer(p, size_bytes);
 }
 
-util::Status CoherentAllocator::DoClose(char *mem_base, size_t size_bytes) {
+Status CoherentAllocator::DoClose(char *mem_base, size_t size_bytes) {
   if (mem_base != nullptr) {
     aligned_free(mem_base);
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status CoherentAllocator::Close() {
+Status CoherentAllocator::Close() {
   StdMutexLock lock(&mutex_);
   auto status = DoClose(coherent_memory_base_, total_size_bytes_);
   // Resets state.

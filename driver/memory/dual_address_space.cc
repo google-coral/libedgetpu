@@ -38,7 +38,7 @@ DualAddressSpace::DualAddressSpace(
       mmu_mapper);
 }
 
-util::StatusOr<DeviceBuffer> DualAddressSpace::MapMemory(
+StatusOr<DeviceBuffer> DualAddressSpace::MapMemory(
     const Buffer& buffer, DmaDirection direction,
     MappingTypeHint mapping_type) {
   switch (mapping_type) {
@@ -51,7 +51,7 @@ util::StatusOr<DeviceBuffer> DualAddressSpace::MapMemory(
   }
 }
 
-util::Status DualAddressSpace::UnmapMemory(DeviceBuffer buffer) {
+Status DualAddressSpace::UnmapMemory(DeviceBuffer buffer) {
   return DetermineSource(buffer)->UnmapMemory(buffer);
 }
 

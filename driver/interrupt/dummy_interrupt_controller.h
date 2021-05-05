@@ -34,16 +34,16 @@ class DummyInterruptController : public InterruptControllerInterface {
 
   ~DummyInterruptController() = default;
 
-  util::Status EnableInterrupts() override {
-    return util::Status();  // OK
+  Status EnableInterrupts() override {
+    return Status();  // OK
   }
 
-  util::Status DisableInterrupts() override {
-    return util::Status();  // OK
+  Status DisableInterrupts() override {
+    return Status();  // OK
   }
 
-  util::Status ClearInterruptStatus(int id) override {
-    return util::Status();  // OK
+  Status ClearInterruptStatus(int id) override {
+    return Status();  // OK
   }
 };
 

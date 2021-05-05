@@ -15,13 +15,11 @@
 # Description:
 #  Register access related functionality.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
-
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-libedgetpu_cc_library(
+cc_library(
     name = "registers",
     srcs = ["registers.cc"],
     hdrs = ["registers.h"],
@@ -31,7 +29,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "socket_registers",
     srcs = ["socket_registers.cc"],
     hdrs = ["socket_registers.h"],

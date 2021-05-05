@@ -18,6 +18,7 @@
 #include <cstdint>
 
 #include "flatbuffers/flexbuffers.h"
+#include "api/chip.h"
 
 namespace platforms {
 namespace darwinn {
@@ -29,14 +30,20 @@ static const int32_t kCustomOpDataVersion = 0;
 struct WrappedBuffer {
   const char* data;
   size_t length;
+
+  // Optional field. Use to specify the target chip of the wrapped executable
+  // when there are multiple exectuables in `CustomOpData`.
+  api::Chip chip = api::Chip::kUnknown;
 };
 
 struct CustomOpData {
   int32_t version;
   // TODO Remove this field and update references in
   // custom_op_data.cc.
+  // The field is only used by 1.0.
   WrappedBuffer parameter_caching_executable;
-  WrappedBuffer executable;
+
+  std::vector<WrappedBuffer> executables;
 
   // Execution preference code (currently used by NNAPI only). For more
   // information, please see PreferenceCode in:

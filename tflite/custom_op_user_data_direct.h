@@ -17,6 +17,7 @@
 
 #include <memory>
 
+#include "absl/container/flat_hash_map.h"
 #include "api/driver.h"
 #include "driver/package_registry.h"
 #include "port/errors.h"
@@ -44,14 +45,22 @@ class CustomOpUserDataDirect : public CustomOpUserData {
   ~CustomOpUserDataDirect();
 
   // Binds to a driver instance, and registers executables with this driver.
-  util::Status SetDriver(api::Driver* driver);
+  Status SetDriver(api::Driver* driver);
 
   // Returns the reference to the executable binary.
   const api::PackageReference* GetExecutable() const { return executable_; }
 
+  // Returns a map from output tensor index to input tensor index, indicating
+  // whether the executable output should be written to one of the input TfLite
+  // buffers. This is the case for LSTM models where hidden states are stored in
+  // variable tensors.
+  const absl::flat_hash_map<int, int>& GetVariableOutputDestination() {
+    return variable_output_destination_;
+  }
+
  private:
   // Unregisters executables with the associated driver.
-  util::Status UnregisterExecutables();
+  Status UnregisterExecutables();
 
   // Raw data parsed from tflite model file.
   std::unique_ptr<CustomOpData> raw_model_data_;
@@ -65,6 +74,10 @@ class CustomOpUserDataDirect : public CustomOpUserData {
 
   // Pointer to the reference of the executable binary;
   const api::PackageReference* executable_{nullptr};
+
+  // A map from output tensor index to input tensor index where output tensor
+  // content should be written to input tensor's TfLite buffer.
+  absl::flat_hash_map<int, int> variable_output_destination_;
 };
 
 }  // namespace tflite

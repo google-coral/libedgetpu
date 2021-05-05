@@ -34,7 +34,7 @@ class TpuRequest {
  public:
   // A type for request completion callback.
   // The int argument is the same as return value of id().
-  using Done = std::function<void(int, const util::Status&)>;
+  using Done = std::function<void(int, const Status&)>;
 
   // Classify each TPU Request for logging.
   using RequestType = api::Request::TimingEvent::TpuRequestType;
@@ -47,21 +47,20 @@ class TpuRequest {
   TpuRequest& operator=(const TpuRequest&) = delete;
 
   // Sets the callback function executed when request is complete.
-  virtual util::Status SetDone(Done done) = 0;
+  virtual Status SetDone(Done done) = 0;
 
   // Adds an input or output buffer. This may be called repeatedly depending
   // on the batch size as long as the request instance is not submitted. If
   // supplied "name" does not exist or size constraints on the input and output
   // buffers do not match executable, will return failure. Memory backing the
   // |Buffer| instance must be valid throughout the life of the request.
-  virtual util::Status AddInput(const std::string& name,
-                                const Buffer& input) = 0;
-  virtual util::Status AddOutput(const std::string& name, Buffer output) = 0;
+  virtual Status AddInput(const std::string& name, const Buffer& input) = 0;
+  virtual Status AddOutput(const std::string& name, Buffer output) = 0;
 
   // Add a provided number of dummy input/output buffers. This is helpful for
   // evening out the number of buffers to native batch size.
-  virtual util::Status AddNoopInputs(const std::string& name, int count) = 0;
-  virtual util::Status AddNoopOutputs(const std::string& name, int count) = 0;
+  virtual Status AddNoopInputs(const std::string& name, int count) = 0;
+  virtual Status AddNoopOutputs(const std::string& name, int count) = 0;
 
   // Returns the input and output buffers that the TPU DMAs to. This is only for
   // use in reference driver and similar.
@@ -70,10 +69,10 @@ class TpuRequest {
   virtual Buffer OutputBuffer(const std::string& name, int batch) const = 0;
 
   // Validates the constraints.
-  virtual util::Status Validate() = 0;
+  virtual Status Validate() = 0;
 
   // Prepares the request to be submitted.
-  virtual util::Status Prepare() = 0;
+  virtual Status Prepare() = 0;
 
   // Cancels the pending request. Cancellation is best effort. Completion
   // callback is called if not already. Canceling a completed request has
@@ -81,16 +80,16 @@ class TpuRequest {
   // Note: A single TpuRequest cancelation will not cause an immediate
   // cancellation of the parent driver::Request. However, it will guarantee a
   // cancellation status once the parent request calls its Done callback.
-  virtual util::Status Cancel() = 0;
+  virtual Status Cancel() = 0;
 
   // Notifies that request is submitted to the driver, but not yet issued.
-  virtual util::Status NotifyRequestSubmitted() = 0;
+  virtual Status NotifyRequestSubmitted() = 0;
 
   // Notifies that request is active. That is, request is issued to DarwiNN.
-  virtual util::Status NotifyRequestActive() = 0;
+  virtual Status NotifyRequestActive() = 0;
 
   // Notifies completion of the request with the given status.
-  virtual util::Status NotifyCompletion(util::Status status) = 0;
+  virtual Status NotifyCompletion(Status status) = 0;
 
   // Returns request id.
   virtual int id() const = 0;
@@ -102,7 +101,7 @@ class TpuRequest {
   virtual int num_instruction_bitstream_chunks() const = 0;
 
   // Returns a list of DMAs to be performed.
-  virtual util::StatusOr<std::list<DmaInfo>> GetDmaInfos() const = 0;
+  virtual StatusOr<std::list<DmaInfo>> GetDmaInfos() const = 0;
 
   // Returns executable reference.
   virtual const ExecutableReference& executable_reference() const = 0;

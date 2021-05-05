@@ -51,9 +51,8 @@ class UsbMlCommands : public UsbStandardCommands {
     uint32_t raw_data;
   };
 
-  using InterruptInDone =
-      std::function<void(util::Status, const InterruptInfo&)>;
-  using EventInDone = std::function<void(util::Status, const EventDescriptor&)>;
+  using InterruptInDone = std::function<void(Status, const InterruptInfo&)>;
+  using EventInDone = std::function<void(Status, const EventDescriptor&)>;
 
   using Register32 = uint32_t;
   using Register64 = uint64_t;
@@ -95,34 +94,34 @@ class UsbMlCommands : public UsbStandardCommands {
   // Note the interface number and timeout for detachment have to come from
   // device configuration or discovered through parsing the interface
   // descriptors.
-  util::Status DfuDetach(int interface_number, uint16_t timeout_msec);
+  Status DfuDetach(int interface_number, uint16_t timeout_msec);
 
   // Reads 32-bit CSR from device.
-  util::StatusOr<Register32> ReadRegister32(uint32_t offset);
+  StatusOr<Register32> ReadRegister32(uint32_t offset);
 
   // Reads 64-bit CSR from device.
-  util::StatusOr<Register64> ReadRegister64(uint32_t offset);
+  StatusOr<Register64> ReadRegister64(uint32_t offset);
 
   // Writes 32-bit CSR to device.
-  util::Status WriteRegister32(uint32_t offset, Register32 value);
+  Status WriteRegister32(uint32_t offset, Register32 value);
 
   // Writes 64-bit CSR to device.
-  util::Status WriteRegister64(uint32_t offset, Register64 value);
+  Status WriteRegister64(uint32_t offset, Register64 value);
 
   // Writes header to device, through the single bulk out endpoint. This
   // function is only meaningful if the device is in single bulk out endpoint
   // mode.
-  util::Status WriteHeader(DescriptorTag tag, uint32_t length);
+  Status WriteHeader(DescriptorTag tag, uint32_t length);
 
   // Prepares header to be sent to device. This function
   // is only meaningful if the device is in single bulk out endpoint mode.
   std::vector<uint8_t> PrepareHeader(DescriptorTag tag, uint32_t length);
 
   // Asynchrounously reads event from device.
-  util::Status AsyncReadEvent(const EventInDone& callback);
+  Status AsyncReadEvent(const EventInDone& callback);
 
   // Asynchrounously read interrupt from device.
-  util::Status AsyncReadInterrupt(const InterruptInDone& callback);
+  Status AsyncReadInterrupt(const InterruptInDone& callback);
 };
 
 }  // namespace driver

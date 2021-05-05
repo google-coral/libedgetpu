@@ -14,15 +14,13 @@
 
 # Description: time related libraries used by DarwiNN drivers.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
-
 package(
     default_visibility = ["//visibility:public"],
 )
 
 licenses(["notice"])
 
-libedgetpu_cc_library(
+cc_library(
     name = "driver_time_stamper",
     srcs = ["driver_time_stamper.cc"],
     hdrs = ["driver_time_stamper.h"],
@@ -32,47 +30,13 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
-    name = "mock_time_stamper",
-    testonly = 1,
-    hdrs = ["mock_time_stamper.h"],
-    deps = [
-        ":time_stamper",
-        "//port:lock_guard",
-        "//port:port_test_helper",
-    ],
-)
-
-libedgetpu_cc_library(
-    name = "mock_time_stamper_no_config",
-    testonly = 1,
-    hdrs = ["mock_time_stamper_no_config.h"],
-    deps = [
-        ":time_stamper",
-        "//testing/base/public:gunit_main",
-    ],
-)
-
-libedgetpu_cc_library(
+cc_library(
     name = "time_stamper",
     hdrs = ["time_stamper.h"],
     deps = ["//port"],
 )
 
-libedgetpu_cc_library(
-    name = "mock_time_stamper_factory",
-    testonly = 1,
-    hdrs = ["mock_time_stamper_factory.h"],
-    deps = [
-        ":mock_time_stamper",
-        ":time_stamper",
-        ":time_stamper_factory",
-        "//port",
-        "//port:port_test_helper",
-    ],
-)
-
-libedgetpu_cc_library(
+cc_library(
     name = "driver_time_stamper_factory",
     hdrs = ["driver_time_stamper_factory.h"],
     deps = [
@@ -83,7 +47,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "time_stamper_factory",
     hdrs = ["time_stamper_factory.h"],
     deps = [

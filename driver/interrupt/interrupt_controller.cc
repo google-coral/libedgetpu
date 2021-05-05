@@ -31,25 +31,25 @@ InterruptController::InterruptController(
   CHECK(registers != nullptr);
 }
 
-util::Status InterruptController::EnableInterrupts() {
+Status InterruptController::EnableInterrupts() {
   if (csr_offsets_.control != kCsrRegisterSpaceInvalidOffset) {
     const uint64 enable_all = (1ULL << NumInterrupts()) - 1;
     return registers_->Write(csr_offsets_.control, enable_all);
   } else {
-    return util::OkStatus();
+    return OkStatus();
   }
 }
 
-util::Status InterruptController::DisableInterrupts() {
+Status InterruptController::DisableInterrupts() {
   if (csr_offsets_.control != kCsrRegisterSpaceInvalidOffset) {
     constexpr uint64 kDisableAll = 0;
     return registers_->Write(csr_offsets_.control, kDisableAll);
   } else {
-    return util::OkStatus();
+    return OkStatus();
   }
 }
 
-util::Status InterruptController::ClearInterruptStatus(int id) {
+Status InterruptController::ClearInterruptStatus(int id) {
   if (csr_offsets_.status != kCsrRegisterSpaceInvalidOffset) {
     // Interrupt status register has W0C policy meaning that writing 0
     // clears the bit, while writing 1 does not have any effect.
@@ -59,7 +59,7 @@ util::Status InterruptController::ClearInterruptStatus(int id) {
     value &= clear_bit;
     return registers_->Write(csr_offsets_.status, value);
   } else {
-    return util::OkStatus();
+    return OkStatus();
   }
 }
 

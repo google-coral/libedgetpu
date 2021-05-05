@@ -45,7 +45,7 @@ ScalarCoreController::ScalarCoreController(const config::ChipConfig& config,
   interrupt_counts_.resize(kNumInterrupts, 0ULL);
 }
 
-util::Status ScalarCoreController::Open() {
+Status ScalarCoreController::Open() {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateOpenState(/*open=*/false));
 
@@ -61,30 +61,30 @@ util::Status ScalarCoreController::Open() {
   }
 
   open_ = true;
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status ScalarCoreController::Close() {
+Status ScalarCoreController::Close() {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateOpenState(/*open=*/true));
 
   open_ = false;
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status ScalarCoreController::EnableInterrupts() {
+Status ScalarCoreController::EnableInterrupts() {
   return interrupt_controller_.EnableInterrupts();
 }
 
-util::Status ScalarCoreController::DisableInterrupts() {
+Status ScalarCoreController::DisableInterrupts() {
   return interrupt_controller_.DisableInterrupts();
 }
 
-util::Status ScalarCoreController::ClearInterruptStatus(int id) {
+Status ScalarCoreController::ClearInterruptStatus(int id) {
   return interrupt_controller_.ClearInterruptStatus(id);
 }
 
-util::StatusOr<uint64> ScalarCoreController::CheckInterruptCounts(int id) {
+StatusOr<uint64> ScalarCoreController::CheckInterruptCounts(int id) {
   {
     StdMutexLock lock(&mutex_);
     RETURN_IF_ERROR(ValidateOpenState(/*open=*/true));
@@ -110,12 +110,11 @@ util::StatusOr<uint64> ScalarCoreController::CheckInterruptCounts(int id) {
   return max_counter - current_count + 1 + new_count;
 }
 
-util::Status ScalarCoreController::ValidateOpenState(bool open) const {
+Status ScalarCoreController::ValidateOpenState(bool open) const {
   if (open_ != open) {
-    return util::FailedPreconditionError(
-        "Invalid state in ScalarCoreController.");
+    return FailedPreconditionError("Invalid state in ScalarCoreController.");
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 }  // namespace driver

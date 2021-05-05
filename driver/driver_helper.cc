@@ -114,7 +114,7 @@ bool CheckIfAreaIsCompletelyOverwritten(const Buffer& output_data,
 }
 
 // Converts a buffer to a string.
-// Similar to model_compiler_file_util::StoreToString.
+// Similar to model_compiler_file_StoreToString.
 std::string ConvertToString(const Buffer::NamedMap& activations) {
   std::vector<std::string> activation_names;
   activation_names.reserve(activations.size());
@@ -139,8 +139,8 @@ std::string ConvertToString(const Buffer::NamedMap& activations) {
   return output;
 }
 
-util::Status WriteToFile(const std::string& output_file_name,
-                         const std::string& output_content) {
+Status WriteToFile(const std::string& output_file_name,
+                   const std::string& output_content) {
   std::ofstream record_file(output_file_name, std::ios_base::out);
 
   if (record_file.is_open()) {
@@ -148,13 +148,13 @@ util::Status WriteToFile(const std::string& output_file_name,
     record_file.close();
 
     if (!record_file) {
-      return util::InternalError("Failed writing execution record.");
+      return InternalError("Failed writing execution record.");
     }
   } else {
-    return util::InternalError("Failed opening file for dumping output.");
+    return InternalError("Failed opening file for dumping output.");
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 // Returns true if the actual output matches with expected on the count for each
@@ -197,11 +197,11 @@ bool DriverHelper::IsOpen() const { return driver_->IsOpen(); }
 
 bool DriverHelper::IsError() const { return driver_->IsError(); }
 
-util::Status DriverHelper::Cancel(std::shared_ptr<api::Request> request) {
+Status DriverHelper::Cancel(std::shared_ptr<api::Request> request) {
   return driver_->Cancel(std::move(request));
 }
 
-util::Status DriverHelper::CancelAllRequests() {
+Status DriverHelper::CancelAllRequests() {
   return driver_->CancelAllRequests();
 }
 
@@ -213,54 +213,54 @@ Buffer DriverHelper::MakeBuffer(size_t size_bytes) const {
   return driver_->MakeBuffer(size_bytes);
 }
 
-util::Status DriverHelper::Open(bool debug_mode, bool context_lost) {
+Status DriverHelper::Open(bool debug_mode, bool context_lost) {
   return driver_->Open(debug_mode, context_lost);
 }
 
-util::StatusOr<const api::PackageReference*>
-DriverHelper::RegisterExecutableFile(const std::string& executable_filename) {
+StatusOr<const api::PackageReference*> DriverHelper::RegisterExecutableFile(
+    const std::string& executable_filename) {
   return driver_->RegisterExecutableFile(executable_filename);
 }
 
-util::StatusOr<const api::PackageReference*>
+StatusOr<const api::PackageReference*>
 DriverHelper::RegisterExecutableSerialized(
     const std::string& executable_content) {
   return driver_->RegisterExecutableSerialized(executable_content);
 }
 
-util::StatusOr<const api::PackageReference*>
+StatusOr<const api::PackageReference*>
 DriverHelper::RegisterExecutableSerialized(const char* executable_content,
                                            size_t length) {
   return driver_->RegisterExecutableSerialized(executable_content, length);
 }
 
-util::Status DriverHelper::UnregisterExecutable(
+Status DriverHelper::UnregisterExecutable(
     const api::PackageReference* executable_ref) {
   return driver_->UnregisterExecutable(executable_ref);
 }
 
-util::StatusOr<std::shared_ptr<api::Request>> DriverHelper::CreateRequest(
+StatusOr<std::shared_ptr<api::Request>> DriverHelper::CreateRequest(
     const api::PackageReference* executable_ref) {
   return driver_->CreateRequest(executable_ref);
 }
 
-util::Status DriverHelper::Execute(std::shared_ptr<api::Request> request) {
+Status DriverHelper::Execute(std::shared_ptr<api::Request> request) {
   return driver_->Execute(request);
 }
 
-util::Status DriverHelper::Execute(
+Status DriverHelper::Execute(
     const std::vector<std::shared_ptr<api::Request>>& requests) {
   return driver_->Execute(requests);
 }
 
-util::Status DriverHelper::Submit(std::shared_ptr<api::Request> request,
-                                  api::Request::Done done_callback) {
+Status DriverHelper::Submit(std::shared_ptr<api::Request> request,
+                            api::Request::Done done_callback) {
   // Request completion callback.
   // Note that the whole callback functor is cloned into this one, so it's
   // available when done.
   auto start_time = std::chrono::steady_clock::now();
-  auto wrapped_done = [this, done_callback, start_time](
-                          int id, const util::Status& status) {
+  auto wrapped_done = [this, done_callback, start_time](int id,
+                                                        const Status& status) {
     auto roundtrip_time_ms = std::chrono::duration<double, std::milli>(
                                  std::chrono::steady_clock::now() - start_time)
                                  .count();
@@ -285,7 +285,7 @@ util::Status DriverHelper::Submit(std::shared_ptr<api::Request> request,
   return driver_->Submit(std::move(request), std::move(wrapped_done));
 }
 
-util::Status DriverHelper::Submit(const TestVector& test_vector, int batches) {
+Status DriverHelper::Submit(const TestVector& test_vector, int batches) {
   Buffer::NamedMap input;
   Buffer::NamedMap expected_output;
   Buffer::NamedMap output;
@@ -413,11 +413,12 @@ util::Status DriverHelper::Submit(const TestVector& test_vector, int batches) {
                 output_with_guard_areas);
 }
 
-util::Status DriverHelper::Submit(
-    const std::string& tag, const api::PackageReference* executable_ref,
-    const Buffer::NamedMap& input, const Buffer::NamedMap& output,
-    const Buffer::NamedMap& output_with_guard_areas,
-    api::Request::Done request_done) {
+Status DriverHelper::Submit(const std::string& tag,
+                            const api::PackageReference* executable_ref,
+                            const Buffer::NamedMap& input,
+                            const Buffer::NamedMap& output,
+                            const Buffer::NamedMap& output_with_guard_areas,
+                            api::Request::Done request_done) {
   ASSIGN_OR_RETURN(auto request, CreateRequest(executable_ref));
 
   // Attach inputs to the request.
@@ -468,24 +469,26 @@ util::Status DriverHelper::Submit(
     }
   }
 
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
-util::Status DriverHelper::Submit(const std::string& tag,
-                                  const api::PackageReference* executable_ref,
-                                  const Buffer::NamedMap& input,
-                                  const Buffer::NamedMap& expected_output,
-                                  const Buffer::NamedMap& output) {
+Status DriverHelper::Submit(const std::string& tag,
+                            const api::PackageReference* executable_ref,
+                            const Buffer::NamedMap& input,
+                            const Buffer::NamedMap& expected_output,
+                            const Buffer::NamedMap& output) {
   Buffer::NamedMap no_guard_areas;
   return Submit(tag, executable_ref, /*output_file_name=*/std::string{}, input,
                 expected_output, output, no_guard_areas);
 }
 
-util::Status DriverHelper::Submit(
-    const std::string& tag, const api::PackageReference* executable_ref,
-    const std::string& output_file_name, const Buffer::NamedMap& input,
-    const Buffer::NamedMap& expected_output, const Buffer::NamedMap& output,
-    const Buffer::NamedMap& output_with_guard_areas) {
+Status DriverHelper::Submit(const std::string& tag,
+                            const api::PackageReference* executable_ref,
+                            const std::string& output_file_name,
+                            const Buffer::NamedMap& input,
+                            const Buffer::NamedMap& expected_output,
+                            const Buffer::NamedMap& output,
+                            const Buffer::NamedMap& output_with_guard_areas) {
   // Note that all the Buffer::NamedMap instances are cloned into the functor
   // when it's created, and hence they can be used to verify correctness of
   // result when the functor is actually executed. Also note that the Buffer
@@ -494,7 +497,7 @@ util::Status DriverHelper::Submit(
   // memory block is destructed.
   auto request_done = [this, tag, executable_ref, output,
                        output_with_guard_areas, expected_output,
-                       output_file_name](int id, const util::Status& status) {
+                       output_file_name](int id, const Status& status) {
     if (!status.ok()) {
       LOG(INFO) << StringPrintf("Request [%d, %s] failed: %s", id, tag.c_str(),
                                 status.error_message().c_str());
@@ -595,7 +598,7 @@ util::Status DriverHelper::Submit(
                 std::move(request_done));
 }
 
-util::Status DriverHelper::Close(api::Driver::ClosingMode mode) {
+Status DriverHelper::Close(api::Driver::ClosingMode mode) {
   StdCondMutexLock lock(&mutex_);
   while (pending_requests_ > 0) {
     VLOG(5) << StringPrintf("Waiting for %d pending requests.",
@@ -638,14 +641,14 @@ void DriverHelper::SetThermalWarningCallback(ThermalWarningCallback callback) {
   driver_->SetThermalWarningCallback(std::move(callback));
 }
 
-util::Status DriverHelper::SetRealtimeMode(bool on) {
-  return util::FailedPreconditionError(
+Status DriverHelper::SetRealtimeMode(bool on) {
+  return FailedPreconditionError(
       "This driver does not support real-time mode.");
 }
 
-util::Status DriverHelper::SetExecutableTiming(
+Status DriverHelper::SetExecutableTiming(
     const api::PackageReference* executable, const api::Timing& timing) {
-  return util::FailedPreconditionError(
+  return FailedPreconditionError(
       "This driver does not support real-time mode.");
 }
 

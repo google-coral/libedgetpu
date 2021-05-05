@@ -68,8 +68,7 @@ class CustomOpUserData {
 };
 
 // Returns input tensor from node.
-const TfLiteTensor* GetInput(TfLiteContext* context, TfLiteNode* node,
-                             int index);
+TfLiteTensor* GetInput(TfLiteContext* context, TfLiteNode* node, int index);
 
 // Returns output tensor from node.
 TfLiteTensor* GetOutput(TfLiteContext* context, TfLiteNode* node, int index);

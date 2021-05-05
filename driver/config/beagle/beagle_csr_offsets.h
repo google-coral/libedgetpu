@@ -1417,18 +1417,26 @@ const HibKernelCsrOffsets kBeagleHibKernelCsrOffsets = {
 };
 
 const HibUserCsrOffsets kBeagleHibUserCsrOffsets = {
-    0x486b0,  // NOLINT: top_level_int_control
-    0x486b8,  // NOLINT: top_level_int_status
-    0x486d0,  // NOLINT: sc_host_int_count
-    0x486d8,  // NOLINT: dma_pause
-    0x486e0,  // NOLINT: dma_paused
-    0x486e8,  // NOLINT: status_block_update
-    0x486f0,  // NOLINT: hib_error_status
-    0x486f8,  // NOLINT: hib_error_mask
-    0x48700,  // NOLINT: hib_first_error_status
-    0x48708,  // NOLINT: hib_first_error_timestamp
-    0x48710,  // NOLINT: hib_inject_error
-    0x487a8,  // NOLINT: dma_burst_limiter
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, axi_auser_scid
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, axi_auser_stream_id_output_actv
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, axi_auser_stream_id_instruction
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, axi_auser_stream_id_input_actv
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, axi_auser_stream_id_param
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, axi_aruser_overrides
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, axi_awuser_overrides
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, axi_overrides
+    0x486b0,                         // NOLINT: top_level_int_control
+    0x486b8,                         // NOLINT: top_level_int_status
+    0x486d0,                         // NOLINT: sc_host_int_count
+    0x486d8,                         // NOLINT: dma_pause
+    0x486e0,                         // NOLINT: dma_paused
+    0x486e8,                         // NOLINT: status_block_update
+    0x486f0,                         // NOLINT: hib_error_status
+    0x486f8,                         // NOLINT: hib_error_mask
+    0x48700,                         // NOLINT: hib_first_error_status
+    0x48708,                         // NOLINT: hib_first_error_timestamp
+    0x48710,                         // NOLINT: hib_inject_error
+    0x487a8,                         // NOLINT: dma_burst_limiter
 };
 
 const QueueCsrOffsets kBeagleInstructionQueueCsrOffsets = {
@@ -1458,46 +1466,73 @@ const ScalarCoreCsrOffsets kBeagleScalarCoreCsrOffsets = {
     0x44038,                         // NOLINT: executeControl
     0x44158,                         // NOLINT: avDataPopRunControl
     0x44198,                         // NOLINT: parameterPopRunControl
+    0x44258,                         // NOLINT: scalarCoreRunStatus
+    0x44168,                         // NOLINT: avDataPopRunStatus
+    0x441a8,                         // NOLINT: parameterPopRunStatus
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, scalarDatapath_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, executeControl_0
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, avDataPop_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, parameterPop_0RunControl
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, scalarDatapath_0RunStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, avDataPop_0RunStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, parameterPop_0RunStatus
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, scalarDatapath_1RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, executeControl_1
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, avDataPop_1RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, parameterPop_1RunControl
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, scalarDatapath_1RunStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, avDataPop_1RunStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, parameterPop_1RunStatus
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, scalarDatapath_2RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, executeControl_2
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, avDataPop_2RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, parameterPop_2RunControl
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, scalarDatapath_2RunStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, avDataPop_2RunStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, parameterPop_2RunStatus
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, scalarDatapath_3RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, executeControl_3
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, avDataPop_3RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, parameterPop_3RunControl
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, scalarDatapath_3RunStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, avDataPop_3RunStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, parameterPop_3RunStatus
     0x441d8,                         // NOLINT: infeedRunControl
     0x44218,                         // NOLINT: outfeedRunControl
+    0x441e0,                         // NOLINT: infeedRunStatus
+    0x44220,                         // NOLINT: outfeedRunStatus
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed1RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed1RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, contextControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, contextStatus
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, contextSwitchCount
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, contextSwitchTimeoutCount
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, clusterPortControl
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, clusterPortStatus
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_0_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_0_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_0_1RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_0_1RunControl
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_0_0RunStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_0_0RunStatus
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_1_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_1_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_1_1RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_1_1RunControl
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_1_0RunStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_1_0RunStatus
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_2_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_2_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_2_1RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_2_1RunControl
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_2_0RunStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_2_0RunStatus
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_3_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_3_0RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_3_1RunControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_3_1RunControl
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, infeed_3_0RunStatus
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, outfeed_3_0RunStatus
     kCsrRegisterSpaceInvalidOffset,  // UNUSED,
                                      // ScalarCoreRingBusCreditSender_0Reset
     kCsrRegisterSpaceInvalidOffset,  // UNUSED,
@@ -1543,6 +1578,7 @@ const ScalarCoreCsrOffsets kBeagleScalarCoreCsrOffsets = {
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, packageTdpAction
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, ThrottleStallCounter
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, cycleCount
+    0x44260,                         // NOLINT: Error_ScalarCore
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_ScalarCoreDatapath_0
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Mask_ScalarCoreDatapath_0
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_Force_ScalarCoreDatapath_0
@@ -1628,6 +1664,9 @@ const TileCsrOffsets kBeagleTileCsrOffsets = {
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, narrowMemoryContext_1
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, narrowMemoryContext_2
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, narrowMemoryContext_3
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, narrowMemoryContext_4
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, narrowMemoryContext_5
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, tileContext
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, TileRingBusCreditSenderReset
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, TileRingBusCreditReceiverReset
     0x40370,                         // NOLINT: Error_Tile
@@ -1636,6 +1675,8 @@ const TileCsrOffsets kBeagleTileCsrOffsets = {
     0x40388,                         // NOLINT: Error_Timestamp_Tile
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_ContextId_Tile
     0x40390,                         // NOLINT: Error_Info_Tile
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, TileMeshBusCreditSenderReset
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, TileMeshBusCreditReceiverReset
 };
 
 const WireCsrOffsets kBeagleWireCsrOffsets = {

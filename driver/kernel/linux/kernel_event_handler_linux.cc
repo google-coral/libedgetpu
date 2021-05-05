@@ -31,32 +31,32 @@ KernelEventHandlerLinux::KernelEventHandlerLinux(const std::string& device_path,
                                                  int num_events)
     : KernelEventHandler(device_path, num_events) {}
 
-util::Status KernelEventHandlerLinux::SetEventFd(FileDescriptor fd,
-                                                 FileDescriptor event_fd,
-                                                 int event_id) const {
+Status KernelEventHandlerLinux::SetEventFd(FileDescriptor fd,
+                                           FileDescriptor event_fd,
+                                           int event_id) const {
   gasket_interrupt_eventfd interrupt;
   interrupt.interrupt = event_id;
   interrupt.event_fd = event_fd;
   if (ioctl(fd, GASKET_IOCTL_SET_EVENTFD, &interrupt) != 0) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Setting Event Fd Failed : %d (%s)", fd, strerror(errno)));
   }
 
   VLOG(5) << StringPrintf("Set event fd : event_id:%d -> event_fd:%d, ",
                           event_id, event_fd);
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 FileDescriptor KernelEventHandlerLinux::InitializeEventFd(int event_id) const {
   return eventfd(0, EFD_CLOEXEC);
 }
 
-util::Status KernelEventHandlerLinux::ReleaseEventFd(FileDescriptor fd,
-                                                     FileDescriptor event_fd,
-                                                     int event_id) const {
+Status KernelEventHandlerLinux::ReleaseEventFd(FileDescriptor fd,
+                                               FileDescriptor event_fd,
+                                               int event_id) const {
   close(event_fd);
-  return util::OkStatus();
+  return OkStatus();
 }
 
 std::unique_ptr<KernelEvent> KernelEventHandlerLinux::CreateKernelEvent(

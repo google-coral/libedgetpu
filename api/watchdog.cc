@@ -80,7 +80,7 @@ TimerFdWatchdog::~TimerFdWatchdog() {
   watcher_thread_.join();
 }
 
-util::StatusOr<int64> TimerFdWatchdog::Activate() {
+StatusOr<int64> TimerFdWatchdog::Activate() {
   StdMutexLock lock(&mutex_);
   switch (state_) {
     case WatchdogState::ACTIVE:
@@ -98,49 +98,47 @@ util::StatusOr<int64> TimerFdWatchdog::Activate() {
       activation_id_ = GetNextActivationId(activation_id_);
       break;
     case WatchdogState::DESTROYED:
-      return util::FailedPreconditionError(
-          "Cannot activate a destroyed watchdog.");
+      return FailedPreconditionError("Cannot activate a destroyed watchdog.");
   }
   return activation_id_;
 }
 
-util::Status TimerFdWatchdog::Signal() {
+Status TimerFdWatchdog::Signal() {
   StdMutexLock lock(&mutex_);
   switch (state_) {
     case WatchdogState::ACTIVE:
       VLOG(5) << "Signalling the watchdog.";
       RETURN_IF_ERROR(timer_->Set(timeout_ns_));
-      return util::OkStatus();
+      return OkStatus();
     case WatchdogState::BARKING:
-      return util::OkStatus();
+      return OkStatus();
     case WatchdogState::INACTIVE:
     case WatchdogState::DESTROYED:
-      return util::FailedPreconditionError(
+      return FailedPreconditionError(
           "Cannot signal an in-active / destroyed watchdog.");
   }
 }
 
-util::Status TimerFdWatchdog::Deactivate() {
+Status TimerFdWatchdog::Deactivate() {
   StdMutexLock lock(&mutex_);
   switch (state_) {
     case WatchdogState::ACTIVE:
       VLOG(5) << "De-activating an active watchdog.";
       RETURN_IF_ERROR(timer_->Set(0));
       state_ = WatchdogState::INACTIVE;
-      return util::OkStatus();
+      return OkStatus();
     case WatchdogState::BARKING:
     case WatchdogState::INACTIVE:
       // Watchdog is either inactive or will become inactive. Nothing to do.
-      return util::OkStatus();
+      return OkStatus();
     case WatchdogState::DESTROYED:
-      return util::FailedPreconditionError(
-          "Cannot deactivate a destroyed watchdog.");
+      return FailedPreconditionError("Cannot deactivate a destroyed watchdog.");
   }
 }
 
-util::Status TimerFdWatchdog::UpdateTimeout(int64 timeout_ns) {
+Status TimerFdWatchdog::UpdateTimeout(int64 timeout_ns) {
   if (timeout_ns <= 0) {
-    return util::InvalidArgumentError(StringPrintf(
+    return InvalidArgumentError(StringPrintf(
         "Watchdog timeout should be a positive integer. %lld was provided",
         static_cast<long long>(timeout_ns)));
   }
@@ -148,7 +146,7 @@ util::Status TimerFdWatchdog::UpdateTimeout(int64 timeout_ns) {
   StdMutexLock lock(&mutex_);
   timeout_ns_ = timeout_ns;
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 void TimerFdWatchdog::Watcher() {
@@ -214,11 +212,11 @@ CountingWatch::~CountingWatch() {
   }
 }
 
-util::Status CountingWatch::Increment() {
+Status CountingWatch::Increment() {
   StdMutexLock lock(&mutex_);
 
   if (counter_ == LLONG_MAX) {
-    return util::InternalError("Reached max counter value.");
+    return InternalError("Reached max counter value.");
   }
 
   counter_++;
@@ -227,10 +225,10 @@ util::Status CountingWatch::Increment() {
   return watchdog_->Activate().status();
 }
 
-util::Status CountingWatch::Decrement() {
+Status CountingWatch::Decrement() {
   StdMutexLock lock(&mutex_);
   if (counter_ <= 0) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Cannot decrement when counter is %lld.",
                      static_cast<long long>(counter_)));
   }
@@ -245,7 +243,7 @@ util::Status CountingWatch::Decrement() {
     RETURN_IF_ERROR(watchdog_->Deactivate());
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 CascadeWatchdog::CascadeWatchdog(const std::vector<Config>& configs)
@@ -305,15 +303,15 @@ void CascadeWatchdog::WatchdogExpired(int64 child_activation_id, int child_id) {
   }
 }
 
-util::Status CascadeWatchdog::StartFirstWatchdog() {
+Status CascadeWatchdog::StartFirstWatchdog() {
   ASSIGN_OR_RETURN(child_activation_id_, watchdogs_[0]->Activate());
   currently_active_ = 0;
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status CascadeWatchdog::DeactivateInternal() {
+Status CascadeWatchdog::DeactivateInternal() {
   if (currently_active_ == kNoneActive) {
-    return util::OkStatus();
+    return OkStatus();
   }
 
   // There is a chance that we end up deactivating an already expired watchdog
@@ -323,10 +321,10 @@ util::Status CascadeWatchdog::DeactivateInternal() {
   RETURN_IF_ERROR(watchdogs_[currently_active_]->Deactivate());
   currently_active_ = kNoneActive;
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::StatusOr<int64> CascadeWatchdog::Activate() {
+StatusOr<int64> CascadeWatchdog::Activate() {
   StdMutexLock lock(&mutex_);
   if (currently_active_ != kNoneActive) {
     return activation_id_;
@@ -336,30 +334,30 @@ util::StatusOr<int64> CascadeWatchdog::Activate() {
   return activation_id_;
 }
 
-util::Status CascadeWatchdog::Signal() {
+Status CascadeWatchdog::Signal() {
   // Early exit if watchdog is not active
   StdMutexLock lock(&mutex_);
   if (currently_active_ == kNoneActive) {
     VLOG(2) << "Signalled inactive CascadeWatchdog. Ignoring.";
-    return util::OkStatus();
+    return OkStatus();
   }
 
   RETURN_IF_ERROR(DeactivateInternal());
   return StartFirstWatchdog();
 }
 
-util::Status CascadeWatchdog::Deactivate() {
+Status CascadeWatchdog::Deactivate() {
   StdMutexLock lock(&mutex_);
   return DeactivateInternal();
 }
 
-util::Status CascadeWatchdog::UpdateTimeout(int64 timeout_ns) {
+Status CascadeWatchdog::UpdateTimeout(int64 timeout_ns) {
   return watchdogs_[0]->UpdateTimeout(timeout_ns);
 }
 
-util::Status CascadeWatchdog::UpdateTimeout(int child_index, int64 timeout_ns) {
+Status CascadeWatchdog::UpdateTimeout(int child_index, int64 timeout_ns) {
   if (child_index >= watchdogs_.size()) {
-    return util::InvalidArgumentError(StringPrintf(
+    return InvalidArgumentError(StringPrintf(
         "Invalid child_index %d. We only have %zu child watchdogs.",
         child_index, watchdogs_.size()));
   }

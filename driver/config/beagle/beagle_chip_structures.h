@@ -39,6 +39,7 @@ const ChipStructures kBeagleChipStructures = {
     4ULL,        // NOLINT: number_y_tiles
     1ULL,        // NOLINT: number_compute_threads
     0ULL,        // NOLINT: number_of_ring_virtual_networks
+    8ULL,        // NOLINT: number_of_ring_vcs
     0ULL,        // NOLINT: last_z_out_cell_disable_incompatible_with_sparsity
     0ULL,        // NOLINT: nlu_buffer_backpressure_causes_assertion
     0ULL,        // NOLINT: mesh_rx_queue_depth
@@ -49,6 +50,7 @@ const ChipStructures kBeagleChipStructures = {
     0ULL,        // NOLINT: base_and_bound_unit_size_bytes
     1ULL,        // NOLINT: number_of_scalar_core_contexts
     0ULL,        // NOLINT: support_tile_thread_gcsr_node
+    1ULL,        // NOLINT: number_of_atomic_clusters
 };
 
 }  // namespace config

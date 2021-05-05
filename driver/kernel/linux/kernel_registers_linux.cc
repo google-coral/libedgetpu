@@ -39,7 +39,7 @@ KernelRegistersLinux::KernelRegistersLinux(const std::string& device_path,
 
 KernelRegistersLinux::~KernelRegistersLinux() { UnmapAllRegions(); }
 
-util::StatusOr<uint64*> KernelRegistersLinux::MapRegion(
+StatusOr<uint64*> KernelRegistersLinux::MapRegion(
     FileDescriptor fd, const MappedRegisterRegion& region, bool read_only) {
   int protections = PROT_READ | PROT_WRITE;
   if (read_only) {
@@ -49,21 +49,20 @@ util::StatusOr<uint64*> KernelRegistersLinux::MapRegion(
   void* result = mmap(nullptr, region.size, protections,
                       MAP_SHARED, fd, region.offset);
   if (result == MAP_FAILED) {
-    return util::InternalError(
-        StringPrintf("Could not mmap: %s", strerror(errno)));
+    return InternalError(StringPrintf("Could not mmap: %s", strerror(errno)));
   }
 
   return static_cast<uint64*>(result);
 }
 
-util::Status KernelRegistersLinux::UnmapRegion(
-    FileDescriptor fd, const MappedRegisterRegion& region) {
+Status KernelRegistersLinux::UnmapRegion(FileDescriptor fd,
+                                         const MappedRegisterRegion& region) {
   const int ret = munmap(region.registers, region.size);
   if (ret != 0) {
-    return util::InternalError(
+    return InternalError(
         StringPrintf("Error unmapping registers: %s", strerror(errno)));
   }
-  return util::OkStatus();
+  return OkStatus();
 }
 
 }  // namespace driver

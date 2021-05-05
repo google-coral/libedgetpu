@@ -20,6 +20,47 @@
 // IWYU pragma: begin_exports
 #if DARWINN_PORT_USE_GOOGLE3
 #include "util/task/canonical_errors.h"
+
+namespace platforms {
+namespace darwinn {
+
+// Allows portable clients to use platforms::darwinn::*Errors.
+using ::util::AbortedError;
+using ::util::AlreadyExistsError;
+using ::util::CancelledError;
+using ::util::DataLossError;
+using ::util::DeadlineExceededError;
+using ::util::FailedPreconditionError;
+using ::util::InternalError;
+using ::util::InvalidArgumentError;
+using ::util::IsAborted;
+using ::util::IsAlreadyExists;
+using ::util::IsCancelled;
+using ::util::IsDataLoss;
+using ::util::IsDeadlineExceeded;
+using ::util::IsFailedPrecondition;
+using ::util::IsInternal;
+using ::util::IsInvalidArgument;
+using ::util::IsNotFound;
+using ::util::IsOutOfRange;
+using ::util::IsPermissionDenied;
+using ::util::IsResourceExhausted;
+using ::util::IsUnauthenticated;
+using ::util::IsUnavailable;
+using ::util::IsUnimplemented;
+using ::util::IsUnknown;
+using ::util::NotFoundError;
+using ::util::OutOfRangeError;
+using ::util::PermissionDeniedError;
+using ::util::ResourceExhaustedError;
+using ::util::UnauthenticatedError;
+using ::util::UnavailableError;
+using ::util::UnimplementedError;
+using ::util::UnknownError;
+
+}  // namespace darwinn
+}  // namespace platforms
+
 #else  // !DARWINN_PORT_USE_GOOGLE3
 #include "port/default/errors.h"
 #endif  // DARWINN_PORT_USE_GOOGLE3

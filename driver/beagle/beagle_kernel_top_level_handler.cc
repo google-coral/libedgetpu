@@ -31,11 +31,11 @@ BeagleKernelTopLevelHandler::BeagleKernelTopLevelHandler(
     const std::string &device_path, api::PerformanceExpectation performance)
     : device_path_(device_path), performance_(performance) {}
 
-util::Status BeagleKernelTopLevelHandler::DisableSoftwareClockGate() {
+Status BeagleKernelTopLevelHandler::DisableSoftwareClockGate() {
   StdMutexLock lock(&mutex_);
 
   if (!clock_gated_) {
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   apex_gate_clock_ioctl ioctl_buffer;
@@ -43,20 +43,20 @@ util::Status BeagleKernelTopLevelHandler::DisableSoftwareClockGate() {
   ioctl_buffer.enable = 0;
 
   if (ioctl(fd_, APEX_IOCTL_GATE_CLOCK, &ioctl_buffer) != 0) {
-    return util::FailedPreconditionError(StringPrintf(
+    return FailedPreconditionError(StringPrintf(
         "Could not Disable Clock Gating : %d (%s)", fd_, strerror(errno)));
   }
 
   clock_gated_ = false;
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleKernelTopLevelHandler::EnableSoftwareClockGate() {
+Status BeagleKernelTopLevelHandler::EnableSoftwareClockGate() {
   StdMutexLock lock(&mutex_);
 
   if (clock_gated_) {
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   apex_gate_clock_ioctl ioctl_buffer;
@@ -64,43 +64,43 @@ util::Status BeagleKernelTopLevelHandler::EnableSoftwareClockGate() {
   ioctl_buffer.enable = 1;
 
   if (ioctl(fd_, APEX_IOCTL_GATE_CLOCK, &ioctl_buffer) != 0) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Could not Clock Gate : %d (%s)", fd_, strerror(errno)));
   }
 
   clock_gated_ = true;
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleKernelTopLevelHandler::Open() {
+Status BeagleKernelTopLevelHandler::Open() {
   StdMutexLock lock(&mutex_);
   if (fd_ != INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device already open.");
+    return FailedPreconditionError("Device already open.");
   }
 
   fd_ = open(device_path_.c_str(), O_RDWR);
   if (fd_ < 0) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Device open failed : %d (%s)", fd_, strerror(errno)));
   }
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleKernelTopLevelHandler::Close() {
+Status BeagleKernelTopLevelHandler::Close() {
   StdMutexLock lock(&mutex_);
   if (fd_ == INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device not open.");
+    return FailedPreconditionError("Device not open.");
   }
 
   close(fd_);
   fd_ = INVALID_FD_VALUE;
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleKernelTopLevelHandler::QuitReset() {
+Status BeagleKernelTopLevelHandler::QuitReset() {
   apex_performance_expectation_ioctl ioctl_buffer;
   memset(&ioctl_buffer, 0, sizeof(ioctl_buffer));
 
@@ -122,7 +122,7 @@ util::Status BeagleKernelTopLevelHandler::QuitReset() {
       break;
 
     default:
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           StringPrintf("Bad performance setting %d.", performance_));
   }
 
@@ -133,7 +133,7 @@ util::Status BeagleKernelTopLevelHandler::QuitReset() {
         strerror(errno));
   }
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 }  // namespace driver

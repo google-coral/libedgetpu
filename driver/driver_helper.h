@@ -62,41 +62,40 @@ class DriverHelper : public api::Driver {
     if (IsOpen()) CHECK_OK(Close(api::Driver::ClosingMode::kGraceful));
   }
 
-  util::Status Open(bool debug_mode, bool context_lost = false) final
+  Status Open(bool debug_mode, bool context_lost = false) final
       LOCKS_EXCLUDED(mutex_);
 
-  util::Status Close(api::Driver::ClosingMode mode) final
-      LOCKS_EXCLUDED(mutex_);
+  Status Close(api::Driver::ClosingMode mode) final LOCKS_EXCLUDED(mutex_);
 
   bool IsOpen() const final LOCKS_EXCLUDED(mutex_);
 
   bool IsError() const final;
 
-  util::StatusOr<const api::PackageReference*> RegisterExecutableFile(
+  StatusOr<const api::PackageReference*> RegisterExecutableFile(
       const std::string& executable_filename) final;
 
-  util::StatusOr<const api::PackageReference*> RegisterExecutableSerialized(
+  StatusOr<const api::PackageReference*> RegisterExecutableSerialized(
       const std::string& executable_content) final;
-  util::StatusOr<const api::PackageReference*> RegisterExecutableSerialized(
+  StatusOr<const api::PackageReference*> RegisterExecutableSerialized(
       const char* executable_content, size_t length) final;
 
-  util::Status UnregisterExecutable(
+  Status UnregisterExecutable(
       const api::PackageReference* executable_ref) final;
 
-  util::StatusOr<std::shared_ptr<api::Request>> CreateRequest(
+  StatusOr<std::shared_ptr<api::Request>> CreateRequest(
       const api::PackageReference* executable_ref) final;
 
-  util::Status Submit(std::shared_ptr<api::Request> request,
-                      api::Request::Done done_callback) final;
+  Status Submit(std::shared_ptr<api::Request> request,
+                api::Request::Done done_callback) final;
 
-  util::Status Execute(std::shared_ptr<api::Request> request) final;
+  Status Execute(std::shared_ptr<api::Request> request) final;
 
-  util::Status Execute(
+  Status Execute(
       const std::vector<std::shared_ptr<api::Request>>& requests) final;
 
-  util::Status Cancel(std::shared_ptr<api::Request> request) final;
+  Status Cancel(std::shared_ptr<api::Request> request) final;
 
-  util::Status CancelAllRequests() final;
+  Status CancelAllRequests() final;
 
   uint64_t allocation_alignment_bytes() const final;
 
@@ -106,47 +105,46 @@ class DriverHelper : public api::Driver {
 
   void SetThermalWarningCallback(ThermalWarningCallback callback) final;
 
-  util::Status SetExecutionPreference(const api::PackageReference* package,
-                                      ExecutionPreference preference) final {
-    return util::OkStatus();
+  Status SetExecutionPreference(const api::PackageReference* package,
+                                ExecutionPreference preference) final {
+    return OkStatus();
   }
 
   // Extensions to the Device interface to facilitate easier testing.
 
   // Submits an inference request with given test vector.
-  util::Status Submit(const TestVector& test_vector, int batches)
+  Status Submit(const TestVector& test_vector, int batches)
       LOCKS_EXCLUDED(mutex_);
 
   // Submits an inference request and execute the specified callback on
   // completion. |tag| is a user friendly name for tracking this request
   // (typically the model name).
-  util::Status Submit(const std::string& tag,
-                      const api::PackageReference* executable_ref,
-                      const Buffer::NamedMap& input,
-                      const Buffer::NamedMap& output,
-                      const Buffer::NamedMap& output_with_guard_areas,
-                      api::Request::Done request_done) LOCKS_EXCLUDED(mutex_);
+  Status Submit(const std::string& tag,
+                const api::PackageReference* executable_ref,
+                const Buffer::NamedMap& input, const Buffer::NamedMap& output,
+                const Buffer::NamedMap& output_with_guard_areas,
+                api::Request::Done request_done) LOCKS_EXCLUDED(mutex_);
 
   // Submits an inference request and verify output, with optional guard area
   // sorrounding the output buffers. Dumps the output upon mismatch, if
   // output_file_name is not empty.
-  util::Status Submit(
+  Status Submit(
       const std::string& tag, const api::PackageReference* executable_ref,
       const std::string& output_file_name, const Buffer::NamedMap& input,
       const Buffer::NamedMap& expected_output, const Buffer::NamedMap& output,
       const Buffer::NamedMap& output_with_guard_areas) LOCKS_EXCLUDED(mutex_);
 
   // Submits an inference request and verify output.
-  util::Status Submit(const std::string& tag,
-                      const api::PackageReference* executable_ref,
-                      const Buffer::NamedMap& input,
-                      const Buffer::NamedMap& expected_output,
-                      const Buffer::NamedMap& output) LOCKS_EXCLUDED(mutex_);
+  Status Submit(const std::string& tag,
+                const api::PackageReference* executable_ref,
+                const Buffer::NamedMap& input,
+                const Buffer::NamedMap& expected_output,
+                const Buffer::NamedMap& output) LOCKS_EXCLUDED(mutex_);
 
-  util::Status SetRealtimeMode(bool on) override;
+  Status SetRealtimeMode(bool on) override;
 
-  util::Status SetExecutableTiming(const api::PackageReference* executable,
-                                   const api::Timing& timing) override;
+  Status SetExecutableTiming(const api::PackageReference* executable,
+                             const api::Timing& timing) override;
 
   void SetTelemeterInterface(
       api::TelemeterInterface* telemeter_interface) override {}

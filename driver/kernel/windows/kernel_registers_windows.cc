@@ -46,7 +46,7 @@ KernelRegistersWindows::KernelRegistersWindows(const std::string& device_path,
 
 KernelRegistersWindows::~KernelRegistersWindows() { UnmapAllRegions(); }
 
-util::StatusOr<uint64*> KernelRegistersWindows::MapRegion(
+StatusOr<uint64*> KernelRegistersWindows::MapRegion(
     FileDescriptor fd, const MappedRegisterRegion& region, bool read_only) {
   gasket_address_map_ioctl ioctl = {0, region.offset, region.size, 0,
                                     0, nullptr};
@@ -55,15 +55,15 @@ util::StatusOr<uint64*> KernelRegistersWindows::MapRegion(
   res = DeviceIoControl(fd, GASKET_IOCTL_MAP_HDW_VIEW, &ioctl, sizeof(ioctl),
                         &ioctl, sizeof(ioctl), NULL, NULL);
   if (!res) {
-    return util::InternalError(StringPrintf(
+    return InternalError(StringPrintf(
         "KernelRegisters::MapRegion failed! gle=%d", GetLastError()));
   }
 
   return static_cast<uint64*>(ioctl.virtaddr);
 }
 
-util::Status KernelRegistersWindows::UnmapRegion(
-    FileDescriptor fd, const MappedRegisterRegion& region) {
+Status KernelRegistersWindows::UnmapRegion(FileDescriptor fd,
+                                           const MappedRegisterRegion& region) {
   gasket_address_map_ioctl ioctl = {0, region.offset,   region.size, 0,
                                     0, region.registers};
   bool res;
@@ -71,11 +71,11 @@ util::Status KernelRegistersWindows::UnmapRegion(
   res = DeviceIoControl(fd, GASKET_IOCTL_UNMAP_HDW_VIEW, &ioctl, sizeof(ioctl),
                         &ioctl, sizeof(ioctl), NULL, NULL);
   if (!res) {
-    util::FailedPreconditionError(StringPrintf(
+    FailedPreconditionError(StringPrintf(
         "KernelRegisters::UnmapRegion failed! gle=%d", GetLastError()));
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 }  // namespace driver

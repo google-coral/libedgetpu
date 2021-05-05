@@ -12,28 +12,28 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_binary", "libedgetpu_cc_library")
-
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-libedgetpu_cc_library(
+cc_library(
     name = "custom_op_data",
     srcs = ["custom_op_data.cc"],
     hdrs = ["custom_op_data.h"],
     deps = [
+        "//api:chip",
         "//port",
         "@flatbuffers",
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "custom_op",
     srcs = ["custom_op.cc"],
     hdrs = ["custom_op.h"],
     deps = [
         ":custom_op_data",
+        "@com_google_absl//absl/strings",
         "//api:layer_information",
         "//driver:package_registry",
         "//port",
@@ -42,20 +42,21 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "custom_op_user_data_direct",
     srcs = ["custom_op_user_data_direct.cc"],
     hdrs = ["custom_op_user_data_direct.h"],
     deps = [
         ":custom_op",
         ":custom_op_data",
+        "@com_google_absl//absl/container:flat_hash_map",
         "//api:driver",
         "//driver:package_registry",
         "//port",
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_context_direct_header",
     hdrs = ["edgetpu_context_direct.h"],
     deps = [
@@ -74,7 +75,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_manager_direct_header",
     hdrs = ["edgetpu_manager_direct.h"],
     deps = [
@@ -94,28 +95,26 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_context_direct",
     srcs = ["edgetpu_context_direct.cc"],
     hdrs = ["edgetpu_context_direct.h"],
     deps = [
-        ":custom_op_data",
         ":custom_op_user_data_direct",
         ":edgetpu_manager_direct_header",
+        "@com_google_absl//absl/strings",
         "//api:driver",
         "//api:driver_factory",
         "//api:driver_options_fbs",
         "//api:package_reference",
-        "//driver:driver_factory",
         "//port",
         "//port:std_mutex_lock",
         "//port:thread_annotations",
         "//tflite/public:edgetpu",
-        "@org_tensorflow//tensorflow/lite:context",
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_manager_direct",
     srcs = ["edgetpu_manager_direct.cc"],
     hdrs = ["edgetpu_manager_direct.h"],
@@ -138,7 +137,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "custom_op_direct",
     srcs = ["custom_op_direct.cc"],
     deps = [
@@ -157,7 +156,7 @@ libedgetpu_cc_library(
     alwayslink = 1,
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "tensor_data_controller",
     srcs = ["tensor_data_controller.cc"],
     hdrs = ["tensor_data_controller.h"],
@@ -168,7 +167,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_context_factory",
     srcs = ["edgetpu_context_factory.cc"],
     hdrs = ["edgetpu_context_factory.h"],
@@ -180,13 +179,13 @@ libedgetpu_cc_library(
     ],
 )
 
-# Set EXTRA_LOGGING to DUMMY to diable extra logging in text protobuf.
+# Set EXTRA_LOGGING to DUMMY to disable extra logging in text protobuf.
 config_setting(
     name = "no_extra_logging",
     values = {"define": "EXTRA_LOGGING=DUMMY"},
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_delegate_for_custom_op",
     srcs = [
         "edgetpu_delegate_for_custom_op.cc",
@@ -200,7 +199,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_delegate_for_custom_op_tflite_plugin",
     srcs = [
         "edgetpu_delegate_for_custom_op_tflite_plugin.cc",
@@ -215,7 +214,7 @@ libedgetpu_cc_library(
     alwayslink = 1,
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_c",
     srcs = [
         "edgetpu_c.cc",

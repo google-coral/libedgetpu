@@ -23,18 +23,18 @@ namespace platforms {
 namespace darwinn {
 namespace driver {
 
-util::Status NoopPackageVerifier::VerifySignature(const void*) const {
-  return util::FailedPreconditionError(
+Status NoopPackageVerifier::VerifySignature(const void*) const {
+  return FailedPreconditionError(
       "No verifier was created yet verification was requested.");
 }
 
-util::StatusOr<std::unique_ptr<PackageVerifier>> MakeExecutableVerifier(
+StatusOr<std::unique_ptr<PackageVerifier>> MakeExecutableVerifier(
     const std::string& public_key_path) {
 
   return {gtl::MakeUnique<NoopPackageVerifier>()};
 }
 
-util::StatusOr<std::unique_ptr<PackageVerifier>> MakeExecutableVerifierFromFile(
+StatusOr<std::unique_ptr<PackageVerifier>> MakeExecutableVerifierFromFile(
     const std::string& public_key_path) {
 
   return {gtl::MakeUnique<NoopPackageVerifier>()};

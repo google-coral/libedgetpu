@@ -55,43 +55,42 @@ class Driver : public api::Driver {
 
   bool IsError() const override;
 
-  util::Status Open(bool debug_mode = false, bool context_lost = false)
+  Status Open(bool debug_mode = false, bool context_lost = false)
       LOCKS_EXCLUDED(state_mutex_) override;
 
-  util::StatusOr<const api::PackageReference*> RegisterExecutableFile(
+  StatusOr<const api::PackageReference*> RegisterExecutableFile(
       const std::string& executable_filename) override;
 
-  util::StatusOr<const api::PackageReference*> RegisterExecutableSerialized(
+  StatusOr<const api::PackageReference*> RegisterExecutableSerialized(
       const std::string& executable_content) override;
 
-  util::StatusOr<const api::PackageReference*> RegisterExecutableSerialized(
+  StatusOr<const api::PackageReference*> RegisterExecutableSerialized(
       const char* executable_content, size_t length) override;
 
-  util::Status UnregisterExecutable(const api::PackageReference* executable_ref)
+  Status UnregisterExecutable(const api::PackageReference* executable_ref)
       LOCKS_EXCLUDED(state_mutex_) override;
 
-  util::StatusOr<std::shared_ptr<api::Request>> CreateRequest(
+  StatusOr<std::shared_ptr<api::Request>> CreateRequest(
       const api::PackageReference*) override;
 
   // TODO If we end up spliting driver::Driver to 2 layers, this
   // method can go up a layer.
-  util::Status Submit(std::shared_ptr<api::Request> request,
-                      api::Request::Done done_callback)
+  Status Submit(std::shared_ptr<api::Request> request,
+                api::Request::Done done_callback)
       LOCKS_EXCLUDED(state_mutex_, submit_mutex_) override;
 
-  util::Status Execute(std::shared_ptr<api::Request> request)
+  Status Execute(std::shared_ptr<api::Request> request)
       LOCKS_EXCLUDED(state_mutex_, submit_mutex_) override;
 
-  util::Status Execute(
-      const std::vector<std::shared_ptr<api::Request>>& requests)
+  Status Execute(const std::vector<std::shared_ptr<api::Request>>& requests)
       LOCKS_EXCLUDED(state_mutex_, submit_mutex_) override;
 
-  util::Status Cancel(std::shared_ptr<api::Request> request)
+  Status Cancel(std::shared_ptr<api::Request> request)
       LOCKS_EXCLUDED(state_mutex_) override;
 
-  util::Status CancelAllRequests() LOCKS_EXCLUDED(state_mutex_) override;
+  Status CancelAllRequests() LOCKS_EXCLUDED(state_mutex_) override;
 
-  util::Status Close(api::Driver::ClosingMode mode)
+  Status Close(api::Driver::ClosingMode mode)
       LOCKS_EXCLUDED(state_mutex_) override;
 
   void SetFatalErrorCallback(FatalErrorCallback callback) override;
@@ -100,22 +99,20 @@ class Driver : public api::Driver {
 
   Buffer MakeBuffer(size_t size_bytes) const override;
 
-  util::Status SetRealtimeMode(bool on) override {
-    return DoSetRealtimeMode(on);
-  }
+  Status SetRealtimeMode(bool on) override { return DoSetRealtimeMode(on); }
 
-  util::Status SetExecutableTiming(const api::PackageReference* executable,
-                                   const api::Timing& timing) override;
+  Status SetExecutableTiming(const api::PackageReference* executable,
+                             const api::Timing& timing) override;
 
-  util::Status RemoveExecutableTiming(const api::PackageReference* executable) {
+  Status RemoveExecutableTiming(const api::PackageReference* executable) {
     return DoRemoveExecutableTiming(
         static_cast<const driver::PackageReference*>(executable)
             ->MainExecutableReference());
   }
 
-  util::Status SetExecutionPreference(const api::PackageReference* package,
-                                      ExecutionPreference preference) override {
-    return util::OkStatus();
+  Status SetExecutionPreference(const api::PackageReference* package,
+                                ExecutionPreference preference) override {
+    return OkStatus();
   }
 
   void SetTelemeterInterface(
@@ -127,48 +124,48 @@ class Driver : public api::Driver {
       LOCKS_EXCLUDED(submit_mutex_) override;
 
  protected:
-  Driver(api::Chip chip, std::unique_ptr<PackageRegistry> executable_registry,
+  Driver(api::Chip, std::unique_ptr<PackageRegistry> executable_registry,
          const api::DriverOptions& driver_options,
-         std::unique_ptr<driver_shared::TimeStamper> timestamper);
+         std::unique_ptr<driver_shared::TimeStamper> time_stamper);
 
   // The base driver implementation does the necessary state checks and
   // validations before issuing the following calls that are implemented by the
   // derived class.
 
-  virtual util::Status DoOpen(bool debug_mode)
+  virtual Status DoOpen(bool debug_mode)
       EXCLUSIVE_LOCKS_REQUIRED(state_mutex_) = 0;
 
-  virtual util::Status DoClose(bool in_error, api::Driver::ClosingMode mode)
+  virtual Status DoClose(bool in_error, api::Driver::ClosingMode mode)
       EXCLUSIVE_LOCKS_REQUIRED(state_mutex_) = 0;
 
   // Cancels pending requests and waits for active requests to finish.
-  virtual util::Status DoCancelAndWaitRequests(bool in_error)
+  virtual Status DoCancelAndWaitRequests(bool in_error)
       SHARED_LOCKS_REQUIRED(state_mutex_) = 0;
 
-  virtual util::StatusOr<MappedDeviceBuffer> DoMapBuffer(const Buffer& buffer,
-                                                         DmaDirection direction)
+  virtual StatusOr<MappedDeviceBuffer> DoMapBuffer(const Buffer& buffer,
+                                                   DmaDirection direction)
       SHARED_LOCKS_REQUIRED(state_mutex_) = 0;
 
-  virtual util::StatusOr<std::shared_ptr<TpuRequest>> DoCreateRequest(
+  virtual StatusOr<std::shared_ptr<TpuRequest>> DoCreateRequest(
       const std::shared_ptr<Request> parent_request,
       const ExecutableReference* executable, TpuRequest::RequestType type)
       SHARED_LOCKS_REQUIRED(state_mutex_) = 0;
 
-  virtual util::Status DoSetExecutableTiming(
-      const ExecutableReference* executable, const api::Timing& timing) = 0;
+  virtual Status DoSetExecutableTiming(const ExecutableReference* executable,
+                                       const api::Timing& timing) = 0;
 
-  virtual util::Status DoRemoveExecutableTiming(
+  virtual Status DoRemoveExecutableTiming(
       const ExecutableReference* executable) {
-    return util::FailedPreconditionError("Unsupported operation");
+    return FailedPreconditionError("Unsupported operation");
   }
 
   // TODO by just using RT scheduler everywhere, we can avoid the
   // complexity of having a capability query here.
   virtual bool HasImplementedRealtimeMode() const { return false; }
 
-  virtual util::Status DoSetRealtimeMode(bool on) = 0;
+  virtual Status DoSetRealtimeMode(bool on) = 0;
 
-  virtual util::Status DoSubmit(std::shared_ptr<TpuRequest> request)
+  virtual Status DoSubmit(std::shared_ptr<TpuRequest> request)
 
       SHARED_LOCKS_REQUIRED(state_mutex_) = 0;
 
@@ -179,14 +176,14 @@ class Driver : public api::Driver {
   virtual int64 MaxRemainingCycles() const = 0;
 
   // Notifies that the driver / device has entered an error state.
-  void NotifyFatalError(const util::Status& status);
+  void NotifyFatalError(const Status& status);
 
   // Unregisters all the currently registered models.
-  util::Status UnregisterAll() { return executable_registry_->UnregisterAll(); }
+  Status UnregisterAll() { return executable_registry_->UnregisterAll(); }
 
   // Unmaps all mapped parameters. This method typically needs to get called
   // before closing the MMU mapper.
-  util::Status UnmapAllParameters() {
+  Status UnmapAllParameters() {
     return executable_registry_->UnmapAllParameters();
   }
 
@@ -205,8 +202,8 @@ class Driver : public api::Driver {
   }
 
   // Returns the oldest submitted request that's still active.
-  virtual util::StatusOr<std::shared_ptr<TpuRequest>>
-  GetOldestActiveRequest() const = 0;
+  virtual StatusOr<std::shared_ptr<TpuRequest>> GetOldestActiveRequest()
+      const = 0;
 
  private:
   // Driver state. Transitions:
@@ -218,22 +215,21 @@ class Driver : public api::Driver {
   };
 
   // Attempts a state transition to the given state.
-  util::Status SetState(State next_state)
-      EXCLUSIVE_LOCKS_REQUIRED(state_mutex_);
+  Status SetState(State next_state) EXCLUSIVE_LOCKS_REQUIRED(state_mutex_);
 
-// Generate string to display for bad driver state errors.
+  // Generate string to display for bad driver state errors.
   std::string BadStateMessage(State expected_state) const
       SHARED_LOCKS_REQUIRED(state_mutex_);
 
   // Internal helper for mapping parameters.
-  util::Status MapParameters(PackageReference& package_ref)
+  Status MapParameters(PackageReference& package_ref)
       SHARED_LOCKS_REQUIRED(state_mutex_)
           EXCLUSIVE_LOCKS_REQUIRED(submit_mutex_);
 
   // Prepares and submits a single inference TpuRequest from the provided
   // request. It returns an error if there are no remaining TpuRequests to be
   // submitted.
-  util::Status SubmitInferenceRequest(std::shared_ptr<Request> request)
+  Status SubmitInferenceRequest(std::shared_ptr<Request> request)
       SHARED_LOCKS_REQUIRED(state_mutex_)
           EXCLUSIVE_LOCKS_REQUIRED(submit_mutex_);
 
@@ -244,14 +240,12 @@ class Driver : public api::Driver {
       EXCLUSIVE_LOCKS_REQUIRED(submit_mutex_);
 
   // Checks if we need to load to-be-cached parameters to the TPU.
-  util::StatusOr<bool> NeedsParameterCaching(
-      const std::shared_ptr<Request>& request) const
-      SHARED_LOCKS_REQUIRED(state_mutex_)
+  StatusOr<bool> NeedsParameterCaching(const std::shared_ptr<Request>& request)
+      const SHARED_LOCKS_REQUIRED(state_mutex_)
           EXCLUSIVE_LOCKS_REQUIRED(submit_mutex_);
 
   // Submits a parameter caching request and updates the records.
-  util::Status SubmitParameterCachingRequest(
-      const std::shared_ptr<Request>& request)
+  Status SubmitParameterCachingRequest(const std::shared_ptr<Request>& request)
       SHARED_LOCKS_REQUIRED(state_mutex_)
           EXCLUSIVE_LOCKS_REQUIRED(submit_mutex_);
 
@@ -259,18 +253,18 @@ class Driver : public api::Driver {
   // tasks pending in the DMA scheduler. It returns OK status if there are no
   // more requests to be scheduled. It returns an error if there are any errors
   // in submitting requests.
-  util::Status TrySchedulePendingRequests() SHARED_LOCKS_REQUIRED(state_mutex_)
+  Status TrySchedulePendingRequests() SHARED_LOCKS_REQUIRED(state_mutex_)
       EXCLUSIVE_LOCKS_REQUIRED(submit_mutex_);
 
   // If a request is for a package with specified latency tolerance, it returns
   // a deadline_exceeded error if driver cannot guarantee that it finishes the
   // request in less than the tolerable latency.
-  util::Status CheckLatencyTolerance(const std::shared_ptr<Request>& request)
+  Status CheckLatencyTolerance(const std::shared_ptr<Request>& request)
       SHARED_LOCKS_REQUIRED(state_mutex_)
           EXCLUSIVE_LOCKS_REQUIRED(submit_mutex_);
 
   // Cleans up the priority queues by cancelling all pending requests.
-  util::Status CancelAllPendingRequests() EXCLUSIVE_LOCKS_REQUIRED(state_mutex_)
+  Status CancelAllPendingRequests() EXCLUSIVE_LOCKS_REQUIRED(state_mutex_)
       LOCKS_EXCLUDED(submit_mutex_);
 
   // Returns true if we can schedule one more inference for the provided request
@@ -278,14 +272,12 @@ class Driver : public api::Driver {
   // request on TPU and what our threshold for keeping the pipeline busy is.
   // This function should not be called for P0 requests. It always returns true
   // If there is no more work in DMA scheduler.
-  util::StatusOr<bool> CanScheduleTpuRequest(
-      const std::shared_ptr<Request>& request)
+  StatusOr<bool> CanScheduleTpuRequest(const std::shared_ptr<Request>& request)
       SHARED_LOCKS_REQUIRED(state_mutex_)
           EXCLUSIVE_LOCKS_REQUIRED(submit_mutex_);
 
   // Updates scheduler with static timing estimation from registered executable.
-  util::Status UpdateInitialTiming(
-      const api::PackageReference* api_package_reference)
+  Status UpdateInitialTiming(const api::PackageReference* api_package_reference)
       LOCKS_EXCLUDED(submit_mutex_);
 
   // Runs the scheduler thread.
@@ -303,9 +295,6 @@ class Driver : public api::Driver {
 
   // Driver state.
   State state_ GUARDED_BY(state_mutex_){kClosed};
-
-  // Chip that this driver controls.
-  const api::Chip chip_;
 
   // Executable registry. Null, when device is in closed state.
   std::unique_ptr<PackageRegistry> executable_registry_;

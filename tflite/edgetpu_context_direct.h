@@ -60,9 +60,7 @@ class EdgeTpuDriverWrapper {
 
   // Synchronously executes executables for this node, with the context object
   // locked.
-  // TODO: optimize locking, so part of pre- and post-processing can
-  // be done without the context object being locked.
-  util::Status InvokeExecutable(TfLiteContext* context, TfLiteNode* node)
+  Status InvokeExecutable(TfLiteContext* context, TfLiteNode* node)
       LOCKS_EXCLUDED(mutex_);
 
   // Returns constant reference to enumeration record for this device.
@@ -73,7 +71,7 @@ class EdgeTpuDriverWrapper {
   EdgeTpuManager::DeviceOptions GetDeviceOptions() const LOCKS_EXCLUDED(mutex_);
 
   // Intended to be used by #EdgeTpuContextDirect
-  util::Status AddRef() LOCKS_EXCLUDED(mutex_);
+  Status AddRef() LOCKS_EXCLUDED(mutex_);
 
   // Intended to be used by #EdgeTpuManagerDirect
   int Release() LOCKS_EXCLUDED(mutex_);

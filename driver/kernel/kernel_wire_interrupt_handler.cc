@@ -39,7 +39,7 @@ KernelWireInterruptHandler::KernelWireInterruptHandler(
       event_handler_(std::move(event_handler)),
       num_wires_(num_wires) {}
 
-util::Status KernelWireInterruptHandler::Open() {
+Status KernelWireInterruptHandler::Open() {
   RETURN_IF_ERROR(wire_handler_.Open());
   auto wire_handler_closer = MakeCleanup(
       [this]() NO_THREAD_SAFETY_ANALYSIS { CHECK_OK(wire_handler_.Close()); });
@@ -59,18 +59,18 @@ util::Status KernelWireInterruptHandler::Open() {
   wire_handler_closer.release();
   event_handler_closer.release();
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status KernelWireInterruptHandler::Close(bool in_error) {
-  util::Status status;
+Status KernelWireInterruptHandler::Close(bool in_error) {
+  Status status;
   status.Update(event_handler_->Close());
   status.Update(wire_handler_.Close());
   return status;
 }
 
-util::Status KernelWireInterruptHandler::Register(Interrupt interrupt,
-                                                  Handler handler) {
+Status KernelWireInterruptHandler::Register(Interrupt interrupt,
+                                            Handler handler) {
   return wire_handler_.Register(interrupt, std::move(handler));
 }
 

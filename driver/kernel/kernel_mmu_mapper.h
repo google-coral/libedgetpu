@@ -41,19 +41,17 @@ class KernelMmuMapper : public MmuMapper {
   ~KernelMmuMapper() override = default;
 
   // Overrides from mmu_mapper.h
-  util::Status Open(int num_simple_page_table_entries_requested) override;
-  util::Status Close() override;
+  Status Open(int num_simple_page_table_entries_requested) override;
+  Status Close() override;
 
  protected:
-  util::Status DoMap(const void *buffer, int num_pages,
-                     uint64 device_virtual_address,
-                     DmaDirection direction) override;
-  util::Status DoUnmap(const void *buffer, int num_pages,
-                       uint64 device_virtual_address) override;
-  util::Status DoMap(int fd, int num_pages, uint64 device_virtual_address,
-                     DmaDirection direction) override;
-  util::Status DoUnmap(int fd, int num_pages,
-                       uint64 device_virtual_address) override;
+  Status DoMap(const void *buffer, int num_pages, uint64 device_virtual_address,
+               DmaDirection direction) override;
+  Status DoUnmap(const void *buffer, int num_pages,
+                 uint64 device_virtual_address) override;
+  Status DoMap(int fd, int num_pages, uint64 device_virtual_address,
+               DmaDirection direction) override;
+  Status DoUnmap(int fd, int num_pages, uint64 device_virtual_address) override;
 
   // Calls ioctl on the device file descriptor owned by this instance.
   // Forwards the parameters to the ioctl too; returns -1 on closed device and

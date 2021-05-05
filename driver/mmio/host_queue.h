@@ -71,20 +71,20 @@ class HostQueue {
   virtual ~HostQueue() = default;
 
   // Open/Close the host queue interface.
-  virtual util::Status Open(AddressSpace* address_space);
-  virtual util::Status Close(bool in_error);
-  util::Status Close() { return Close(/*in_error=*/false); }
+  virtual Status Open(AddressSpace* address_space);
+  virtual Status Close(bool in_error);
+  Status Close() { return Close(/*in_error=*/false); }
 
   // Enqueue the element into the queue with a callback. Does not block. Returns
   // a failure if Enqueue is called when the queue is full.
-  virtual util::Status Enqueue(const Element& element,
-                               std::function<void(uint32)> callback);
+  virtual Status Enqueue(const Element& element,
+                         std::function<void(uint32)> callback);
 
   // Enable/Disable interrupts.
-  virtual util::Status EnableInterrupts() {
+  virtual Status EnableInterrupts() {
     return RegisterWrite(csr_offsets_.queue_int_control, kEnableBit);
   }
-  virtual util::Status DisableInterrupts() {
+  virtual Status DisableInterrupts() {
     return RegisterWrite(csr_offsets_.queue_int_control, kDisableBit);
   }
 
@@ -129,17 +129,15 @@ class HostQueue {
 
  private:
   // Returns an error if |open_| is not in the specified state.
-  util::Status CheckState(bool required) const
-      SHARED_LOCKS_REQUIRED(open_mutex_) {
+  Status CheckState(bool required) const SHARED_LOCKS_REQUIRED(open_mutex_) {
     if (open_ != required) {
-      return util::FailedPreconditionError("Invalid state in HostQueue.");
+      return FailedPreconditionError("Invalid state in HostQueue.");
     }
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   // Helper method to read register at a given offset.
-  util::StatusOr<uint64> RegisterRead(uint64 offset)
-      LOCKS_EXCLUDED(open_mutex_) {
+  StatusOr<uint64> RegisterRead(uint64 offset) LOCKS_EXCLUDED(open_mutex_) {
     {
       StdMutexLock lock(&open_mutex_);
       RETURN_IF_ERROR(CheckState(/*required=*/true));
@@ -148,7 +146,7 @@ class HostQueue {
   }
 
   // Helper method to read register at a given offset.
-  util::Status RegisterWrite(uint64 offset, uint64 value)
+  Status RegisterWrite(uint64 offset, uint64 value)
       LOCKS_EXCLUDED(open_mutex_) {
     {
       StdMutexLock lock(&open_mutex_);
@@ -183,13 +181,13 @@ class HostQueue {
   }
 
   // Helper method to unmap all the device addresses.
-  util::Status UnmapAll() {
+  Status UnmapAll() {
     RETURN_IF_ERROR(
         address_space_->UnmapCoherentMemory(std::move(device_queue_buffer_)));
     RETURN_IF_ERROR(
         address_space_->UnmapCoherentMemory(
             std::move(device_status_block_buffer_)));
-    return util::OkStatus();
+    return OkStatus();
   }
 
   // Helper method to return available space in the queue. Because this is
@@ -276,16 +274,15 @@ HostQueue<Element, StatusBlock>::HostQueue(
 }
 
 template <typename Element, typename StatusBlock>
-util::Status HostQueue<Element, StatusBlock>::Open(
-    AddressSpace* address_space) {
+Status HostQueue<Element, StatusBlock>::Open(AddressSpace* address_space) {
   StdMutexLock lock(&open_mutex_);
   RETURN_IF_ERROR(CheckState(/*required=*/false));
 
   if (address_space_ != nullptr) {
-    return util::InternalError("Address space is already set.");
+    return InternalError("Address space is already set.");
   }
   if (address_space == nullptr) {
-    return util::InvalidArgumentError("Provided address space is null.");
+    return InvalidArgumentError("Provided address space is null.");
   }
   address_space_ = address_space;
 
@@ -293,8 +290,7 @@ util::Status HostQueue<Element, StatusBlock>::Open(
   ASSIGN_OR_RETURN(auto descriptor_result,
                    registers_->Read(csr_offsets_.queue_descriptor_size));
   if (descriptor_result != sizeof(Element)) {
-    return util::InternalError(
-        "Size of |Element| does not match with the hardware.");
+    return InternalError("Size of |Element| does not match with the hardware.");
   }
 
   const size_t q_size =
@@ -336,11 +332,11 @@ util::Status HostQueue<Element, StatusBlock>::Open(
   RETURN_IF_ERROR(registers_->Poll(csr_offsets_.queue_status, kEnableBit));
 
   open_ = true;
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 template <typename Element, typename StatusBlock>
-util::Status HostQueue<Element, StatusBlock>::Close(bool in_error) {
+Status HostQueue<Element, StatusBlock>::Close(bool in_error) {
   StdMutexLock lock(&open_mutex_);
   StdMutexLock callback_lock(&callback_mutex_);
   RETURN_IF_ERROR(CheckState(/*required=*/true));
@@ -362,7 +358,7 @@ util::Status HostQueue<Element, StatusBlock>::Close(bool in_error) {
   RETURN_IF_ERROR(UnmapAll());
 
   if (address_space_ == nullptr) {
-    return util::InternalError("Address space is already null.");
+    return InternalError("Address space is already null.");
   }
 
   address_space_ = nullptr;
@@ -375,16 +371,16 @@ util::Status HostQueue<Element, StatusBlock>::Close(bool in_error) {
   RETURN_IF_ERROR(coherent_allocator_->Close());
 
   open_ = false;
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 template <typename Element, typename StatusBlock>
-util::Status HostQueue<Element, StatusBlock>::Enqueue(
+Status HostQueue<Element, StatusBlock>::Enqueue(
     const Element& element, std::function<void(uint32)> callback) {
   TRACE_SCOPE("HostQueue::Enqueue");
   StdMutexLock lock(&queue_mutex_);
   if (GetAvailableSpaceLocked() == 0) {
-    return util::UnavailableError(StringPrintf(
+    return UnavailableError(StringPrintf(
         "No space in the queue, completed_head: %d, tail: %d, size: %d",
         completed_head_, tail_, size_));
   }
@@ -398,7 +394,7 @@ util::Status HostQueue<Element, StatusBlock>::Enqueue(
   tail_ &= (size_ - 1);
 
   RETURN_IF_ERROR(RegisterWrite(csr_offsets_.queue_tail, tail_));
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 template <typename Element, typename StatusBlock>

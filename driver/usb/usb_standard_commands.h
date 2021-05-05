@@ -146,24 +146,23 @@ class UsbStandardCommands {
 
   virtual ~UsbStandardCommands();
 
-  util::Status Close(CloseAction action) { return device_->Close(action); }
+  Status Close(CloseAction action) { return device_->Close(action); }
 
-  util::Status SetConfiguration(int configuration) {
+  Status SetConfiguration(int configuration) {
     return device_->SetConfiguration(configuration);
   }
 
-  util::Status ClaimInterface(int interface_number) {
+  Status ClaimInterface(int interface_number) {
     return device_->ClaimInterface(interface_number);
   }
 
-  util::Status ReleaseInterface(int interface_number) {
+  Status ReleaseInterface(int interface_number) {
     return device_->ReleaseInterface(interface_number);
   }
 
-  util::Status GetDescriptor(UsbDeviceInterface::DescriptorType desc_type,
-                             uint8_t desc_index, MutableBuffer data_in,
-                             size_t* num_bytes_transferred,
-                             const char* context) {
+  Status GetDescriptor(UsbDeviceInterface::DescriptorType desc_type,
+                       uint8_t desc_index, MutableBuffer data_in,
+                       size_t* num_bytes_transferred, const char* context) {
     // TODO add warnings/limitations on what can be queried, according
     // to USB 3 spec. Only device, config, string, and BOS types can be queried.
     // Only config and string types can have non-zero index specified.
@@ -174,75 +173,72 @@ class UsbStandardCommands {
 
   DeviceSpeed GetDeviceSpeed() const { return device_->GetDeviceSpeed(); }
 
-  util::Status SendControlCommand(const SetupPacket& command,
-                                  const char* context) {
+  Status SendControlCommand(const SetupPacket& command, const char* context) {
     return device_->SendControlCommand(command, default_timeout_msec_, context);
   }
 
-  util::Status SendControlCommandWithDataOut(const SetupPacket& command,
-                                             ConstBuffer data_out,
-                                             const char* context) {
+  Status SendControlCommandWithDataOut(const SetupPacket& command,
+                                       ConstBuffer data_out,
+                                       const char* context) {
     return device_->SendControlCommandWithDataOut(
         command, data_out, default_timeout_msec_, context);
   }
 
-  util::Status SendControlCommandWithDataIn(const SetupPacket& command,
-                                            MutableBuffer data_in,
-                                            size_t* num_bytes_transferred,
-                                            const char* context) {
+  Status SendControlCommandWithDataIn(const SetupPacket& command,
+                                      MutableBuffer data_in,
+                                      size_t* num_bytes_transferred,
+                                      const char* context) {
     return device_->SendControlCommandWithDataIn(
         command, data_in, num_bytes_transferred, default_timeout_msec_,
         context);
   }
 
-  util::Status BulkOutTransfer(uint8_t endpoint, ConstBuffer data_out,
-                               const char* context) {
+  Status BulkOutTransfer(uint8_t endpoint, ConstBuffer data_out,
+                         const char* context) {
     return device_->BulkOutTransfer(endpoint, data_out, default_timeout_msec_,
                                     context);
   }
 
-  util::Status BulkInTransfer(uint8_t endpoint, MutableBuffer data_in,
-                              size_t* num_bytes_transferred,
-                              const char* context) {
+  Status BulkInTransfer(uint8_t endpoint, MutableBuffer data_in,
+                        size_t* num_bytes_transferred, const char* context) {
     return device_->BulkInTransfer(endpoint, data_in, num_bytes_transferred,
                                    default_timeout_msec_, context);
   }
 
-  util::Status InterruptInTransfer(uint8_t endpoint, MutableBuffer data_in,
-                                   size_t* num_bytes_transferred,
-                                   const char* context) {
+  Status InterruptInTransfer(uint8_t endpoint, MutableBuffer data_in,
+                             size_t* num_bytes_transferred,
+                             const char* context) {
     return device_->InterruptInTransfer(endpoint, data_in,
                                         num_bytes_transferred,
                                         default_timeout_msec_, context);
   }
 
-  util::Status AsyncBulkOutTransfer(uint8_t endpoint, ConstBuffer data_out,
-                                    DataOutDone callback, const char* context) {
+  Status AsyncBulkOutTransfer(uint8_t endpoint, ConstBuffer data_out,
+                              DataOutDone callback, const char* context) {
     return device_->AsyncBulkOutTransfer(endpoint, data_out,
                                          default_timeout_msec_,
                                          std::move(callback), context);
   }
 
-  util::Status AsyncBulkInTransfer(uint8_t endpoint, MutableBuffer data_in,
-                                   DataInDone callback, const char* context) {
+  Status AsyncBulkInTransfer(uint8_t endpoint, MutableBuffer data_in,
+                             DataInDone callback, const char* context) {
     return device_->AsyncBulkInTransfer(
         endpoint, data_in, default_timeout_msec_, std::move(callback), context);
   }
 
-  util::Status AsyncInterruptInTransfer(uint8_t endpoint, MutableBuffer data_in,
-                                        DataInDone callback,
-                                        const char* context) {
+  Status AsyncInterruptInTransfer(uint8_t endpoint, MutableBuffer data_in,
+                                  DataInDone callback, const char* context) {
     return device_->AsyncInterruptInTransfer(
         endpoint, data_in, default_timeout_msec_, std::move(callback), context);
   }
 
   void TryCancelAllTransfers() { device_->TryCancelAllTransfers(); }
 
-  util::StatusOr<MutableBuffer> AllocateTransferBuffer(size_t buffer_size) {
+  StatusOr<MutableBuffer> AllocateTransferBuffer(size_t buffer_size) {
     return device_->AllocateTransferBuffer(buffer_size);
   }
 
-  util::Status ReleaseTransferBuffer(MutableBuffer buffer) {
+  Status ReleaseTransferBuffer(MutableBuffer buffer) {
     return device_->ReleaseTransferBuffer(buffer);
   }
 
@@ -253,11 +249,11 @@ class UsbStandardCommands {
 
   // Retrieves device descriptor from device. In some implementations, a cached
   // one could be returned.
-  util::StatusOr<DeviceDescriptor> GetDeviceDescriptor();
+  StatusOr<DeviceDescriptor> GetDeviceDescriptor();
 
   // Retrieves configuration descriptor from device. In some implementations, a
   // cached one could be returned.
-  util::StatusOr<ConfigurationDescriptor> GetConfigurationDescriptor(
+  StatusOr<ConfigurationDescriptor> GetConfigurationDescriptor(
       uint8_t index, size_t max_extra_data_length);
 
   TimeoutMillis GetDefaultTimeoutMillis() const {

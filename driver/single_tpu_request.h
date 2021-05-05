@@ -75,39 +75,38 @@ class SingleTpuRequest : public TpuRequest {
   SingleTpuRequest& operator=(const SingleTpuRequest&) = delete;
   ~SingleTpuRequest() override;
 
-  util::Status SetDone(Done done) LOCKS_EXCLUDED(mutex_) override;
-  util::Status AddInput(const std::string& name, const Buffer& input)
+  Status SetDone(Done done) LOCKS_EXCLUDED(mutex_) override;
+  Status AddInput(const std::string& name, const Buffer& input)
       LOCKS_EXCLUDED(mutex_) override;
-  util::Status AddOutput(const std::string& name, Buffer output)
+  Status AddOutput(const std::string& name, Buffer output)
       LOCKS_EXCLUDED(mutex_) override;
-  util::Status AddNoopInputs(const std::string& name, int count)
+  Status AddNoopInputs(const std::string& name, int count)
       LOCKS_EXCLUDED(mutex_) override;
-  util::Status AddNoopOutputs(const std::string& name, int count)
+  Status AddNoopOutputs(const std::string& name, int count)
       LOCKS_EXCLUDED(mutex_) override;
   const Buffer& InputBuffer(const std::string& name, int batch) const override
       LOCKS_EXCLUDED(mutex_);
   Buffer OutputBuffer(const std::string& name, int batch) const override
       LOCKS_EXCLUDED(mutex_);
-  util::Status Validate() LOCKS_EXCLUDED(mutex_) override;
-  util::Status Prepare() LOCKS_EXCLUDED(mutex_) override;
-  util::Status Cancel() LOCKS_EXCLUDED(mutex_) override;
+  Status Validate() LOCKS_EXCLUDED(mutex_) override;
+  Status Prepare() LOCKS_EXCLUDED(mutex_) override;
+  Status Cancel() LOCKS_EXCLUDED(mutex_) override;
 
   // TODO: The following functions needs to restricted for use
   // by the driver only.
-  util::Status NotifyRequestSubmitted() LOCKS_EXCLUDED(mutex_) override;
-  util::Status NotifyRequestActive() LOCKS_EXCLUDED(mutex_) override;
-  util::Status NotifyCompletion(util::Status status)
-      LOCKS_EXCLUDED(mutex_) override;
+  Status NotifyRequestSubmitted() LOCKS_EXCLUDED(mutex_) override;
+  Status NotifyRequestActive() LOCKS_EXCLUDED(mutex_) override;
+  Status NotifyCompletion(Status status) LOCKS_EXCLUDED(mutex_) override;
 
   int id() const override { return id_; }
 
   RequestType type() const override { return type_; }
 
   int num_instruction_bitstream_chunks() const override {
-    return executable().instruction_bitstreams()->Length();
+    return executable().instruction_bitstreams()->size();
   }
 
-  util::StatusOr<std::list<DmaInfo>> GetDmaInfos() const
+  StatusOr<std::list<DmaInfo>> GetDmaInfos() const
       LOCKS_EXCLUDED(mutex_) override;
 
   const ExecutableReference& executable_reference() const override {
@@ -131,22 +130,22 @@ class SingleTpuRequest : public TpuRequest {
   };
 
   // Attempts a state transition to the given state.
-  util::Status SetState(State next_state) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status SetState(State next_state) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Validates that we are in the expected state.
-  util::Status ValidateState(State expected_state) const
+  Status ValidateState(State expected_state) const
       SHARED_LOCKS_REQUIRED(mutex_);
 
   // Maps all data buffers (input, output, parameters) to the DarwiNN address
   // space.
-  util::Status MapDataBuffers() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status MapDataBuffers() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Map instruction buffers to the DarwiNN address space.
-  util::Status MapInstructionBuffers() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status MapInstructionBuffers() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Unmaps all buffers and frees the allocated instruction and parameter
   // buffers if any. Reverse of what is done in #Prepare().
-  util::Status Cleanup() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status Cleanup() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Convenience function that returns the backing executable in
   // |executable_reference_|.
@@ -163,7 +162,7 @@ class SingleTpuRequest : public TpuRequest {
   //    and for those we set the same user-provided buffer in the host_outputs_.
   //    Those are ignored by this method.
   // 2. Perform sign conversion.
-  util::Status PostProcessOutputBuffers() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status PostProcessOutputBuffers() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Tries to create a TPU DRAM buffer. If it fails, it falls back to create a
   // host DRAM buffer.

@@ -33,7 +33,7 @@ class Request {
  public:
   // A type for request completion callback.
   // The int argument is the same as return value of id().
-  using Done = std::function<void(int, util::Status)>;
+  using Done = std::function<void(int, Status)>;
 
   // Fine grain timing information
   struct TimingEvent {
@@ -98,8 +98,7 @@ class Request {
   // aligned with at least minimum_alignment_bytes (architecture dependent). If
   // possible use Driver::MakeBuffer to get a buffer with this requirement met.
   // Buffers with and without padding are both acceptable.
-  virtual util::Status AddInput(const std::string& name,
-                                const Buffer& input) = 0;
+  virtual Status AddInput(const std::string& name, const Buffer& input) = 0;
 
   // Adds an output buffer. This may be called repeatedly depending
   // on the batch size as long as the request instance is not submitted. The
@@ -113,17 +112,17 @@ class Request {
   // TODO -- the API implementation does not currently validate
   // that no post-processing will be needed for a user-allocated on-device DRAM
   // output.
-  virtual util::Status AddOutput(const std::string& name, Buffer output) = 0;
+  virtual Status AddOutput(const std::string& name, Buffer output) = 0;
 
   // Sets the scheduling priority of this request (must be a positive int) where
   // 0 is highest priority. P0 requests are immediately scheduled for execution
   // while lower priorities (higher in value) may get preempted if device is
   // busy. By default, a request is P0.
-  virtual util::Status SetPriority(int priority) = 0;
+  virtual Status SetPriority(int priority) = 0;
 
   // Returns timing information of this request. It can only be called when the
   // request is done.
-  virtual util::StatusOr<Timing> GetTiming() const = 0;
+  virtual StatusOr<Timing> GetTiming() const = 0;
 
   // Returns an ID to track the request.
   virtual int id() const = 0;

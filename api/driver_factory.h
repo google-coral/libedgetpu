@@ -111,12 +111,12 @@ class DriverFactory {
   virtual std::vector<Device> Enumerate() = 0;
 
   // Creates a driver instance that interfaces to the specified device.
-  virtual util::StatusOr<std::unique_ptr<Driver>> CreateDriver(
+  virtual StatusOr<std::unique_ptr<Driver>> CreateDriver(
       const Device& device) = 0;
 
   // Creates a driver instance that interfaces to the specified device with
   // custom options.
-  virtual util::StatusOr<std::unique_ptr<Driver>> CreateDriver(
+  virtual StatusOr<std::unique_ptr<Driver>> CreateDriver(
       const Device& device, const Driver::Options& options) = 0;
 
  protected:

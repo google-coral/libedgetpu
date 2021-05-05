@@ -39,7 +39,7 @@ UsbDfuCommands::UsbDfuCommands(std::unique_ptr<UsbDeviceInterface> device,
 
 UsbDfuCommands::~UsbDfuCommands() { VLOG(10) << __func__; }
 
-util::Status UsbDfuCommands::DfuDetach(uint16_t timeout_msec) {
+Status UsbDfuCommands::DfuDetach(uint16_t timeout_msec) {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   SetupPacket command{
@@ -68,31 +68,31 @@ void UsbDfuCommands::SetDfuInterface(int interface_number) {
   VLOG(5) << StringPrintf("%s set to %u", __func__, dfu_interface_number_);
 }
 
-util::StatusOr<std::pair<std::list<UsbStandardCommands::InterfaceDescriptor>,
-                         UsbDfuCommands::DfuFunctionalDescriptor>>
+StatusOr<std::pair<std::list<UsbStandardCommands::InterfaceDescriptor>,
+                   UsbDfuCommands::DfuFunctionalDescriptor>>
 UsbDfuCommands::FindDfuInterfaces(
     const std::vector<uint8_t>& raw_configuration_descriptor) {
   constexpr size_t kConfigDescriptorRawByteSize = 9;
   constexpr size_t kInterfaceDescriptorRawByteSize = 9;
   if (raw_configuration_descriptor.size() < kConfigDescriptorRawByteSize) {
-    return util::InvalidArgumentError("Raw data is way too short");
+    return InvalidArgumentError("Raw data is way too short");
   }
 
   const uint8_t reported_config_type = raw_configuration_descriptor[1];
   if (reported_config_type !=
       static_cast<uint8_t>(UsbDeviceInterface::DescriptorType::kConfig)) {
-    return util::InvalidArgumentError("Not reported as config descriptor");
+    return InvalidArgumentError("Not reported as config descriptor");
   }
 
   const uint8_t reported_config_length = raw_configuration_descriptor[0];
   const uint8_t reported_total_data_length = raw_configuration_descriptor[2];
   if (reported_total_data_length > raw_configuration_descriptor.size()) {
-    return util::InvalidArgumentError("Incomplete config descriptor");
+    return InvalidArgumentError("Incomplete config descriptor");
   }
   // Every configuration must has at least one interface.
   if (reported_total_data_length <
       kConfigDescriptorRawByteSize + kInterfaceDescriptorRawByteSize) {
-    return util::InvalidArgumentError("Reported total data is way too short");
+    return InvalidArgumentError("Reported total data is way too short");
   }
 
   bool found_dfu_functional_descriptor = false;
@@ -108,7 +108,7 @@ UsbDfuCommands::FindDfuInterfaces(
     VLOG(10) << StringPrintf("%s type 0x%x, length %u", __func__, type, length);
 
     if (length == 0) {
-      return util::FailedPreconditionError(
+      return FailedPreconditionError(
           "Length of functional descriptor must not be 0");
     }
 
@@ -199,10 +199,10 @@ UsbDfuCommands::FindDfuInterfaces(
     return std::make_pair(std::move(dfu_interfaces), dfu_functional_descriptor);
   }
 
-  return util::NotFoundError(__func__);
+  return NotFoundError(__func__);
 }
 
-util::StatusOr<UsbDfuCommands::DfuStatus> UsbDfuCommands::DfuGetStatus() {
+StatusOr<UsbDfuCommands::DfuStatus> UsbDfuCommands::DfuGetStatus() {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   constexpr size_t kGetStatusRawByteSize = 6;
@@ -230,7 +230,7 @@ util::StatusOr<UsbDfuCommands::DfuStatus> UsbDfuCommands::DfuGetStatus() {
       __func__));
 
   if (num_bytes_transferred != sizeof(buffer)) {
-    return util::UnknownError("Invalid DFU status data");
+    return UnknownError("Invalid DFU status data");
   }
 
   DfuStatus dfu_status;
@@ -262,7 +262,7 @@ util::StatusOr<UsbDfuCommands::DfuStatus> UsbDfuCommands::DfuGetStatus() {
   return dfu_status;
 }
 
-util::Status UsbDfuCommands::DfuClearStatus() {
+Status UsbDfuCommands::DfuClearStatus() {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   SetupPacket command{
@@ -285,7 +285,7 @@ util::Status UsbDfuCommands::DfuClearStatus() {
   return SendControlCommand(command, __func__);
 }
 
-util::Status UsbDfuCommands::DfuAbort() {
+Status UsbDfuCommands::DfuAbort() {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   SetupPacket command{
@@ -308,7 +308,7 @@ util::Status UsbDfuCommands::DfuAbort() {
   return SendControlCommand(command, __func__);
 }
 
-util::StatusOr<UsbDfuCommands::State> UsbDfuCommands::DfuGetState() {
+StatusOr<UsbDfuCommands::State> UsbDfuCommands::DfuGetState() {
   VLOG(10) << __func__;
   StdMutexLock lock(&mutex_);
   constexpr size_t kGetStateRawByteSize = 1;
@@ -336,7 +336,7 @@ util::StatusOr<UsbDfuCommands::State> UsbDfuCommands::DfuGetState() {
       __func__));
 
   if (num_bytes_transferred != sizeof(buffer)) {
-    return util::UnknownError("Invalid DFU state data");
+    return UnknownError("Invalid DFU state data");
   }
 
   State dfu_state = static_cast<State>(buffer[0]);
@@ -346,8 +346,8 @@ util::StatusOr<UsbDfuCommands::State> UsbDfuCommands::DfuGetState() {
   return dfu_state;
 }
 
-util::Status UsbDfuCommands::DfuDownloadBlock(uint16_t block_number,
-                                              ConstBuffer block_buffer) {
+Status UsbDfuCommands::DfuDownloadBlock(uint16_t block_number,
+                                        ConstBuffer block_buffer) {
   VLOG(10) << StringPrintf("%s block %u, request size %u", __func__,
                            block_number,
                            static_cast<uint32_t>(block_buffer.size()));
@@ -374,9 +374,9 @@ util::Status UsbDfuCommands::DfuDownloadBlock(uint16_t block_number,
   return SendControlCommandWithDataOut(command, block_buffer, __func__);
 }
 
-util::Status UsbDfuCommands::DfuUploadBlock(uint16_t block_number,
-                                            MutableBuffer block_buffer,
-                                            size_t* num_bytes_transferred) {
+Status UsbDfuCommands::DfuUploadBlock(uint16_t block_number,
+                                      MutableBuffer block_buffer,
+                                      size_t* num_bytes_transferred) {
   VLOG(10) << StringPrintf("%s block %u, request size %u", __func__,
                            block_number,
                            static_cast<uint32_t>(block_buffer.size()));
@@ -406,12 +406,12 @@ util::Status UsbDfuCommands::DfuUploadBlock(uint16_t block_number,
                                       num_bytes_transferred, __func__);
 }
 
-util::Status UsbDfuCommands::UpdateFirmware(
-    const DfuFunctionalDescriptor& descriptor, ConstBuffer firmware_image) {
+Status UsbDfuCommands::UpdateFirmware(const DfuFunctionalDescriptor& descriptor,
+                                      ConstBuffer firmware_image) {
   VLOG(7) << StringPrintf("%s Downloading firmware", __func__);
 
   if (firmware_image.empty()) {
-    return util::InvalidArgumentError("Invalid DFU image file");
+    return InvalidArgumentError("Invalid DFU image file");
   }
 
   VLOG(7) << StringPrintf("%s Firmware image size %zu bytes", __func__,
@@ -473,13 +473,13 @@ util::Status UsbDfuCommands::UpdateFirmware(
                           (firmware_image.size() == num_bytes_transferred));
 
   if (last_packet_sent) {
-    return util::Status();  // OK.
+    return Status();  // OK.
   }
 
-  return util::DataLossError("Firmware downloading failed");
+  return DataLossError("Firmware downloading failed");
 }
 
-util::Status UsbDfuCommands::ValidateFirmware(
+Status UsbDfuCommands::ValidateFirmware(
     const DfuFunctionalDescriptor& descriptor, ConstBuffer firmware_image) {
   VLOG(7) << StringPrintf("%s Validating firmware", __func__);
 
@@ -518,20 +518,20 @@ util::Status UsbDfuCommands::ValidateFirmware(
   if (upload_image.size() < firmware_image.size()) {
     VLOG(1) << StringPrintf("%s, Uploaded image is shorter than expected",
                             __func__);
-    return util::DataLossError(__func__);
+    return DataLossError(__func__);
   }
 
   // Only compares the first part of uploaded image, for it's possible for
   // the uploaded images to be longer than the reference image.
   if (0 == memcmp(upload_image.data(), firmware_image.data(),
                   firmware_image.size())) {
-    return util::Status();  // OK.
+    return Status();  // OK.
   }
 
   VLOG(1) << StringPrintf("%s, Uploaded image is different from expected",
                           __func__);
 
-  return util::DataLossError(__func__);
+  return DataLossError(__func__);
 }
 
 }  // namespace driver

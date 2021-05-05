@@ -14,6 +14,8 @@
 
 #include "tflite/edgetpu_context_direct.h"
 
+#include "absl/strings/match.h"
+#include "absl/strings/str_cat.h"
 #include "api/driver_factory.h"
 #include "api/driver_options_generated.h"
 #include "port/logging.h"
@@ -49,7 +51,7 @@ api::PerformanceExpectation DefaultThrottledUsbPerformance(
 }
 
 // Sets performance exectation in a driver option builder.
-util::Status ParsePerformanceExpectationWithDefaultMax(
+Status ParsePerformanceExpectationWithDefaultMax(
     edgetpu::DeviceType device_type,
     const std::unordered_map<std::string, std::string>& options,
     api::DriverOptionsBuilder* driver_option_builder) {
@@ -83,16 +85,16 @@ util::Status ParsePerformanceExpectationWithDefaultMax(
       VLOG(2) << "Performance expectation: Max";
     }
   } else {
-    return util::InvalidArgumentError("Invalid performance setting.");
+    return InvalidArgumentError("Invalid performance setting.");
   }
 
   driver_option_builder->add_performance_expectation(performance);
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 // Sets USB options in a driver USB option builder.
-util::Status ParseUsbOptions(
+Status ParseUsbOptions(
     const std::unordered_map<std::string, std::string>& options,
     api::DriverUsbOptionsBuilder* usb_option_builder) {
   // Retrieve USB always DFU settings.
@@ -110,7 +112,7 @@ util::Status ParseUsbOptions(
       VLOG(2) << "USB always DFU: False";
       always_dfu = false;
     } else {
-      return util::InvalidArgumentError("Invalid USB setting.");
+      return InvalidArgumentError("Invalid USB setting.");
     }
 
     usb_option_builder->add_always_dfu(always_dfu);
@@ -129,7 +131,7 @@ util::Status ParseUsbOptions(
       std::istringstream ss(it->second);
       ss >> bulk_in_queue_capacity;
       if (ss.fail() || !ss.eof()) {
-        return util::InvalidArgumentError(
+        return InvalidArgumentError(
             "Converting string argument to integer failed.");
       }
 
@@ -139,7 +141,7 @@ util::Status ParseUsbOptions(
         usb_option_builder->add_has_enable_queued_bulk_in_requests(true);
       } else if ((bulk_in_queue_capacity < 0) ||
                  (bulk_in_queue_capacity > 256)) {
-        return util::InvalidArgumentError(
+        return InvalidArgumentError(
             "bulk-in queue capacity must be in [0, 256].");
       } else {
         VLOG(2) << "USB bulk-in queue capacity: " << bulk_in_queue_capacity;
@@ -149,7 +151,7 @@ util::Status ParseUsbOptions(
     }
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 }  // namespace
@@ -188,29 +190,31 @@ api::Driver* EdgeTpuDriverWrapper::GetDriver() const {
   return driver_.get();
 }
 
-util::Status EdgeTpuDriverWrapper::InvokeExecutable(TfLiteContext* context,
+Status EdgeTpuDriverWrapper::InvokeExecutable(TfLiteContext* context,
                                                     TfLiteNode* node) {
-  StdMutexLock lock(&mutex_);
-
   CustomOpUserDataDirect* user_data =
       reinterpret_cast<CustomOpUserDataDirect*>(node->user_data);
-
-  if (!driver_ || !is_ready_) {
-    return util::FailedPreconditionError("Edge TPU is not ready.");
-  }
   auto executable = user_data->GetExecutable();
+  std::shared_ptr<api::Request> request;
+
+  {
+    StdMutexLock lock(&mutex_);
+    if (!driver_ || !is_ready_) {
+      return FailedPreconditionError("Edge TPU is not ready.");
+    }
+    ASSIGN_OR_RETURN(request, driver_->CreateRequest(executable));
+  }
+
   const auto batches = user_data->GetBatches();
-
-  ASSIGN_OR_RETURN(std::shared_ptr<api::Request> request,
-                   driver_->CreateRequest(executable));
-
+  const absl::flat_hash_map<int, int>& variable_output_destination =
+      user_data->GetVariableOutputDestination();
   // Attach inputs to the request.
   for (int i = 0; i < executable->NumInputLayers(); ++i) {
     const auto* input = GetInput(context, node, i);
     const auto single_input_size = executable->InputLayer(i)->ActualSizeBytes();
     if (input->buffer_handle != kTfLiteNullBufferHandle && batches > 1) {
       // TODO: How to handle batches > 1?
-      return util::FailedPreconditionError("Too many batches for dma-buf.");
+      return FailedPreconditionError("Too many batches for dma-buf.");
     }
     for (int batch = 0; batch < batches; ++batch) {
       Buffer input_buffer =
@@ -223,34 +227,47 @@ util::Status EdgeTpuDriverWrapper::InvokeExecutable(TfLiteContext* context,
     }
   }
 
-  // Attach outputs to the request.
   std::vector<Buffer> output_buffers;
-  output_buffers.reserve(executable->NumOutputLayers() * batches);
-  for (int i = 0; i < executable->NumOutputLayers(); ++i) {
-    for (int batch = 0; batch < batches; ++batch) {
-      Buffer output_buffer =
-          driver_->MakeBuffer(executable->OutputLayer(i)->ActualSizeBytes());
-      output_buffers.push_back(output_buffer);
-      RETURN_IF_ERROR(
-          request->AddOutput(executable->OutputLayerName(i), output_buffer));
+  {
+    StdMutexLock lock(&mutex_);
+    if (!driver_ || !is_ready_) {
+      return FailedPreconditionError("Edge TPU is not ready.");
     }
-  }
 
-  // Submit.
-  RETURN_IF_ERROR(driver_->Execute(std::move(request)));
+    // Attach outputs to the request.
+    output_buffers.reserve(executable->NumOutputLayers() * batches);
+    for (int i = 0; i < executable->NumOutputLayers(); ++i) {
+      for (int batch = 0; batch < batches; ++batch) {
+        Buffer output_buffer =
+            driver_->MakeBuffer(executable->OutputLayer(i)->ActualSizeBytes());
+        output_buffers.push_back(output_buffer);
+        RETURN_IF_ERROR(
+            request->AddOutput(executable->OutputLayerName(i), output_buffer));
+      }
+    }
+
+    // Submit.
+    RETURN_IF_ERROR(driver_->Execute(std::move(request)));
+  }
 
   // Relayout tpu outputs to tflite outputs.
   for (int i = 0; i < executable->NumOutputLayers(); ++i) {
-    auto* output = GetOutput(context, node, i);
+    TfLiteTensor* output = nullptr;
+    auto it = variable_output_destination.find(i);
+    if (it != variable_output_destination.end()) {
+      output = GetInput(context, node, it->second);
+    } else {
+      output = GetOutput(context, node, i);
+    }
     int output_size = output->bytes / batches;
     for (int batch = 0; batch < batches; ++batch) {
-      RETURN_IF_ERROR(ReFormatOutputs(output, batch * output_size, output_size,
-                                      executable->OutputLayer(i),
-                                      output_buffers[i].ptr()));
+      RETURN_IF_ERROR(ReFormatOutputs(
+          output, batch * output_size, output_size, executable->OutputLayer(i),
+          output_buffers[i * batches + batch].ptr()));
     }
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 const EdgeTpuManager::DeviceEnumerationRecord&
@@ -273,13 +290,13 @@ EdgeTpuManager::DeviceOptions EdgeTpuDriverWrapper::GetDeviceOptions() const {
   return status;
 }
 
-util::Status EdgeTpuDriverWrapper::AddRef() {
+Status EdgeTpuDriverWrapper::AddRef() {
   StdMutexLock lock(&mutex_);
 
   // TODO: Add check for wrap around.
   ++use_count_;
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 int EdgeTpuDriverWrapper::Release() {

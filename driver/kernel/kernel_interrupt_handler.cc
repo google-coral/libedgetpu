@@ -34,14 +34,13 @@ KernelInterruptHandler::KernelInterruptHandler(
     std::unique_ptr<KernelEventHandler> event_handler)
     : event_handler_(std::move(event_handler)) {}
 
-util::Status KernelInterruptHandler::Open() { return event_handler_->Open(); }
+Status KernelInterruptHandler::Open() { return event_handler_->Open(); }
 
-util::Status KernelInterruptHandler::Close(bool in_error) {
+Status KernelInterruptHandler::Close(bool in_error) {
   return event_handler_->Close();
 }
 
-util::Status KernelInterruptHandler::Register(Interrupt interrupt,
-                                              Handler handler) {
+Status KernelInterruptHandler::Register(Interrupt interrupt, Handler handler) {
   return event_handler_->RegisterEvent(interrupt, std::move(handler));
 }
 

@@ -40,12 +40,11 @@ class DualAddressSpace final : public AddressSpace {
 
   // Maps the buffer to the device buffer. Returns the mapped device
   // buffer on success.
-  util::StatusOr<DeviceBuffer> MapMemory(const Buffer& buffer,
-                                         DmaDirection direction,
-                                         MappingTypeHint mapping_type) override;
+  StatusOr<DeviceBuffer> MapMemory(const Buffer& buffer, DmaDirection direction,
+                                   MappingTypeHint mapping_type) override;
 
   // Unmaps the given device buffer.
-  util::Status UnmapMemory(DeviceBuffer buffer) override;
+  Status UnmapMemory(DeviceBuffer buffer) override;
 
  private:
   // Determines which address space the device buffer was allocated from.

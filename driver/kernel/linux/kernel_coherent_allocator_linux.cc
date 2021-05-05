@@ -32,29 +32,28 @@ KernelCoherentAllocatorLinux::KernelCoherentAllocatorLinux(
     const std::string &device_path, int alignment_bytes, size_t size_bytes)
     : KernelCoherentAllocator(device_path, alignment_bytes, size_bytes) {}
 
-util::StatusOr<char *> KernelCoherentAllocatorLinux::Map(FileDescriptor fd,
-                                                         size_t size_bytes,
-                                                         uint64 dma_address) {
+StatusOr<char *> KernelCoherentAllocatorLinux::Map(FileDescriptor fd,
+                                                   size_t size_bytes,
+                                                   uint64 dma_address) {
   // Map the memory range so as it can be accessed by user.
   char *mem_base =
       static_cast<char *>(mmap(nullptr, size_bytes, PROT_READ | PROT_WRITE,
                                MAP_SHARED | MAP_LOCKED, fd, dma_address));
   if (mem_base == MAP_FAILED) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("CoherentAllocator Could not mmap size %zu.", size_bytes));
   }
 
   return mem_base;
 }
 
-util::Status KernelCoherentAllocatorLinux::Unmap(FileDescriptor fd,
-                                                 char *mem_base,
-                                                 size_t size_bytes) {
+Status KernelCoherentAllocatorLinux::Unmap(FileDescriptor fd, char *mem_base,
+                                           size_t size_bytes) {
   if (munmap(mem_base, size_bytes)) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Error unmapping coherent memory. %s", strerror(errno)));
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 }  // namespace driver

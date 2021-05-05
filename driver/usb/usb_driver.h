@@ -178,7 +178,7 @@ class UsbDriver : public Driver {
   UsbDriver(
       const api::DriverOptions& driver_options,
       std::unique_ptr<config::ChipConfig> chip_config,
-      std::function<util::StatusOr<std::unique_ptr<UsbDeviceInterface>>()>
+      std::function<StatusOr<std::unique_ptr<UsbDeviceInterface>>()>
           device_factory,
       std::unique_ptr<UsbRegisters> registers,
       std::unique_ptr<TopLevelInterruptManager> top_level_interrupt_manager,
@@ -218,32 +218,31 @@ class UsbDriver : public Driver {
   }
 
  protected:
-  util::Status DoOpen(bool debug_mode) LOCKS_EXCLUDED(mutex_) final;
-  util::Status DoClose(bool in_error, api::Driver::ClosingMode mode)
+  Status DoOpen(bool debug_mode) LOCKS_EXCLUDED(mutex_) final;
+  Status DoClose(bool in_error, api::Driver::ClosingMode mode)
       LOCKS_EXCLUDED(mutex_) final;
-  util::Status DoCancelAndWaitRequests(bool in_error)
-      LOCKS_EXCLUDED(mutex_) final;
+  Status DoCancelAndWaitRequests(bool in_error) LOCKS_EXCLUDED(mutex_) final;
 
   Buffer DoMakeBuffer(size_t size_bytes) const final;
-  util::StatusOr<MappedDeviceBuffer> DoMapBuffer(const Buffer& buffer,
-                                                 DmaDirection direction) final;
-  util::StatusOr<std::shared_ptr<TpuRequest>> DoCreateRequest(
+  StatusOr<MappedDeviceBuffer> DoMapBuffer(const Buffer& buffer,
+                                           DmaDirection direction) final;
+  StatusOr<std::shared_ptr<TpuRequest>> DoCreateRequest(
       const std::shared_ptr<Request> parent_request,
       const ExecutableReference* executable_ref, TpuRequest::RequestType type)
       LOCKS_EXCLUDED(mutex_) final;
 
-  util::Status DoSetExecutableTiming(const ExecutableReference* executable,
-                                     const api::Timing& timing) final;
-  util::Status DoSetRealtimeMode(bool on) final;
+  Status DoSetExecutableTiming(const ExecutableReference* executable,
+                               const api::Timing& timing) final;
+  Status DoSetRealtimeMode(bool on) final;
 
-  util::Status DoSubmit(std::shared_ptr<TpuRequest> request_in)
+  Status DoSubmit(std::shared_ptr<TpuRequest> request_in)
       LOCKS_EXCLUDED(mutex_) final;
 
   int64 MaxRemainingCycles() const override {
     return dma_scheduler_.MaxRemainingCycles();
   }
 
-  util::StatusOr<std::shared_ptr<TpuRequest>> GetOldestActiveRequest()
+  StatusOr<std::shared_ptr<TpuRequest>> GetOldestActiveRequest()
       const override {
     return dma_scheduler_.GetOldestActiveRequest();
   }
@@ -293,57 +292,56 @@ class UsbDriver : public Driver {
       std::unique_ptr<driver_shared::TimeStamper> time_stamper);
 
   // Prepares USB device with resets and DFU according to options_.
-  util::Status PrepareUsbDevice();
+  Status PrepareUsbDevice();
 
   // Creates a UsbMlCommands and assigns it to usb_device_, with timed retry.
-  util::Status OpenMlUsbDevice();
+  Status OpenMlUsbDevice();
 
   // Creates a raw USB device from device_factory_, with timed retry.
-  util::StatusOr<std::unique_ptr<UsbDeviceInterface>>
-  CreateRawUsbDeviceWithRetry();
+  StatusOr<std::unique_ptr<UsbDeviceInterface>> CreateRawUsbDeviceWithRetry();
 
   // Attempts a state transition to the given state.
-  util::Status SetState(State next_state) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status SetState(State next_state) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Validates that we are in the expected state.
-  util::Status ValidateState(State expected_state) const
+  Status ValidateState(State expected_state) const
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Validates that we are in any of the expected states.
-  util::Status ValidateStates(const std::vector<State>& expected_states) const
+  Status ValidateStates(const std::vector<State>& expected_states) const
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Catches all fatal error handling during runtime.
-  void CheckFatalError(const util::Status& status);
+  void CheckFatalError(const Status& status);
 
   // Initializes the chip through CSR access.
-  util::Status InitializeChip() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status InitializeChip() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Registers and enables all interrupts that come through interrupt
   // endpoint.
-  util::Status RegisterAndEnableAllInterrupts();
+  Status RegisterAndEnableAllInterrupts();
 
   // Disables all interrupts that come through interrupt endpoint.
-  util::Status DisableAllInterrupts();
+  Status DisableAllInterrupts();
 
   // Runs the worker thread.
   void WorkerThreadFunc() LOCKS_EXCLUDED(mutex_);
 
   // Handles bulk-in completion event from device.
-  void HandleQueuedBulkIn(const util::Status& status, int buffer_index,
+  void HandleQueuedBulkIn(const Status& status, int buffer_index,
                           size_t num_bytes_transferred);
 
   // Handles data in/out and software interrupt events sent from the device,
   // in the worker thread. Thread safety analysis is confused by wrapping
   // this function into a functor, and hence has to be disabled.
-  void HandleEvent(const util::Status& status,
+  void HandleEvent(const Status& status,
                    const UsbMlCommands::EventDescriptor& event_info)
       NO_THREAD_SAFETY_ANALYSIS;
 
   // Handles hardware interrupt events sent from the device, in the
   // worker thread. Thread safety analysis is confused by wrapping this
   // function into a functor, and hence has to be disabled.
-  void HandleInterrupt(const util::Status& status,
+  void HandleInterrupt(const Status& status,
                        const UsbMlCommands::InterruptInfo& interrupt_info)
       NO_THREAD_SAFETY_ANALYSIS;
 
@@ -352,17 +350,16 @@ class UsbDriver : public Driver {
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Processes data in/out requests associated with specified task.
-  util::StatusOr<bool> ProcessIo() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  StatusOr<bool> ProcessIo() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Records DMA descriptors and in-band interrupts sent from device.
-  util::Status HandleDmaDescriptor(UsbMlCommands::DescriptorTag tag,
-                                   uint64_t device_virtual_address,
-                                   uint32_t size_bytes,
-                                   bool bulk_events_enabled);
+  Status HandleDmaDescriptor(UsbMlCommands::DescriptorTag tag,
+                             uint64_t device_virtual_address,
+                             uint32_t size_bytes, bool bulk_events_enabled);
 
-  util::Status CheckHibError();
+  Status CheckHibError();
 
-  std::function<util::StatusOr<std::unique_ptr<UsbDeviceInterface>>()>
+  std::function<StatusOr<std::unique_ptr<UsbDeviceInterface>>()>
       device_factory_;
 
   // The current active USB device supporting ML commands.

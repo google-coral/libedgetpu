@@ -54,36 +54,36 @@ class DmaScheduler {
   virtual ~DmaScheduler() = default;
 
   // Opens/closes DMA scheduler.
-  virtual util::Status Open() = 0;
-  virtual util::Status Close(api::Driver::ClosingMode mode) = 0;
+  virtual Status Open() = 0;
+  virtual Status Close(api::Driver::ClosingMode mode) = 0;
 
   // Submits a request for execution on DarwiNN.
-  virtual util::Status Submit(std::shared_ptr<TpuRequest> request) = 0;
+  virtual Status Submit(std::shared_ptr<TpuRequest> request) = 0;
 
   // Returns next DMA type to be performed. Returns kLocalFence if there is no
   // next DMA.
-  virtual util::StatusOr<DmaDescriptorType> PeekNextDma() const = 0;
+  virtual StatusOr<DmaDescriptorType> PeekNextDma() const = 0;
 
   // Returns DMA to perform. If there is no DMA to perform, returns nullptr.
   // Target of pointers are internally maintained.
   // DmaScheduler::NotifyDmaCompletion is a contract that given pointer is no
   // longer used by external entity.
-  virtual util::StatusOr<DmaInfo*> GetNextDma() = 0;
+  virtual StatusOr<DmaInfo*> GetNextDma() = 0;
 
   // Notifies that DMA for given "dma_info" has completed. Returns an error if
   // given "dma_info" cannot be completed.
-  virtual util::Status NotifyDmaCompletion(DmaInfo* dma_info) = 0;
+  virtual Status NotifyDmaCompletion(DmaInfo* dma_info) = 0;
 
   // Notifies when request has been completed, and performs any necessary
   // cleanups.
-  virtual util::Status NotifyRequestCompletion() = 0;
+  virtual Status NotifyRequestCompletion() = 0;
 
   // Cancels all the pending requests that has not been submitted to DarwiNN
   // device yet.
-  virtual util::Status CancelPendingRequests() = 0;
+  virtual Status CancelPendingRequests() = 0;
 
   // Waits until active requests are done.
-  virtual util::Status WaitActiveRequests() = 0;
+  virtual Status WaitActiveRequests() = 0;
 
   // Returns true if there is no DMAs to schedule.
   virtual bool IsEmpty() const = 0;
@@ -93,7 +93,7 @@ class DmaScheduler {
   virtual int64 MaxRemainingCycles() const = 0;
 
   // Returns the oldest submitted request that's still active.
-  virtual util::StatusOr<std::shared_ptr<TpuRequest>> GetOldestActiveRequest()
+  virtual StatusOr<std::shared_ptr<TpuRequest>> GetOldestActiveRequest()
       const = 0;
 };
 

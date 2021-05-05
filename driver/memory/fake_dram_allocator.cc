@@ -24,17 +24,17 @@ FakeDramBuffer::FakeDramBuffer(size_t size_bytes) : size_bytes_(size_bytes) {
 
 FakeDramBuffer::~FakeDramBuffer() { free(ptr_); }
 
-util::Status FakeDramBuffer::ReadFrom(void* source) {
+Status FakeDramBuffer::ReadFrom(void* source) {
   memcpy(ptr_, source, size_bytes_);
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status FakeDramBuffer::WriteTo(void* destination) {
+Status FakeDramBuffer::WriteTo(void* destination) {
   memcpy(destination, ptr_, size_bytes_);
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::StatusOr<std::shared_ptr<DramBuffer>> FakeDramAllocator::AllocateBuffer(
+StatusOr<std::shared_ptr<DramBuffer>> FakeDramAllocator::AllocateBuffer(
     size_t size_bytes) {
   return {std::make_shared<FakeDramBuffer>(size_bytes)};
 }

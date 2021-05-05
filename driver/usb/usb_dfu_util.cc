@@ -54,9 +54,9 @@ std::vector<uint8_t> ReadToVector(const std::string& file_name) {
 
 }  // namespace
 
-util::Status UsbUpdateDfuDevice(UsbDfuCommands* dfu_device,
-                                UsbDeviceInterface::ConstBuffer firmware_image,
-                                bool skip_verify) {
+Status UsbUpdateDfuDevice(UsbDfuCommands* dfu_device,
+                          UsbDeviceInterface::ConstBuffer firmware_image,
+                          bool skip_verify) {
   TRACE_SCOPE("UsbUpdateDfuDevice");
 
   VLOG(10) << StringPrintf("%s Loading descriptor for the first configuration",
@@ -86,22 +86,22 @@ util::Status UsbUpdateDfuDevice(UsbDfuCommands* dfu_device,
       dfu_device->UpdateFirmware(dfu_interfaces.second, firmware_image));
 
   if (skip_verify) {
-    return util::Status();  // OK.
+    return Status();  // OK.
   } else {
     return dfu_device->ValidateFirmware(dfu_interfaces.second, firmware_image);
   }
 }
 
-util::Status UsbUpdateAllDfuDevices(UsbManager* usb_manager, uint16_t vendor_id,
-                                    uint16_t product_id,
-                                    const std::string& firmware_filename,
-                                    bool skip_verify) {
+Status UsbUpdateAllDfuDevices(UsbManager* usb_manager, uint16_t vendor_id,
+                              uint16_t product_id,
+                              const std::string& firmware_filename,
+                              bool skip_verify) {
   VLOG(7) << StringPrintf("%s Downloading firmware file:%s", __func__,
                           firmware_filename.c_str());
 
   auto firmware_image = ReadToVector(firmware_filename);
   if (firmware_image.empty()) {
-    return util::InvalidArgumentError("Invalid DFU image file");
+    return InvalidArgumentError("Invalid DFU image file");
   }
 
   // Perform DFU on all devices that have the right product ID.
@@ -138,7 +138,7 @@ util::Status UsbUpdateAllDfuDevices(UsbManager* usb_manager, uint16_t vendor_id,
     Sleep(kSleepTimeSecondsAfterReset);
   }
 
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
 }  // namespace driver

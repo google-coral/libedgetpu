@@ -36,16 +36,12 @@ class NullDramAllocator : public DramAllocator {
 
   // Always returns an error.
 
-  util::Status Open() override {
-    return util::OkStatus();
-  }
-  util::Status Close() override {
-    return util::OkStatus();
-  }
+  Status Open() override { return OkStatus(); }
+  Status Close() override { return OkStatus(); }
 
-  util::StatusOr<std::shared_ptr<DramBuffer>> AllocateBuffer(
+  StatusOr<std::shared_ptr<DramBuffer>> AllocateBuffer(
       size_t size_bytes) override {
-    return util::FailedPreconditionError("No on-chip DRAM available.");
+    return FailedPreconditionError("No on-chip DRAM available.");
   }
 };
 

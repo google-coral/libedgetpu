@@ -35,13 +35,13 @@ class InterruptControllerInterface {
   virtual ~InterruptControllerInterface() = default;
 
   // Enable/disables interrupts.
-  virtual util::Status EnableInterrupts() = 0;
-  virtual util::Status DisableInterrupts() = 0;
+  virtual Status EnableInterrupts() = 0;
+  virtual Status DisableInterrupts() = 0;
 
   // Clears interrupt status register to notify that host has received the
   // interrupt.
-  virtual util::Status ClearInterruptStatus(int id) = 0;
-  util::Status ClearInterruptStatus() { return ClearInterruptStatus(/*id=*/0); }
+  virtual Status ClearInterruptStatus(int id) = 0;
+  Status ClearInterruptStatus() { return ClearInterruptStatus(/*id=*/0); }
 
   // Returns number of interrupts controlled by this interface.
   int NumInterrupts() const { return num_interrupts_; }

@@ -88,6 +88,11 @@ struct TileCsrOffsets {
   uint64 narrowMemoryContext_1;
   uint64 narrowMemoryContext_2;
   uint64 narrowMemoryContext_3;
+  uint64 narrowMemoryContext_4;
+  uint64 narrowMemoryContext_5;
+
+  // Tile Context ID.
+  uint64 tileContext;
 
   // Ring bus credit control
   uint64 TileRingBusCreditSenderReset;
@@ -100,6 +105,10 @@ struct TileCsrOffsets {
   uint64 Error_Timestamp_Tile;
   uint64 Error_ContextId_Tile;
   uint64 Error_Info_Tile;
+
+  // Ring bus credit control
+  uint64 TileMeshBusCreditSenderReset;
+  uint64 TileMeshBusCreditReceiverReset;
 };
 
 }  // namespace config

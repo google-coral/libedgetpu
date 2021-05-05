@@ -57,12 +57,12 @@ class MmioAddressSpace : public AddressSpace {
  protected:
   // Maps the entire given Buffer, and stores the mapping information. Returns
   // an error if trying to map already mapped Buffer.
-  util::Status Map(const Buffer& buffer, uint64 device_address,
-                   DmaDirection direction) LOCKS_EXCLUDED(mutex_);
+  Status Map(const Buffer& buffer, uint64 device_address,
+             DmaDirection direction) LOCKS_EXCLUDED(mutex_);
 
   // Checks and unmaps device virtual address. |device_address| must be
   // page-aligned.
-  util::Status Unmap(uint64 device_address, int num_released_pages)
+  Status Unmap(uint64 device_address, int num_released_pages)
       LOCKS_EXCLUDED(mutex_);
 
   // Member accessors for inherited classes.

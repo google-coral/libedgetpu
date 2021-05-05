@@ -28,8 +28,8 @@ namespace platforms {
 namespace darwinn {
 namespace driver {
 
-util::Status MmioAddressSpace::Map(const Buffer& buffer, uint64 device_address,
-                                   DmaDirection direction) {
+Status MmioAddressSpace::Map(const Buffer& buffer, uint64 device_address,
+                             DmaDirection direction) {
   TRACE_SCOPE("MmioAddressSpace::Map");
   CHECK(IsPageAligned(device_address));
 
@@ -38,7 +38,7 @@ util::Status MmioAddressSpace::Map(const Buffer& buffer, uint64 device_address,
   // If already mapped, fail.
   // TODO: Add a finer grained check, e.g., overlap, if necessary?
   if (mapped_.find(device_address) != mapped_.end()) {
-    return util::InvalidArgumentError(
+    return InvalidArgumentError(
         "Trying to map a segment that is already mapped.");
   }
 
@@ -56,11 +56,10 @@ util::Status MmioAddressSpace::Map(const Buffer& buffer, uint64 device_address,
       "MapMemory() page-aligned : device_address = 0x%016llx",
       static_cast<unsigned long long>(device_address));  // NOLINT(runtime/int)
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status MmioAddressSpace::Unmap(uint64 device_address,
-                                     int num_released_pages) {
+Status MmioAddressSpace::Unmap(uint64 device_address, int num_released_pages) {
   TRACE_SCOPE("MmioAddressSpace::Unmap");
   // TODO: verify num_released_pages if the Buffer is backed by host
   // memory.
@@ -70,7 +69,7 @@ util::Status MmioAddressSpace::Unmap(uint64 device_address,
 
   auto find_result = mapped_.find(device_address);
   if (find_result == mapped_.end()) {
-    return util::InvalidArgumentError(
+    return InvalidArgumentError(
         "Trying to ummap a segment that is not already mapped.");
   }
 
@@ -87,7 +86,7 @@ util::Status MmioAddressSpace::Unmap(uint64 device_address,
 
   mapped_.erase(find_result);
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 }  // namespace driver

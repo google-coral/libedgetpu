@@ -22,14 +22,13 @@ namespace platforms {
 namespace darwinn {
 namespace driver {
 
-util::Status Registers::Poll(uint64 offset, uint64 expected_value,
-                             int64 timeout_us) {
+Status Registers::Poll(uint64 offset, uint64 expected_value, int64 timeout_us) {
   return SpinReadHelper(offset, expected_value, timeout_us,
                         [this](uint64 offset) { return Read(offset); });
 }
 
-util::Status Registers::Poll32(uint64 offset, uint32 expected_value,
-                               int64 timeout_us) {
+Status Registers::Poll32(uint64 offset, uint32 expected_value,
+                         int64 timeout_us) {
   return SpinReadHelper(offset, expected_value, timeout_us,
                         [this](uint64 offset) { return Read32(offset); });
 }

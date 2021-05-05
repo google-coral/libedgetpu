@@ -28,33 +28,32 @@ KernelCoherentAllocatorWindows::KernelCoherentAllocatorWindows(
     const std::string &device_path, int alignment_bytes, size_t size_bytes)
     : KernelCoherentAllocator(device_path, alignment_bytes, size_bytes) {}
 
-util::StatusOr<char *> KernelCoherentAllocatorWindows::Map(FileDescriptor fd,
-                                                           size_t size_bytes,
-                                                           uint64 dma_address) {
+StatusOr<char *> KernelCoherentAllocatorWindows::Map(FileDescriptor fd,
+                                                     size_t size_bytes,
+                                                     uint64 dma_address) {
   gasket_address_map_ioctl apex_memmap_ioctl;
   memset(&apex_memmap_ioctl, 0x00, sizeof(apex_memmap_ioctl));
   apex_memmap_ioctl.dev_dma_addr = dma_address;
   apex_memmap_ioctl.size = size_bytes;
   int rc = ioctl(fd, GASKET_IOCTL_MAP_UMDMA_VIEW, &apex_memmap_ioctl);
   if (rc != 0) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("CoherentAllocator Could not map size %zu.", size_bytes));
   }
   return (char *)apex_memmap_ioctl.virtaddr;
 }
 
-util::Status KernelCoherentAllocatorWindows::Unmap(FileDescriptor fd,
-                                                   char *mem_base,
-                                                   size_t size_bytes) {
+Status KernelCoherentAllocatorWindows::Unmap(FileDescriptor fd, char *mem_base,
+                                             size_t size_bytes) {
   gasket_address_map_ioctl apex_memmap_ioctl;
   memset(&apex_memmap_ioctl, 0x00, sizeof(apex_memmap_ioctl));
   apex_memmap_ioctl.virtaddr = reinterpret_cast<uint64_t *>(mem_base);
   int rc = ioctl(fd, GASKET_IOCTL_UNMAP_UMDMA_VIEW, &apex_memmap_ioctl);
   if (rc != 0) {
-    return util::FailedPreconditionError(StringPrintf(
+    return FailedPreconditionError(StringPrintf(
         "CoherentAllocator Could not unmap coherent %p.", mem_base));
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 }  // namespace driver

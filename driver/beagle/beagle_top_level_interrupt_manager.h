@@ -39,28 +39,28 @@ class BeagleTopLevelInterruptManager : public TopLevelInterruptManager {
 
  protected:
   // Implements interfaces.
-  util::Status DoEnableInterrupts() override;
-  util::Status DoDisableInterrupts() override;
-  util::Status DoHandleInterrupt(int id) override;
+  Status DoEnableInterrupts() override;
+  Status DoDisableInterrupts() override;
+  Status DoHandleInterrupt(int id) override;
 
  private:
   // Implements extra CSR managements to enable top level interrupts.
-  util::Status EnableThermalWarningInterrupt();
-  util::Status EnableMbistInterrupt();
-  util::Status EnablePcieErrorInterrupt();
-  util::Status EnableThermalShutdownInterrupt();
+  Status EnableThermalWarningInterrupt();
+  Status EnableMbistInterrupt();
+  Status EnablePcieErrorInterrupt();
+  Status EnableThermalShutdownInterrupt();
 
   // Implements extra CSR managements to disable top level interrupts.
-  util::Status DisableThermalWarningInterrupt();
-  util::Status DisableMbistInterrupt();
-  util::Status DisablePcieErrorInterrupt();
-  util::Status DisableThermalShutdownInterrupt();
+  Status DisableThermalWarningInterrupt();
+  Status DisableMbistInterrupt();
+  Status DisablePcieErrorInterrupt();
+  Status DisableThermalShutdownInterrupt();
 
   // Implements top level interrupt handling.
-  util::Status HandleThermalWarningInterrupt();
-  util::Status HandleMbistInterrupt();
-  util::Status HandlePcieErrorInterrupt();
-  util::Status HandleThermalShutdownInterrupt();
+  Status HandleThermalWarningInterrupt();
+  Status HandleMbistInterrupt();
+  Status HandlePcieErrorInterrupt();
+  Status HandleThermalShutdownInterrupt();
 
   // Apex CSR offsets.
   const config::ApexCsrOffsets& apex_csr_offsets_;

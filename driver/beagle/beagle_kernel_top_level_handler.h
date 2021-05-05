@@ -35,11 +35,11 @@ class BeagleKernelTopLevelHandler : public TopLevelHandler {
   ~BeagleKernelTopLevelHandler() override = default;
 
   // Implements ResetHandler interface.
-  util::Status Open() override;
-  util::Status Close() override;
-  util::Status EnableSoftwareClockGate() override;
-  util::Status DisableSoftwareClockGate() override;
-  util::Status QuitReset() override;
+  Status Open() override;
+  Status Close() override;
+  Status EnableSoftwareClockGate() override;
+  Status DisableSoftwareClockGate() override;
+  Status QuitReset() override;
 
  private:
   // Device path.

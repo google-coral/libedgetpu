@@ -92,18 +92,18 @@ class MmioDriver : public Driver {
   }
 
  protected:
-  util::Status DoOpen(bool debug_mode) LOCKS_EXCLUDED(state_mutex_) override;
-  util::Status DoClose(bool in_error, api::Driver::ClosingMode mode)
+  Status DoOpen(bool debug_mode) LOCKS_EXCLUDED(state_mutex_) override;
+  Status DoClose(bool in_error, api::Driver::ClosingMode mode)
       LOCKS_EXCLUDED(state_mutex_) override;
-  util::Status DoCancelAndWaitRequests(bool in_error)
+  Status DoCancelAndWaitRequests(bool in_error)
       LOCKS_EXCLUDED(state_mutex_) override;
 
   Buffer DoMakeBuffer(size_t size_bytes) const override;
 
-  util::StatusOr<MappedDeviceBuffer> DoMapBuffer(
-      const Buffer& buffer, DmaDirection direction) override;
+  StatusOr<MappedDeviceBuffer> DoMapBuffer(const Buffer& buffer,
+                                           DmaDirection direction) override;
 
-  util::StatusOr<std::shared_ptr<TpuRequest>> DoCreateRequest(
+  StatusOr<std::shared_ptr<TpuRequest>> DoCreateRequest(
       const std::shared_ptr<Request> parent_request,
       const ExecutableReference* executable, TpuRequest::RequestType type)
       LOCKS_EXCLUDED(state_mutex_) override;
@@ -111,18 +111,18 @@ class MmioDriver : public Driver {
   // We do support real-time mode in this driver.
   bool HasImplementedRealtimeMode() const final { return true; }
 
-  util::Status DoSetExecutableTiming(const ExecutableReference* executable,
-                                     const api::Timing& timing) final {
+  Status DoSetExecutableTiming(const ExecutableReference* executable,
+                               const api::Timing& timing) final {
     return dma_scheduler_.SetExecutableTiming(executable, timing);
   }
 
-  util::Status DoRemoveExecutableTiming(const ExecutableReference* executable) {
+  Status DoRemoveExecutableTiming(const ExecutableReference* executable) {
     return dma_scheduler_.RemoveExecutableTiming(executable);
   }
 
-  util::Status DoSetRealtimeMode(bool on) final;
+  Status DoSetRealtimeMode(bool on) final;
 
-  util::Status DoSubmit(std::shared_ptr<driver::TpuRequest> request)
+  Status DoSubmit(std::shared_ptr<driver::TpuRequest> request)
       LOCKS_EXCLUDED(state_mutex_) override;
 
   int64 MaxRemainingCycles() const override {
@@ -139,7 +139,7 @@ class MmioDriver : public Driver {
     return *chip_config_;
   }
 
-  util::StatusOr<std::shared_ptr<TpuRequest>> GetOldestActiveRequest()
+  StatusOr<std::shared_ptr<TpuRequest>> GetOldestActiveRequest()
       const override {
     return dma_scheduler_.GetOldestActiveRequest();
   }
@@ -156,15 +156,14 @@ class MmioDriver : public Driver {
   };
 
   // Attempts a state transition to the given state.
-  util::Status SetState(State next_state)
-      EXCLUSIVE_LOCKS_REQUIRED(state_mutex_);
+  Status SetState(State next_state) EXCLUSIVE_LOCKS_REQUIRED(state_mutex_);
 
   // Validates that we are in the expected state.
-  util::Status ValidateState(State expected_state) const
+  Status ValidateState(State expected_state) const
       SHARED_LOCKS_REQUIRED(state_mutex_);
 
   // Attempts to issue as many DMAs as possible.
-  util::Status TryIssueDmas() LOCKS_EXCLUDED(dma_issue_mutex_);
+  Status TryIssueDmas() LOCKS_EXCLUDED(dma_issue_mutex_);
 
   // Handles request execution completions.
   void HandleExecutionCompletion();
@@ -173,19 +172,19 @@ class MmioDriver : public Driver {
   void HandleHostQueueCompletion(uint32 error_code);
 
   // Checks for HIB Errors.
-  util::Status CheckHibError();
+  Status CheckHibError();
 
   // Catch all fatal error handling during runtime.
-  void CheckFatalError(const util::Status& status);
+  void CheckFatalError(const Status& status);
 
   // Registers and enables all interrupts.
-  util::Status RegisterAndEnableAllInterrupts();
+  Status RegisterAndEnableAllInterrupts();
 
   // Pauses all the DMAs and returns once that is verified.
-  util::Status PauseAllDmas() EXCLUSIVE_LOCKS_REQUIRED(state_mutex_);
+  Status PauseAllDmas() EXCLUSIVE_LOCKS_REQUIRED(state_mutex_);
 
   // Programs errata CSRs to disable hardware features with known issues.
-  util::Status FixErrata();
+  Status FixErrata();
 
   // CSR offsets.
   const config::HibUserCsrOffsets& hib_user_csr_offsets_;

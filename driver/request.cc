@@ -39,7 +39,7 @@ Request::Request(int id, const PackageReference& package_ref,
   timing_.completed_ns = -1;
 }
 
-util::Status Request::AddInput(const std::string& name, const Buffer& input) {
+Status Request::AddInput(const std::string& name, const Buffer& input) {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kInitial));
 
@@ -47,10 +47,10 @@ util::Status Request::AddInput(const std::string& name, const Buffer& input) {
   VLOG(3) << StringPrintf("Adding input \"%s\" with %zu bytes.", name.c_str(),
                           input.size_bytes());
   inputs_[name].push_back(input);
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status Request::AddOutput(const std::string& name, const Buffer output) {
+Status Request::AddOutput(const std::string& name, const Buffer output) {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kInitial));
 
@@ -58,21 +58,21 @@ util::Status Request::AddOutput(const std::string& name, const Buffer output) {
   VLOG(3) << StringPrintf("Adding output \"%s\" with %zu bytes.", name.c_str(),
                           output.size_bytes());
   outputs_[name].push_back(output);
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status Request::SetPriority(int priority) {
+Status Request::SetPriority(int priority) {
   if (priority < 0) {
-    return util::InvalidArgumentError(StringPrintf(
+    return InvalidArgumentError(StringPrintf(
         "Priority must be 0 or greater. %d was provided.", priority));
   }
 
   StdMutexLock lock(&mutex_);
   priority_ = priority;
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::StatusOr<Request::Timing> Request::GetTiming() const {
+StatusOr<Request::Timing> Request::GetTiming() const {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kDone));
   return timing_;
@@ -83,24 +83,24 @@ int Request::GetPriority() const {
   return priority_;
 }
 
-util::Status Request::SetDone(Done done) {
+Status Request::SetDone(Done done) {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kInitial));
 
   if (done_) {
-    return util::InvalidArgumentError("Done callback is already set.");
+    return InvalidArgumentError("Done callback is already set.");
   }
 
   done_ = std::move(done);
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status Request::Prepare() {
+Status Request::Prepare() {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kInitial));
 
   if (!done_) {
-    return util::InvalidArgumentError("Done callback is not set.");
+    return InvalidArgumentError("Done callback is not set.");
   }
 
   // Batch size is inferred from the number of input and output buffers provided
@@ -119,7 +119,7 @@ util::Status Request::Prepare() {
 
   for (const auto& name : main_executable_ref_.InputLayerNames()) {
     if (inputs_.find(name) == inputs_.end()) {
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           StringPrintf("Unable to find input for layer %s.", name.c_str()));
     }
 
@@ -129,7 +129,7 @@ util::Status Request::Prepare() {
     }
 
     if (inputs_[name].size() != batch_size) {
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           StringPrintf("Mismatched number of input buffers for \"%s\". "
                        "expected=%d, actual=%zu.",
                        name.c_str(), batch_size, inputs_[name].size()));
@@ -138,7 +138,7 @@ util::Status Request::Prepare() {
 
   for (const auto& name : main_executable_ref_.OutputLayerNames()) {
     if (outputs_.find(name) == outputs_.end()) {
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           StringPrintf("Unable to find output for layer %s.", name.c_str()));
     }
 
@@ -148,7 +148,7 @@ util::Status Request::Prepare() {
     }
 
     if (outputs_[name].size() != batch_size) {
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           StringPrintf("Mismatched number of output buffers for \"%s\". "
                        "expected=%d, actual=%zu.",
                        name.c_str(), batch_size, outputs_[name].size()));
@@ -156,7 +156,7 @@ util::Status Request::Prepare() {
   }
 
   if (batch_size <= 0) {
-    return util::InvalidArgumentError("No input/output buffers found.");
+    return InvalidArgumentError("No input/output buffers found.");
   }
 
   request_batch_size_ = batch_size;
@@ -171,14 +171,13 @@ util::Status Request::Prepare() {
   return SetState(kPrepared);
 }
 
-util::StatusOr<int> Request::RemainingTpuRequestCount() const {
+StatusOr<int> Request::RemainingTpuRequestCount() const {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kPrepared));
   return required_tpu_request_count_ - tpu_requests_prepared_;
 }
 
-util::Status Request::PrepareTpuRequest(
-    std::shared_ptr<TpuRequest> tpu_request) {
+Status Request::PrepareTpuRequest(std::shared_ptr<TpuRequest> tpu_request) {
   TRACE_SCOPE("Request::PrepareTpuRequest");
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kPrepared));
@@ -191,36 +190,34 @@ util::Status Request::PrepareTpuRequest(
   }
 }
 
-util::Status Request::PrepareNoIORequest(
-    std::shared_ptr<TpuRequest> tpu_request) {
+Status Request::PrepareNoIORequest(std::shared_ptr<TpuRequest> tpu_request) {
   TRACE_SCOPE("Request::PrepareNoIORequest");
   if (request_batch_size_ != 1) {
-    return util::InvalidArgumentError(
+    return InvalidArgumentError(
         StringPrintf("Executable batch size is 1, yet %d sets of input/outputs "
                      "are provided.",
                      request_batch_size_));
   }
 
   if (tpu_requests_prepared_ >= 1) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("%d are already prepared yet prepare was called again.",
                      tpu_requests_prepared_));
   }
 
-  auto done = [this](int id, const util::Status& status) {
+  auto done = [this](int id, const Status& status) {
     TpuRequestDone(id, status);
   };
   RETURN_IF_ERROR(tpu_request->SetDone(std::move(done)));
 
   tpu_requests_prepared_ = 1;
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status Request::PrepareIORequest(
-    std::shared_ptr<TpuRequest> tpu_request) {
+Status Request::PrepareIORequest(std::shared_ptr<TpuRequest> tpu_request) {
   TRACE_SCOPE("Request::PrepareIORequest");
   if (tpu_requests_prepared_ >= required_tpu_request_count_) {
-    return util::InternalError(
+    return InternalError(
         StringPrintf("Software batch (expected size=%d, actual size=%d) "
                      "already saturated with prepared TPU requests",
                      required_tpu_request_count_, tpu_requests_prepared_));
@@ -244,7 +241,7 @@ util::Status Request::PrepareIORequest(
     }
   }
 
-  auto done = [this](int id, const util::Status& status) {
+  auto done = [this](int id, const Status& status) {
     TpuRequestDone(id, status);
   };
   RETURN_IF_ERROR(tpu_request->SetDone(std::move(done)));
@@ -267,7 +264,7 @@ util::Status Request::PrepareIORequest(
   }
 
   ++tpu_requests_prepared_;
-  return util::OkStatus();
+  return OkStatus();
 }
 
 void Request::NotifySubmission(TpuRequest::RequestType type) {
@@ -289,16 +286,16 @@ void Request::NotifyCompletion(TpuRequest::RequestType type) {
                   api::Request::TimingEvent::EventType::COMPLETED));
 }
 
-void Request::TpuRequestDone(int id, const util::Status& status) {
+void Request::TpuRequestDone(int id, const Status& status) {
   // TODO Improve handling of this error.
   CHECK_OK(HandleTpuRequestsDone(status, 1));
 }
 
-util::Status Request::HandleTpuRequestsDone(const util::Status& status,
-                                            int num_requests_done) {
+Status Request::HandleTpuRequestsDone(const Status& status,
+                                      int num_requests_done) {
   Done done;
   int64 request_id;
-  util::Status done_status;
+  Status done_status;
 
   {
     StdMutexLock lock(&mutex_);
@@ -306,7 +303,7 @@ util::Status Request::HandleTpuRequestsDone(const util::Status& status,
     RETURN_IF_ERROR(ValidateState(kPrepared));
 
     if (num_requests_done > pending_tpu_requests_) {
-      return util::InternalError(
+      return InternalError(
           StringPrintf("Number of done requests (%d) exceeds number of pending "
                        "requests (%d).",
                        num_requests_done, pending_tpu_requests_));
@@ -315,7 +312,7 @@ util::Status Request::HandleTpuRequestsDone(const util::Status& status,
     pending_tpu_requests_ -= num_requests_done;
     done_status_.Update(status);
     if (pending_tpu_requests_ > 0) {
-      return util::OkStatus();
+      return OkStatus();
     }
 
     RETURN_IF_ERROR(SetState(kDone));
@@ -327,41 +324,41 @@ util::Status Request::HandleTpuRequestsDone(const util::Status& status,
   }
 
   done(request_id, done_status);
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status Request::SetState(State next_state) {
+Status Request::SetState(State next_state) {
   switch (state_) {
     case kInitial:
       if (next_state == kPrepared) {
         state_ = next_state;
-        return util::OkStatus();
+        return OkStatus();
       }
       break;
 
     case kPrepared:
       if (next_state == kDone) {
         state_ = next_state;
-        return util::OkStatus();
+        return OkStatus();
       }
       break;
 
     case kDone:
-      return util::FailedPreconditionError(
+      return FailedPreconditionError(
           StringPrintf("Cannot set state from done to %d.", next_state));
   }
 
   // Illegal state transition.
-  return util::FailedPreconditionError(StringPrintf(
+  return FailedPreconditionError(StringPrintf(
       "Invalid state transition. current=%d, next=%d.", state_, next_state));
 }
 
-util::Status Request::ValidateState(State state) const {
+Status Request::ValidateState(State state) const {
   if (state_ != state) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Invalid state. Expected=%d, Actual=%d.", state, state_));
   }
-  return util::OkStatus();
+  return OkStatus();
 }
 
 }  // namespace driver

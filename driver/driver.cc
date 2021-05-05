@@ -50,12 +50,10 @@ using api::ExecutionContextInterface;
 
 }  // namespace
 
-Driver::Driver(api::Chip chip,
-               std::unique_ptr<PackageRegistry> executable_registry,
+Driver::Driver(api::Chip, std::unique_ptr<PackageRegistry> executable_registry,
                const api::DriverOptions& driver_options,
                std::unique_ptr<driver_shared::TimeStamper> time_stamper)
-    : chip_(chip),
-      executable_registry_(std::move(executable_registry)),
+    : executable_registry_(std::move(executable_registry)),
       time_stamper_(std::move(time_stamper)),
       current_parameter_caching_token_(0),
       debug_mode_(false),
@@ -83,35 +81,35 @@ Driver::~Driver() {
 
 std::string Driver::BadStateMessage(State expected_state) const {
   return StringPrintf("Bad driver state. expected=%d, actual=%d.",
-                         expected_state, state_);
+                      expected_state, state_);
 }
 
-util::Status Driver::SetState(State next_state) {
+Status Driver::SetState(State next_state) {
   switch (state_) {
     case kOpen:
       if (next_state == kClosing) {
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
 
     case kClosing:
       if (next_state == kClosed) {
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
 
     case kClosed:
       if (next_state == kOpen) {
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
   }
 
   // Illegal state transition.
-  return util::FailedPreconditionError(StringPrintf(
+  return FailedPreconditionError(StringPrintf(
       "Invalid state transition. current=%d, next=%d.", state_, next_state));
 }
 
@@ -122,21 +120,21 @@ bool Driver::IsOpen() const {
 
 bool Driver::IsError() const { return in_error_; }
 
-util::Status Driver::Open(bool debug_mode, bool context_lost) {
+Status Driver::Open(bool debug_mode, bool context_lost) {
   WriterMutexLock state_writer_lock(&state_mutex_);
   if (num_clients_ > 0) {
     if (context_lost) {
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           "context_lost was set at open() yet there were others holding the "
           "driver open.");
     }
 
     num_clients_++;
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   if (state_ != kClosed) {
-    return util::FailedPreconditionError(BadStateMessage(kClosed));
+    return FailedPreconditionError(BadStateMessage(kClosed));
   }
 
   if (context_lost) {
@@ -150,7 +148,7 @@ util::Status Driver::Open(bool debug_mode, bool context_lost) {
   // All good. Move state to open.
   RETURN_IF_ERROR(SetState(kOpen));
 
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
 namespace {
@@ -168,7 +166,7 @@ int64 ComputeMETinMs(int64 cycles, int64 frequency) {
 
 }  // namespace
 
-util::Status Driver::UpdateInitialTiming(
+Status Driver::UpdateInitialTiming(
     const api::PackageReference* api_package_reference) {
   StdMutexLock lock(&submit_mutex_);
 
@@ -181,7 +179,7 @@ util::Status Driver::UpdateInitialTiming(
   // support real-time mode, or if the driver's operating frequency is not set.
   if (!HasImplementedRealtimeMode() ||
       operational_settings_.tpu_frequency_hz <= 0) {
-    return util::OkStatus();
+    return OkStatus();
   }
 
   // Producing initial guess for estimated execution time.
@@ -198,11 +196,11 @@ util::Status Driver::UpdateInitialTiming(
     return SetExecutableTiming(api_package_reference, timing);
   } else {
     // The executable doesn't carry estimated cycles information.
-    return util::OkStatus();
+    return OkStatus();
   }
 }
 
-util::StatusOr<const api::PackageReference*> Driver::RegisterExecutableFile(
+StatusOr<const api::PackageReference*> Driver::RegisterExecutableFile(
     const std::string& executable_filename) {
   TRACE_SCOPE("Driver::RegisterExecutableFile");
   ASSIGN_OR_RETURN(auto* registered_package,
@@ -211,8 +209,8 @@ util::StatusOr<const api::PackageReference*> Driver::RegisterExecutableFile(
   return registered_package;
 }
 
-util::StatusOr<const api::PackageReference*>
-Driver::RegisterExecutableSerialized(const std::string& executable_content) {
+StatusOr<const api::PackageReference*> Driver::RegisterExecutableSerialized(
+    const std::string& executable_content) {
   TRACE_SCOPE("Driver::RegisterExecutableSerialized");
   ASSIGN_OR_RETURN(
       auto* registered_package,
@@ -221,9 +219,8 @@ Driver::RegisterExecutableSerialized(const std::string& executable_content) {
   return registered_package;
 }
 
-util::StatusOr<const api::PackageReference*>
-Driver::RegisterExecutableSerialized(const char* executable_content,
-                                     size_t length) {
+StatusOr<const api::PackageReference*> Driver::RegisterExecutableSerialized(
+    const char* executable_content, size_t length) {
   TRACE_SCOPE("Driver::RegisterExecutableSerialized");
   ASSIGN_OR_RETURN(
       auto* registered_package,
@@ -234,7 +231,7 @@ Driver::RegisterExecutableSerialized(const char* executable_content,
 
 // TODO  Keeping parameters mapped for the entire time driver is
 // open can lead to OOM even if we have enough memory for one request.
-util::Status Driver::MapParameters(PackageReference& package_ref) {
+Status Driver::MapParameters(PackageReference& package_ref) {
   TRACE_SCOPE("Driver::MapParameters");
 
   // If this is the first time we are mapping parameters and the parameters are
@@ -257,14 +254,14 @@ util::Status Driver::MapParameters(PackageReference& package_ref) {
         std::move(mapped_device_buffer)));
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 Buffer Driver::MakeBuffer(size_t size_bytes) const {
   return DoMakeBuffer(size_bytes);
 }
 
-util::Status Driver::UnregisterExecutable(
+Status Driver::UnregisterExecutable(
     const api::PackageReference* executable_ref) {
   ReaderMutexLock state_reader_lock(&state_mutex_);
 
@@ -278,10 +275,10 @@ util::Status Driver::UnregisterExecutable(
   return executable_registry_->Unregister(executable_ref);
 }
 
-util::StatusOr<std::shared_ptr<api::Request>> Driver::CreateRequest(
+StatusOr<std::shared_ptr<api::Request>> Driver::CreateRequest(
     const api::PackageReference* api_package_ref) {
   if (api_package_ref == nullptr) {
-    return util::InvalidArgumentError("Package reference is null.");
+    return InvalidArgumentError("Package reference is null.");
   }
 
   const auto* package_ref =
@@ -291,14 +288,14 @@ util::StatusOr<std::shared_ptr<api::Request>> Driver::CreateRequest(
       *time_stamper_)};
 }
 
-util::Status Driver::Submit(std::shared_ptr<api::Request> api_request,
-                            api::Request::Done done_callback) {
+Status Driver::Submit(std::shared_ptr<api::Request> api_request,
+                      api::Request::Done done_callback) {
   TRACE_SCOPE("Driver::Submit");
   ReaderMutexLock state_reader_lock(&state_mutex_);
   StdMutexLock submit_lock(&submit_mutex_);
 
   if (state_ != kOpen) {
-    return util::UnavailableError(BadStateMessage(kOpen));
+    return UnavailableError(BadStateMessage(kOpen));
   }
 
   auto request = std::static_pointer_cast<Request>(api_request);
@@ -322,20 +319,19 @@ util::Status Driver::Submit(std::shared_ptr<api::Request> api_request,
     RETURN_IF_ERROR(TrySchedulePendingRequests());
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status Driver::CheckLatencyTolerance(
-    const std::shared_ptr<Request>& request) {
+Status Driver::CheckLatencyTolerance(const std::shared_ptr<Request>& request) {
   TRACE_SCOPE("Driver::CheckLatencyTolerance");
   const auto& package_ref = request->GetPackageReference();
   if (package_ref.LatencyToleranceMs() <= 0) {
     // No latency requirement set.
-    return util::OkStatus();
+    return OkStatus();
   }
 
   if (request->GetPriority() > 0) {
-    return util::InvalidArgumentError(
+    return InvalidArgumentError(
         "Latency tolerance can only be set for P0 requests.");
   }
 
@@ -356,15 +352,15 @@ util::Status Driver::CheckLatencyTolerance(
   int64 estimated_time_ms =
       ComputeMETinMs(estimated_cycles, operational_settings_.tpu_frequency_hz);
   if (estimated_time_ms > package_ref.LatencyToleranceMs()) {
-    return util::DeadlineExceededError(absl::StrFormat(
+    return DeadlineExceededError(absl::StrFormat(
         "Estimated execution time (%lld ms) exceeds max tolerance (%lld ms).",
         estimated_time_ms, package_ref.LatencyToleranceMs()));
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status Driver::SubmitInferenceRequest(std::shared_ptr<Request> request) {
+Status Driver::SubmitInferenceRequest(std::shared_ptr<Request> request) {
   TRACE_SCOPE("Driver::SubmitInferenceRequest");
   const auto& package_ref = request->GetPackageReference();
   ASSIGN_OR_RETURN(auto parameters_mapped, package_ref.ParametersMapped());
@@ -399,10 +395,10 @@ util::Status Driver::SubmitInferenceRequest(std::shared_ptr<Request> request) {
   request->NotifySubmission(TpuRequest::RequestType::INFERENCE);
   RETURN_IF_ERROR(DoSubmit(std::move(tpu_request)));
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::StatusOr<bool> Driver::NeedsParameterCaching(
+StatusOr<bool> Driver::NeedsParameterCaching(
     const std::shared_ptr<Request>& request) const {
   const auto& package_ref = request->GetPackageReference();
   if (!package_ref.ParameterCachingEnabled()) {
@@ -412,14 +408,14 @@ util::StatusOr<bool> Driver::NeedsParameterCaching(
   const auto& parameter_caching_ref =
       package_ref.ParameterCachingExecutableReference();
   if (parameter_caching_ref->ParameterCachingToken() == 0) {
-    return util::InternalError("Parameter caching tag is not set.");
+    return InternalError("Parameter caching tag is not set.");
   }
 
   return currently_cached_refs_.find(parameter_caching_ref) ==
          currently_cached_refs_.end();
 }
 
-util::Status Driver::SubmitParameterCachingRequest(
+Status Driver::SubmitParameterCachingRequest(
     const std::shared_ptr<Request>& request) {
   TRACE_SCOPE("Driver::SubmitParameterCachingRequest");
   auto parameter_caching_ref =
@@ -432,14 +428,14 @@ util::Status Driver::SubmitParameterCachingRequest(
   ASSIGN_OR_RETURN(auto tpu_request,
                    DoCreateRequest(request, parameter_caching_ref,
                                    TpuRequest::RequestType::PARAMETER_CACHING));
-  RETURN_IF_ERROR(tpu_request->SetDone([](int, const util::Status&) {}));
+  RETURN_IF_ERROR(tpu_request->SetDone([](int, const Status&) {}));
 
   // Record the submission time before actually submitting the workload. This
   // avoids race conditions where the completion is notified before submission.
   request->NotifySubmission(TpuRequest::RequestType::PARAMETER_CACHING);
   RETURN_IF_ERROR(DoSubmit(std::move(tpu_request)));
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 void Driver::ResetCachedParameters() {
@@ -475,7 +471,7 @@ void Driver::HandleTpuRequestCompletion() {
   scheduler_wakeup_.notify_one();
 }
 
-util::Status Driver::TrySchedulePendingRequests() {
+Status Driver::TrySchedulePendingRequests() {
   for (auto& priority_and_queue : pending_requests_) {
     auto& request_queue = priority_and_queue.second;
 
@@ -487,7 +483,7 @@ util::Status Driver::TrySchedulePendingRequests() {
             "Already have %lld cycles in scheduler, no need to schedule more "
             "work.",
             MaxRemainingCycles());
-        return util::OkStatus();
+        return OkStatus();
       }
 
       auto request = request_queue.front();
@@ -508,14 +504,13 @@ util::Status Driver::TrySchedulePendingRequests() {
     }
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::StatusOr<bool> Driver::CanScheduleTpuRequest(
+StatusOr<bool> Driver::CanScheduleTpuRequest(
     const std::shared_ptr<Request>& request) {
   if (request->GetPriority() == 0) {
-    return util::InvalidArgumentError(
-        "P0 requests should be immediately scheduled.");
+    return InvalidArgumentError("P0 requests should be immediately scheduled.");
   }
 
   if (max_scheduled_work_ns_ < 0) {
@@ -555,7 +550,7 @@ util::StatusOr<bool> Driver::CanScheduleTpuRequest(
   return (max_cycles_to_schedule >= total_cycles);
 }
 
-util::Status Driver::CancelAllPendingRequests() {
+Status Driver::CancelAllPendingRequests() {
   StdMutexLock submit_lock(&submit_mutex_);
 
   for (auto& priority_and_queue : pending_requests_) {
@@ -570,19 +565,19 @@ util::Status Driver::CancelAllPendingRequests() {
           remaining_tpu_requests);
 
       RETURN_IF_ERROR(request->HandleTpuRequestsDone(
-          util::CancelledError("Request cancelled."), remaining_tpu_requests));
+          CancelledError("Request cancelled."), remaining_tpu_requests));
       request_queue.pop();
     }
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status Driver::Execute(std::shared_ptr<api::Request> request) {
+Status Driver::Execute(std::shared_ptr<api::Request> request) {
   BlockingCounter counter(1);
-  util::Status final_status;
+  Status final_status;
 
-  auto done_callback = [&counter, &final_status](int id, util::Status status) {
+  auto done_callback = [&counter, &final_status](int id, Status status) {
     final_status = std::move(status);
     counter.DecrementCount();
   };
@@ -595,14 +590,14 @@ util::Status Driver::Execute(std::shared_ptr<api::Request> request) {
   return final_status;
 }
 
-util::Status Driver::Execute(
+Status Driver::Execute(
     const std::vector<std::shared_ptr<api::Request>>& requests) {
   BlockingCounter counter(requests.size());
   std::mutex status_mutex;
-  util::Status final_status;
+  Status final_status;
 
-  auto done_callback = [&counter, &final_status, &status_mutex](
-                           int id, util::Status status) {
+  auto done_callback = [&counter, &final_status, &status_mutex](int id,
+                                                                Status status) {
     StdMutexLock status_lock(&status_mutex);
     final_status.Update(status);
     counter.DecrementCount();
@@ -617,24 +612,24 @@ util::Status Driver::Execute(
   return final_status;
 }
 
-util::Status Driver::Cancel(std::shared_ptr<api::Request> request) {
-  return util::UnimplementedError("Unimplemented.");
+Status Driver::Cancel(std::shared_ptr<api::Request> request) {
+  return UnimplementedError("Unimplemented.");
 }
 
-util::Status Driver::CancelAllRequests() {
-  return util::UnimplementedError("Unimplemented.");
+Status Driver::CancelAllRequests() {
+  return UnimplementedError("Unimplemented.");
 }
 
-util::Status Driver::Close(api::Driver::ClosingMode mode) {
+Status Driver::Close(api::Driver::ClosingMode mode) {
   WriterMutexLock state_writer_lock(&state_mutex_);
 
   if (num_clients_ > 1) {
     num_clients_--;
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   if (state_ != kOpen) {
-    return util::FailedPreconditionError(BadStateMessage(kOpen));
+    return FailedPreconditionError(BadStateMessage(kOpen));
   }
 
   // Note our intention to close.
@@ -672,7 +667,7 @@ void Driver::SetThermalWarningCallback(ThermalWarningCallback callback) {
   thermal_warning_callback_ = std::move(callback);
 }
 
-void Driver::NotifyFatalError(const util::Status& status) {
+void Driver::NotifyFatalError(const Status& status) {
   // Set error state.
   bool was_in_error = std::atomic_exchange(&in_error_, true);
   if (!was_in_error) {
@@ -705,8 +700,8 @@ void Driver::HandleWatchdogTimeout() {
   CHECK_OK(Open(debug_mode_));
 }
 
-util::Status Driver::SetExecutableTiming(
-    const api::PackageReference* executable, const api::Timing& timing) {
+Status Driver::SetExecutableTiming(const api::PackageReference* executable,
+                                   const api::Timing& timing) {
   return DoSetExecutableTiming(
       static_cast<const driver::PackageReference*>(executable)
           ->MainExecutableReference(),

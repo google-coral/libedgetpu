@@ -15,13 +15,11 @@
 # Description:
 # Kernel driver specific functionality.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
-
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_event_windows",
     srcs = ["kernel_event_windows.cc"],
     hdrs = ["kernel_event_windows.h"],
@@ -42,7 +40,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_event_handler_windows",
     srcs = ["kernel_event_handler_windows.cc"],
     hdrs = ["kernel_event_handler_windows.h"],
@@ -65,7 +63,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_coherent_allocator_windows",
     srcs = ["kernel_coherent_allocator_windows.cc"],
     hdrs = ["kernel_coherent_allocator_windows.h"],
@@ -85,7 +83,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_registers_windows",
     srcs = ["kernel_registers_windows.cc"],
     hdrs = ["kernel_registers_windows.h"],
@@ -107,7 +105,10 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "gasket_ioctl_windows",
     hdrs = ["windows_gasket_ioctl.inc"],
+    deps = [
+        "//port",
+    ],
 )

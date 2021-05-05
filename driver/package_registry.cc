@@ -54,7 +54,7 @@ PackageRegistry::PackageRegistry(
       chip_(chip),
       verifier_(std::move(executable_verifier)) {}
 
-util::StatusOr<std::unordered_map<ExecutableType, const Executable*>>
+StatusOr<std::unordered_map<ExecutableType, const Executable*>>
 PackageRegistry::GetExecutablesFromBinary(const char* executable_content,
                                           size_t length) {
   // Check the file identifier of the package.
@@ -70,7 +70,7 @@ PackageRegistry::GetExecutablesFromBinary(const char* executable_content,
   flatbuffers::Verifier package_verifier(
       reinterpret_cast<const uint8*>(executable_content), length);
   if (!package_verifier.VerifyBuffer<Package>()) {
-    return util::InternalError("Package verification failed.");
+    return InternalError("Package verification failed.");
   }
   auto* package = flatbuffers::GetRoot<Package>(executable_content);
 
@@ -83,7 +83,7 @@ PackageRegistry::GetExecutablesFromBinary(const char* executable_content,
         "expected (%d).",
         min_runtime_version, api::RuntimeVersion::kMinValidRuntimeVersion);
   } else if (min_runtime_version > api::RuntimeVersion::kCurrent) {
-    return util::FailedPreconditionError(StringPrintf(
+    return FailedPreconditionError(StringPrintf(
         "Package requires runtime version (%d), which is newer "
         "than this runtime version (%d).",
         package->min_runtime_version(), api::RuntimeVersion::kCurrent));
@@ -91,11 +91,11 @@ PackageRegistry::GetExecutablesFromBinary(const char* executable_content,
 
   constexpr int kVirtualChipIdForMultiChipPackage = -1;
   if (package->virtual_chip_id() == kVirtualChipIdForMultiChipPackage) {
-    return util::FailedPreconditionError("This is a multi-chip package.");
+    return FailedPreconditionError("This is a multi-chip package.");
   }
 
   if (flatbuffers::VectorLength(package->serialized_multi_executable()) == 0) {
-    return util::FailedPreconditionError("No executables to register.");
+    return FailedPreconditionError("No executables to register.");
   }
 
   // Verify and get the MultiExecutable table from the package.
@@ -103,7 +103,7 @@ PackageRegistry::GetExecutablesFromBinary(const char* executable_content,
       package->serialized_multi_executable()->data(),
       flatbuffers::VectorLength(package->serialized_multi_executable()));
   if (!multi_executable_verifier.VerifyBuffer<MultiExecutable>()) {
-    return util::InternalError("MultiExecutable verification failed.");
+    return InternalError("MultiExecutable verification failed.");
   }
   auto* multi_executable = flatbuffers::GetRoot<MultiExecutable>(
       package->serialized_multi_executable()->data());
@@ -113,14 +113,13 @@ PackageRegistry::GetExecutablesFromBinary(const char* executable_content,
 
   if (flatbuffers::VectorLength(multi_executable->serialized_executables()) ==
       0) {
-    return util::NotFoundError("No executables provided.");
+    return NotFoundError("No executables provided.");
   }
 
   return ExtractExecutables(*multi_executable);
 }
 
-util::StatusOr<const Executable*>
-PackageRegistry::GetMainExecutableFromExecutableMap(
+StatusOr<const Executable*> PackageRegistry::GetMainExecutableFromExecutableMap(
     std::unordered_map<ExecutableType, const Executable*> executables) {
   switch (executables.size()) {
     case 1:
@@ -141,12 +140,11 @@ PackageRegistry::GetMainExecutableFromExecutableMap(
       return executables[ExecutableType_STAND_ALONE];
 
     default:
-      return util::InternalError("Unexpected combination of executables.");
+      return InternalError("Unexpected combination of executables.");
   }
 }
 
-util::StatusOr<const Executable*>
-PackageRegistry::GetPCExecutableFromExecutableMap(
+StatusOr<const Executable*> PackageRegistry::GetPCExecutableFromExecutableMap(
     std::unordered_map<ExecutableType, const Executable*> executables) {
   switch (executables.size()) {
     case 1:
@@ -156,11 +154,11 @@ PackageRegistry::GetPCExecutableFromExecutableMap(
     case 3:
       return nullptr;
     default:
-      return util::InternalError("Unexpected combination of executables.");
+      return InternalError("Unexpected combination of executables.");
   }
 }
 
-util::StatusOr<const api::PackageReference*> PackageRegistry::RegisterPackage(
+StatusOr<const api::PackageReference*> PackageRegistry::RegisterPackage(
     const Buffer& package_buffer) {
   ASSIGN_OR_RETURN(auto executables,
                    GetExecutablesFromBinary(
@@ -192,7 +190,7 @@ util::StatusOr<const api::PackageReference*> PackageRegistry::RegisterPackage(
       std::unique_ptr<api::PackageReference>(package_reference));
 }
 
-util::StatusOr<std::unique_ptr<ExecutableLayersInfo>>
+StatusOr<std::unique_ptr<ExecutableLayersInfo>>
 PackageRegistry::GetMainExecutableLayersInfoFromBinary(
     const char* executable_content, size_t length) {
   ASSIGN_OR_RETURN(auto executables,
@@ -204,7 +202,7 @@ PackageRegistry::GetMainExecutableLayersInfoFromBinary(
   return gtl::MakeUnique<ExecutableLayersInfo>(main_executable);
 }
 
-util::StatusOr<std::unordered_map<ExecutableType, const Executable*>>
+StatusOr<std::unordered_map<ExecutableType, const Executable*>>
 PackageRegistry::ExtractExecutables(const MultiExecutable& multi_executable) {
   std::unordered_map<ExecutableType, const Executable*> executables;
 
@@ -216,7 +214,7 @@ PackageRegistry::ExtractExecutables(const MultiExecutable& multi_executable) {
                                               executable_serialized->size()));
 
     if (executables.find(executable->type()) != executables.end()) {
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           "Multiple executables of the same type were found in the package.");
     }
     executables[executable->type()] = executable;
@@ -225,7 +223,7 @@ PackageRegistry::ExtractExecutables(const MultiExecutable& multi_executable) {
   // Sanity check for legal combinations.
   switch (executables.size()) {
     case 0:
-      return util::InternalError("No executables provided.");
+      return InternalError("No executables provided.");
 
     case 1:
       break;
@@ -235,7 +233,7 @@ PackageRegistry::ExtractExecutables(const MultiExecutable& multi_executable) {
               executables.end() ||
           executables.find(ExecutableType_EXECUTION_ONLY) ==
               executables.end()) {
-        return util::InvalidArgumentError(
+        return InvalidArgumentError(
             "Invalid combination of executables in the package.");
       }
       break;
@@ -246,25 +244,25 @@ PackageRegistry::ExtractExecutables(const MultiExecutable& multi_executable) {
           executables.find(ExecutableType_EXECUTION_ONLY) ==
               executables.end() ||
           executables.find(ExecutableType_STAND_ALONE) == executables.end()) {
-        return util::InvalidArgumentError(
+        return InvalidArgumentError(
             "Invalid combination of executables in the package.");
       }
       break;
 
     default:
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           "Found executable types that are not yet supported.");
   }
 
   return executables;
 }
 
-util::StatusOr<const Executable*> PackageRegistry::FetchAndVerifyExecutable(
+StatusOr<const Executable*> PackageRegistry::FetchAndVerifyExecutable(
     const char* executable_serialized, size_t length) {
   flatbuffers::Verifier verifier(
       reinterpret_cast<const uint8*>(executable_serialized), length);
   if (!verifier.VerifyBuffer<Executable>()) {
-    return util::InvalidArgumentError("Executable verification failed.");
+    return InvalidArgumentError("Executable verification failed.");
   }
 
   const auto* executable = flatbuffers::GetRoot<Executable>(
@@ -272,38 +270,38 @@ util::StatusOr<const Executable*> PackageRegistry::FetchAndVerifyExecutable(
 
   // All executables must have a batch size of at least one.
   if (executable->batch_size() < 1) {
-    return util::InvalidArgumentError("Executable has invalid batch size.");
+    return InvalidArgumentError("Executable has invalid batch size.");
   }
 
   return executable;
 }
 
-util::Status PackageRegistry::VerifyExecutableMatchesChip(
+Status PackageRegistry::VerifyExecutableMatchesChip(
     const Executable* executable) const {
-  return util::OkStatus();
+  (void)chip_;
+  return OkStatus();
 }
 
-util::StatusOr<const api::PackageReference*>
-PackageRegistry::RegisterSerialized(const std::string& executable_content) {
+StatusOr<const api::PackageReference*> PackageRegistry::RegisterSerialized(
+    const std::string& executable_content) {
   return RegisterSerialized(executable_content.data(),
                             executable_content.size());
 }
 
-util::StatusOr<const api::PackageReference*>
-PackageRegistry::RegisterSerialized(const char* executable_content,
-                                    size_t length) {
+StatusOr<const api::PackageReference*> PackageRegistry::RegisterSerialized(
+    const char* executable_content, size_t length) {
   Buffer package_buffer = allocator_.MakeBuffer(length);
   CHECK(package_buffer.ptr() != nullptr);
   memcpy(package_buffer.ptr(), executable_content, length);
   return RegisterPackage(package_buffer);
 }
 
-util::StatusOr<const api::PackageReference*> PackageRegistry::RegisterFile(
+StatusOr<const api::PackageReference*> PackageRegistry::RegisterFile(
     const std::string& executable_filename) {
   std::ifstream ifs;
   ifs.open(executable_filename, std::ifstream::in);
   if (!ifs.is_open()) {
-    return util::InvalidArgumentError(
+    return InvalidArgumentError(
         StringPrintf("Cannot open %s.", executable_filename.c_str()));
   }
 
@@ -319,16 +317,16 @@ util::StatusOr<const api::PackageReference*> PackageRegistry::RegisterFile(
   return RegisterPackage(package_buffer);
 }
 
-util::Status PackageRegistry::Unregister(
+Status PackageRegistry::Unregister(
     const api::PackageReference* package_reference) {
   StdMutexLock registrations_lock(&registrations_mutex_);
 
   // Bail out early if package_reference isn't valid.
   if (package_reference == nullptr) {
-    return util::InvalidArgumentError("Provided package reference in null.");
+    return InvalidArgumentError("Provided package reference in null.");
   }
   if (registrations_.count(package_reference) == 0) {
-    return util::NotFoundError(
+    return NotFoundError(
         "Attempting to unregister a nonexistent executable reference.");
   }
 
@@ -344,14 +342,14 @@ util::Status PackageRegistry::Unregister(
   // TODO : Need to track outstanding requests and error when
   // there are pending/in-flight requests at un-registration time.
   if (registrations_.erase(driver_package_ref) == 0) {
-    return util::NotFoundError(
+    return NotFoundError(
         "Attempting to unregister a nonexistent executable reference.");
   }
 
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
-util::Status PackageRegistry::UnregisterAll() {
+Status PackageRegistry::UnregisterAll() {
   RETURN_IF_ERROR(UnmapAllParameters());
 
   StdMutexLock registrations_lock(&registrations_mutex_);
@@ -359,17 +357,16 @@ util::Status PackageRegistry::UnregisterAll() {
   // there are pending/in-flight requests at un-registration time.
   registrations_.clear();
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status PackageRegistry::UnmapAllParameters() {
+Status PackageRegistry::UnmapAllParameters() {
   StdMutexLock registrations_lock(&registrations_mutex_);
-  util::Status status;
+  Status status;
 
   for (auto& it : registrations_) {
     if (it.first == nullptr) {
-      return util::InternalError(
-          "Encountered nullptr key to package reference.");
+      return InternalError("Encountered nullptr key to package reference.");
     }
     PackageReference* package = const_cast<PackageReference*>(
         static_cast<const PackageReference*>(it.first));
@@ -457,23 +454,21 @@ ExecutableLayersInfo::ExecutableLayersInfo(const Executable* executable) {
   }
 }
 
-util::StatusOr<int> ExecutableLayersInfo::InputIndex(
-    const std::string& name) const {
+StatusOr<int> ExecutableLayersInfo::InputIndex(const std::string& name) const {
   auto iter = input_map_.find(name);
   if (iter != input_map_.end()) {
     return iter->second;
   }
-  return util::NotFoundError(
+  return NotFoundError(
       StringPrintf("Input layer '%s' not found.", name.c_str()));
 }
 
-util::StatusOr<int> ExecutableLayersInfo::OutputIndex(
-    const std::string& name) const {
+StatusOr<int> ExecutableLayersInfo::OutputIndex(const std::string& name) const {
   auto iter = output_map_.find(name);
   if (iter != output_map_.end()) {
     return iter->second;
   }
-  return util::NotFoundError(
+  return NotFoundError(
       StringPrintf("Output layer '%s' not found.", name.c_str()));
 }
 
@@ -495,43 +490,43 @@ const api::OutputLayerInformation* ExecutableLayersInfo::OutputLayer(
 
 // TODO If possible, refactor this to only have a name map and we
 // will not need to do 2 lookups.
-util::StatusOr<const api::InputLayerInformation*>
-ExecutableLayersInfo::InputLayer(const std::string& layer_name) const {
+StatusOr<const api::InputLayerInformation*> ExecutableLayersInfo::InputLayer(
+    const std::string& layer_name) const {
   ASSIGN_OR_RETURN(auto index, InputIndex(layer_name));
   const auto* input_info = InputLayer(index);
   if (input_info == nullptr) {
-    return util::InternalError(
+    return InternalError(
         StringPrintf("Input layer %s was not found in executable reference.",
                      layer_name.c_str()));
   }
   return input_info;
 }
 
-util::StatusOr<const api::OutputLayerInformation*>
-ExecutableLayersInfo::OutputLayer(const std::string& layer_name) const {
+StatusOr<const api::OutputLayerInformation*> ExecutableLayersInfo::OutputLayer(
+    const std::string& layer_name) const {
   ASSIGN_OR_RETURN(auto index, OutputIndex(layer_name));
   const auto* output_info = OutputLayer(index);
   if (output_info == nullptr) {
-    return util::InternalError(
+    return InternalError(
         StringPrintf("Output layer %s was not found in executable reference.",
                      layer_name.c_str()));
   }
   return output_info;
 }
 
-util::StatusOr<int> ExecutableLayersInfo::InputLayerSizeBytes(
+StatusOr<int> ExecutableLayersInfo::InputLayerSizeBytes(
     const std::string& name) const {
   ASSIGN_OR_RETURN(int index, InputIndex(name));
   return inputs_[index].ActualSizeBytes();
 }
 
-util::StatusOr<int> ExecutableLayersInfo::InputLayerPaddedSizeBytes(
+StatusOr<int> ExecutableLayersInfo::InputLayerPaddedSizeBytes(
     const std::string& name) const {
   ASSIGN_OR_RETURN(int index, InputIndex(name));
   return inputs_[index].PaddedSizeBytes();
 }
 
-util::StatusOr<int> ExecutableLayersInfo::OutputLayerSizeBytes(
+StatusOr<int> ExecutableLayersInfo::OutputLayerSizeBytes(
     const std::string& name) const {
   ASSIGN_OR_RETURN(int index, OutputIndex(name));
   return outputs_[index].ActualSizeBytes();
@@ -541,8 +536,7 @@ ExecutableReference::ExecutableReference(const Executable* executable,
                                          Allocator* allocator,
                                          DramAllocator* dram_allocator,
                                          PackageReference* pkg_ref)
-    : executable_(executable),
-      package_reference_(pkg_ref) {
+    : executable_(executable), package_reference_(pkg_ref) {
   // Create a buffer for parameters. This buffer is either in host or in the
   // on-chip DRAM. If on host, we already have a copy of the data in the package
   // flatbuffer. If on chip, we will copy the data the first time the buffer is
@@ -603,33 +597,33 @@ ExecutableReference::ExecutableReference(const Executable* executable,
   }
 }
 
-util::Status ExecutableReference::ValidateInput(const std::string& input_name,
-                                                const Buffer& input) const {
+Status ExecutableReference::ValidateInput(const std::string& input_name,
+                                          const Buffer& input) const {
   ASSIGN_OR_RETURN(const auto* layer, InputLayer(input_name));
 
   // We can only accept buffers that are the same size as the input layer tensor
   // with or without padding.
   if (input.size_bytes() != layer->ActualSizeBytes() &&
       input.size_bytes() != layer->PaddedSizeBytes()) {
-    return util::InvalidArgumentError(StringPrintf(
+    return InvalidArgumentError(StringPrintf(
         "Unexpected input size for \"%s\". Expected %d or %d, got %zu",
         input_name.c_str(), layer->ActualSizeBytes(), layer->PaddedSizeBytes(),
         input.size_bytes()));
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status ExecutableReference::ValidateOutput(const std::string& output_name,
-                                                 const Buffer& output) const {
+Status ExecutableReference::ValidateOutput(const std::string& output_name,
+                                           const Buffer& output) const {
   ASSIGN_OR_RETURN(const int expected_size_bytes,
                    OutputLayerSizeBytes(output_name));
   if (output.size_bytes() != expected_size_bytes) {
-    return util::InvalidArgumentError(StringPrintf(
+    return InvalidArgumentError(StringPrintf(
         "Unexpected output size for \"%s\". expected=%d, actual=%zu.",
         output_name.c_str(), expected_size_bytes, output.size_bytes()));
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 // Reuses the instruction buffers if available. Creates a new one if not.
@@ -664,11 +658,11 @@ void ExecutableReference::ReturnInstructionBuffers(
   VLOG(10) << "Returned instruction buffers back to executable reference";
 }
 
-util::Status ExecutableReference::PrepareParameters() {
+Status ExecutableReference::PrepareParameters() {
   // If parameters are not in on-chip DRAM or they have already been loaded
   // there, nothing else to do here.
   if (!parameters_.IsDramType() || parameters_loaded_) {
-    return util::OkStatus();
+    return OkStatus();
   }
 
   ASSIGN_OR_RETURN(auto dram_buffer, parameters_.GetDramBuffer());
@@ -679,7 +673,7 @@ util::Status ExecutableReference::PrepareParameters() {
   parameters_loaded_ = true;
   VLOG(2) << "Parameters were loaded on DRAM.";
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 void ExecutableReference::ResetParametersLoaded() {
@@ -688,29 +682,28 @@ void ExecutableReference::ResetParametersLoaded() {
   }
 }
 
-util::Status ExecutableReference::SetMappedParameters(
+Status ExecutableReference::SetMappedParameters(
     MappedDeviceBuffer&& mapped_parameters) {
   if (parameters_mapped_) {
     RETURN_IF_ERROR(mapped_parameters.Unmap());
-    return util::FailedPreconditionError("Parameters are already mapped.");
+    return FailedPreconditionError("Parameters are already mapped.");
   }
 
   mapped_parameters_ = std::move(mapped_parameters);
   parameters_mapped_ = true;
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status ExecutableReference::UnmapParameters() {
+Status ExecutableReference::UnmapParameters() {
   if (!parameters_mapped_) {
-    return util::FailedPreconditionError(
-        "Parameters are not currently mapped.");
+    return FailedPreconditionError("Parameters are not currently mapped.");
   }
 
   RETURN_IF_ERROR(mapped_parameters_.Unmap());
   parameters_mapped_ = false;
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 PackageReference::PackageReference(const Buffer& package_buffer,
@@ -752,8 +745,8 @@ PackageReference::AllExecutableReferences() const {
   return all_references;
 }
 
-util::Status PackageReference::UnmapParameters() {
-  util::Status status;
+Status PackageReference::UnmapParameters() {
+  Status status;
 
   for (ExecutableReference* executable_ref : AllExecutableReferences()) {
     status.Update(executable_ref->UnmapParameters());
@@ -762,17 +755,17 @@ util::Status PackageReference::UnmapParameters() {
   return status;
 }
 
-util::StatusOr<bool> PackageReference::ParametersMapped() const {
+StatusOr<bool> PackageReference::ParametersMapped() const {
   auto all_executable_refs = AllExecutableReferences();
   if (all_executable_refs.empty()) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         "No executable references were found in the package reference.");
   }
   bool parameters_mapped = all_executable_refs.front()->ParametersMapped();
 
   for (auto* executable_ref : all_executable_refs) {
     if (executable_ref->ParametersMapped() != parameters_mapped) {
-      return util::InternalError(
+      return InternalError(
           "Inconsistent parameter mapping status across executables in the "
           "same package.");
     }
@@ -793,9 +786,9 @@ bool PackageReference::NeedsDram() const {
   return false;
 }
 
-util::Status PackageReference::SetLatencyTolerance(int64 latency_tolerance_ms) {
+Status PackageReference::SetLatencyTolerance(int64 latency_tolerance_ms) {
   latency_tolerance_ms_ = latency_tolerance_ms;
-  return util::OkStatus();
+  return OkStatus();
 }
 
 }  // namespace driver

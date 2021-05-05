@@ -31,26 +31,32 @@ RunController::RunController(const config::ChipConfig& config,
       tile_csr_offsets_(config.GetTileCsrOffsets()),
       has_thread_csr_offsets_(config.HasThreadCsrOffsets()),
       tile_thread_0_csr_offsets_(config.HasThreadCsrOffsets() ?
-        &config.GetTileThread0CsrOffsets() : nullptr),
+        &config.GetSpecificTileThreadCsrOffsets(0) : nullptr),
       tile_thread_1_csr_offsets_(config.HasThreadCsrOffsets() ?
-        &config.GetTileThread1CsrOffsets() : nullptr),
-      tile_thread_2_csr_offsets_(config.HasThreadCsrOffsets() ?
-        &config.GetTileThread2CsrOffsets() : nullptr),
-      tile_thread_3_csr_offsets_(config.HasThreadCsrOffsets() ?
-        &config.GetTileThread3CsrOffsets() : nullptr),
-      tile_thread_4_csr_offsets_(config.HasThreadCsrOffsets() ?
-        &config.GetTileThread4CsrOffsets() : nullptr),
-      tile_thread_5_csr_offsets_(config.HasThreadCsrOffsets() ?
-        &config.GetTileThread5CsrOffsets() : nullptr),
-      tile_thread_6_csr_offsets_(config.HasThreadCsrOffsets() ?
-        &config.GetTileThread6CsrOffsets() : nullptr),
-      tile_thread_7_csr_offsets_(config.HasThreadCsrOffsets() ?
-        &config.GetTileThread7CsrOffsets() : nullptr),
+        &config.GetSpecificTileThreadCsrOffsets(1) : nullptr),
+      tile_thread_2_csr_offsets_(
+        (config.HasNumberOfThreads() > 2 && config.HasThreadCsrOffsets()) ?
+        &config.GetSpecificTileThreadCsrOffsets(2) : nullptr),
+      tile_thread_3_csr_offsets_(
+        (config.HasNumberOfThreads() > 3 && config.HasThreadCsrOffsets()) ?
+        &config.GetSpecificTileThreadCsrOffsets(3) : nullptr),
+      tile_thread_4_csr_offsets_(
+        (config.HasNumberOfThreads() > 4 && config.HasThreadCsrOffsets()) ?
+        &config.GetSpecificTileThreadCsrOffsets(4) : nullptr),
+      tile_thread_5_csr_offsets_(
+        (config.HasNumberOfThreads() > 5 && config.HasThreadCsrOffsets()) ?
+        &config.GetSpecificTileThreadCsrOffsets(5) : nullptr),
+      tile_thread_6_csr_offsets_(
+        (config.HasNumberOfThreads() > 6 && config.HasThreadCsrOffsets()) ?
+        &config.GetSpecificTileThreadCsrOffsets(6) : nullptr),
+      tile_thread_7_csr_offsets_(
+        (config.HasNumberOfThreads() > 7 && config.HasThreadCsrOffsets()) ?
+        &config.GetSpecificTileThreadCsrOffsets(7) : nullptr),
       registers_(registers) {
   CHECK(registers != nullptr);
 }
 
-util::Status RunController::DoRunControl(RunControl run_state) {
+Status RunController::DoRunControl(RunControl run_state) {
   // Value of offset when register is not present in a project.
   constexpr uint64 kInvalidOffset = static_cast<uint64>(-1);
 
@@ -237,6 +243,7 @@ util::Status RunController::DoRunControl(RunControl run_state) {
           tile_thread_6_csr_offsets_, tile_thread_7_csr_offsets_};
   if (has_thread_csr_offsets_) {
     for (const auto* tile_thread_csr_offsets_ : tile_thread_csr_offsets) {
+      if (tile_thread_csr_offsets_ == nullptr) continue;
       if (tile_thread_csr_offsets_->opRunControl_0 != kInvalidOffset) {
         RETURN_IF_ERROR(registers_->Write(
           tile_thread_csr_offsets_->opRunControl_0, run_state_value));
@@ -273,7 +280,7 @@ util::Status RunController::DoRunControl(RunControl run_state) {
         tile_csr_offsets_.narrowToNarrowRunControl, run_state_value));
   }
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 }  // namespace driver

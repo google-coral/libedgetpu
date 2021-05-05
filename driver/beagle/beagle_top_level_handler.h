@@ -41,11 +41,11 @@ class BeagleTopLevelHandler : public TopLevelHandler {
   ~BeagleTopLevelHandler() override = default;
 
   // Implements ResetHandler interface.
-  util::Status Open() override;
-  util::Status QuitReset() override;
-  util::Status EnableReset() override;
-  util::Status EnableHardwareClockGate() override;
-  util::Status DisableHardwareClockGate() override;
+  Status Open() override;
+  Status QuitReset() override;
+  Status EnableReset() override;
+  Status EnableHardwareClockGate() override;
+  Status DisableHardwareClockGate() override;
 
  private:
   // CSR offsets.

@@ -39,16 +39,15 @@ namespace driver {
 KernelMmuMapper::KernelMmuMapper(const std::string &device_path)
     : device_path_(device_path) {}
 
-util::Status KernelMmuMapper::Open(
-    int num_simple_page_table_entries_requested) {
+Status KernelMmuMapper::Open(int num_simple_page_table_entries_requested) {
   StdMutexLock lock(&mutex_);
   if (fd_ != INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device already open.");
+    return FailedPreconditionError("Device already open.");
   }
 
   fd_ = open(device_path_.c_str(), O_RDWR);
   if (fd_ < 0) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Device open failed : %d (%s)", fd_, strerror(errno)));
   }
 
@@ -58,24 +57,24 @@ util::Status KernelMmuMapper::Open(
   ioctl_buffer.size = num_simple_page_table_entries_requested;
 
   if (ioctl(fd_, GASKET_IOCTL_PARTITION_PAGE_TABLE, &ioctl_buffer) != 0) {
-    return util::FailedPreconditionError(StringPrintf(
+    return FailedPreconditionError(StringPrintf(
         "Could not partition page table. : %d (%s)", fd_, strerror(errno)));
   }
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status KernelMmuMapper::Close() {
+Status KernelMmuMapper::Close() {
   StdMutexLock lock(&mutex_);
 
   if (fd_ == INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device not open.");
+    return FailedPreconditionError("Device not open.");
   }
 
   close(fd_);
   fd_ = INVALID_FD_VALUE;
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 // Converts DmaDirection to
@@ -91,14 +90,14 @@ static uint32_t DirectionFlag(DmaDirection direction) {
   }
 }
 
-util::Status KernelMmuMapper::DoMap(const void *buffer, int num_pages,
-                                    uint64 device_virtual_address,
-                                    DmaDirection direction) {
+Status KernelMmuMapper::DoMap(const void *buffer, int num_pages,
+                              uint64 device_virtual_address,
+                              DmaDirection direction) {
   TRACE_SCOPE("KernelMmuMapper::DoMap");
   StdMutexLock lock(&mutex_);
 
   if (fd_ == INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device not open.");
+    return FailedPreconditionError("Device not open.");
   }
 
   gasket_page_table_ioctl_flags buffer_to_map;
@@ -128,7 +127,7 @@ util::Status KernelMmuMapper::DoMap(const void *buffer, int num_pages,
   }
 
   if (ioctl_retval != 0) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Could not map pages : %d (%s)", fd_, strerror(errno)));
   }
 
@@ -145,16 +144,16 @@ util::Status KernelMmuMapper::DoMap(const void *buffer, int num_pages,
                             buffer_to_map.base.device_address, num_pages);
   }
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status KernelMmuMapper::DoUnmap(const void *buffer, int num_pages,
-                                      uint64 device_virtual_address) {
+Status KernelMmuMapper::DoUnmap(const void *buffer, int num_pages,
+                                uint64 device_virtual_address) {
   TRACE_SCOPE("KernelMmuMapper::DoUnmap");
   StdMutexLock lock(&mutex_);
 
   if (fd_ == INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device not open.");
+    return FailedPreconditionError("Device not open.");
   }
 
   gasket_page_table_ioctl buffer_to_map;
@@ -165,7 +164,7 @@ util::Status KernelMmuMapper::DoUnmap(const void *buffer, int num_pages,
   buffer_to_map.device_address = device_virtual_address;
 
   if (ioctl(fd_, GASKET_IOCTL_UNMAP_BUFFER, &buffer_to_map) != 0) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Could not unmap pages : %d (%s)", fd_, strerror(errno)));
   }
 
@@ -173,16 +172,16 @@ util::Status KernelMmuMapper::DoUnmap(const void *buffer, int num_pages,
       "MmuMaper#Unmap() : %016" PRIx64 " -> %016" PRIx64 " (%d pages).",
       buffer_to_map.host_address, buffer_to_map.device_address, num_pages);
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status KernelMmuMapper::DoMap(int fd, int num_pages,
-                                    uint64 device_virtual_address,
-                                    DmaDirection direction) {
+Status KernelMmuMapper::DoMap(int fd, int num_pages,
+                              uint64 device_virtual_address,
+                              DmaDirection direction) {
   TRACE_SCOPE("KernelMmuMapper::DoMap");
   StdMutexLock lock(&mutex_);
   if (fd_ == INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device not open.");
+    return FailedPreconditionError("Device not open.");
   }
 
   gasket_page_table_ioctl_dmabuf buffer_to_map = {0};
@@ -196,7 +195,7 @@ util::Status KernelMmuMapper::DoMap(int fd, int num_pages,
 
   int ioctl_retval = ioctl(fd_, GASKET_IOCTL_MAP_DMABUF, &buffer_to_map);
   if (ioctl_retval != 0) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Could not map pages : %d (%s)", fd_, strerror(errno)));
   }
 
@@ -205,15 +204,15 @@ util::Status KernelMmuMapper::DoMap(int fd, int num_pages,
                           buffer_to_map.dmabuf_fd, buffer_to_map.device_address,
                           num_pages, buffer_to_map.flags);
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status KernelMmuMapper::DoUnmap(int fd, int num_pages,
-                                      uint64 device_virtual_address) {
+Status KernelMmuMapper::DoUnmap(int fd, int num_pages,
+                                uint64 device_virtual_address) {
   TRACE_SCOPE("KernelMmuMapper::DoUnmap");
   StdMutexLock lock(&mutex_);
   if (fd_ == INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device not open.");
+    return FailedPreconditionError("Device not open.");
   }
 
   gasket_page_table_ioctl_dmabuf buffer_to_unmap = {0};
@@ -223,7 +222,7 @@ util::Status KernelMmuMapper::DoUnmap(int fd, int num_pages,
   buffer_to_unmap.dmabuf_fd = fd;
   buffer_to_unmap.device_address = device_virtual_address;
   if (ioctl(fd_, GASKET_IOCTL_MAP_DMABUF, &buffer_to_unmap) != 0) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Could not unmap pages : %d (%s)", fd_, strerror(errno)));
   }
 
@@ -231,7 +230,7 @@ util::Status KernelMmuMapper::DoUnmap(int fd, int num_pages,
       "MmuMaper#Unmap() : fd %d -> %016" PRIx64 " (%d pages).",
       buffer_to_unmap.dmabuf_fd, buffer_to_unmap.device_address, num_pages);
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 }  // namespace driver

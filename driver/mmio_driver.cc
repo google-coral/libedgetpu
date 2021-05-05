@@ -122,45 +122,45 @@ MmioDriver::~MmioDriver() {
   }
 }
 
-util::Status MmioDriver::ValidateState(State expected_state) const {
+Status MmioDriver::ValidateState(State expected_state) const {
   if (state_ != expected_state) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Bad MMIO driver state. expected=%d, actual=%d.",
                      expected_state, state_));
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status MmioDriver::SetState(State next_state) {
+Status MmioDriver::SetState(State next_state) {
   switch (state_) {
     case kOpen:
       if (next_state == kClosing) {
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
 
     case kClosing:
       if (next_state == kClosed) {
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
 
     case kClosed:
       if (next_state == kOpen) {
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
   }
 
   // Illegal state transition.
-  return util::FailedPreconditionError(StringPrintf(
+  return FailedPreconditionError(StringPrintf(
       "Invalid state transition. current=%d, next=%d.", state_, next_state));
 }
 
-util::Status MmioDriver::RegisterAndEnableAllInterrupts() {
+Status MmioDriver::RegisterAndEnableAllInterrupts() {
   // Instruction queue completion.
   RETURN_IF_ERROR(interrupt_handler_->Register(
       DW_INTERRUPT_INSTR_QUEUE,
@@ -232,14 +232,14 @@ util::Status MmioDriver::RegisterAndEnableAllInterrupts() {
   // TODO: refactor for Darwinn 1.0 vs 2.0 driver.
   RETURN_IF_ERROR(top_level_interrupt_manager_->EnableInterrupts());
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status MmioDriver::CheckHibError() {
+Status MmioDriver::CheckHibError() {
   ASSIGN_OR_RETURN(uint64 hib_error_status,
                    registers_->Read(hib_user_csr_offsets_.hib_error_status));
   if (hib_error_status == kHibErrorStatusNone) {
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   uint64 hib_first_error_status =
@@ -252,10 +252,10 @@ util::Status MmioDriver::CheckHibError() {
       static_cast<unsigned long long>(                    // NOLINT(runtime/int)
           hib_first_error_status));
   LOG(ERROR) << error_string;
-  return util::InternalError(error_string);
+  return InternalError(error_string);
 }
 
-util::Status MmioDriver::DoOpen(bool debug_mode) {
+Status MmioDriver::DoOpen(bool debug_mode) {
   StdMutexLock state_lock(&state_mutex_);
   RETURN_IF_ERROR(ValidateState(/*expected_state=*/kClosed));
 
@@ -268,6 +268,9 @@ util::Status MmioDriver::DoOpen(bool debug_mode) {
   RETURN_IF_ERROR(top_level_handler_->Open());
   auto top_level_handler_closer =
       MakeCleanup([this] { CHECK_OK(top_level_handler_->Close()); });
+
+  // LPM power up core
+  RETURN_IF_ERROR(top_level_handler_->LpmCoreToActive());
 
   // Disable clock gate and reset GCB for clean state.
   RETURN_IF_ERROR(top_level_handler_->DisableSoftwareClockGate());
@@ -359,10 +362,10 @@ util::Status MmioDriver::DoOpen(bool debug_mode) {
   top_level_handler_closer.release();
   registers_closer.release();
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status MmioDriver::DoClose(bool in_error, api::Driver::ClosingMode mode) {
+Status MmioDriver::DoClose(bool in_error, api::Driver::ClosingMode mode) {
   StdMutexLock state_lock(&state_mutex_);
   RETURN_IF_ERROR(ValidateState(/*expected_state=*/kOpen));
 
@@ -374,7 +377,7 @@ util::Status MmioDriver::DoClose(bool in_error, api::Driver::ClosingMode mode) {
 
   // All good. Shut down stuff. This is best effort. So if things starts
   // failing, keep going and try cleaning up as much as we can.
-  util::Status status;
+  Status status;
 
   // Pause all DMAs and wait for that to happen in the hardware otherwise we
   // will be at risk of getting into undefined behavior in the following
@@ -406,6 +409,10 @@ util::Status MmioDriver::DoClose(bool in_error, api::Driver::ClosingMode mode) {
   status.Update(UnmapAllParameters());
   status.Update(mmu_mapper_->Close());
   status.Update(top_level_handler_->EnableReset());
+
+  // LPM rail gate core
+  status.Update(top_level_handler_->LpmCoreToRailGate());
+
   status.Update(top_level_handler_->Close());
   status.Update(registers_->Close());
   status.Update(dram_allocator_->Close());
@@ -414,24 +421,24 @@ util::Status MmioDriver::DoClose(bool in_error, api::Driver::ClosingMode mode) {
   // Finalize.
   RETURN_IF_ERROR(SetState(kClosed));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status MmioDriver::DoCancelAndWaitRequests(bool in_error) {
+Status MmioDriver::DoCancelAndWaitRequests(bool in_error) {
   StdMutexLock state_lock(&state_mutex_);
   RETURN_IF_ERROR(dma_scheduler_.CancelPendingRequests());
   if (!in_error) {
     RETURN_IF_ERROR(dma_scheduler_.WaitActiveRequests());
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 Buffer MmioDriver::DoMakeBuffer(size_t size_bytes) const {
   return allocator_->MakeBuffer(size_bytes);
 }
 
-util::StatusOr<MappedDeviceBuffer> MmioDriver::DoMapBuffer(
-    const Buffer& buffer, DmaDirection direction) {
+StatusOr<MappedDeviceBuffer> MmioDriver::DoMapBuffer(const Buffer& buffer,
+                                                     DmaDirection direction) {
   if (buffer.IsValid()) {
     ASSIGN_OR_RETURN(auto device_buffer,
                      address_space_->MapMemory(buffer, direction,
@@ -447,7 +454,7 @@ util::StatusOr<MappedDeviceBuffer> MmioDriver::DoMapBuffer(
   return MappedDeviceBuffer();
 }
 
-util::StatusOr<std::shared_ptr<TpuRequest>> MmioDriver::DoCreateRequest(
+StatusOr<std::shared_ptr<TpuRequest>> MmioDriver::DoCreateRequest(
     const std::shared_ptr<Request> parent_request,
     const ExecutableReference* executable, TpuRequest::RequestType type) {
   TRACE_SCOPE("MmioDriver::DoCreateRequest");
@@ -460,7 +467,7 @@ util::StatusOr<std::shared_ptr<TpuRequest>> MmioDriver::DoCreateRequest(
       &dma_info_extractor_, chip_structure_.minimum_alignment_bytes, type)};
 }
 
-util::Status MmioDriver::DoSubmit(std::shared_ptr<TpuRequest> request) {
+Status MmioDriver::DoSubmit(std::shared_ptr<TpuRequest> request) {
   TRACE_SCOPE("MmioDriver::DoSubmit");
   StdMutexLock state_lock(&state_mutex_);
   RETURN_IF_ERROR(ValidateState(kOpen));
@@ -478,10 +485,10 @@ util::Status MmioDriver::DoSubmit(std::shared_ptr<TpuRequest> request) {
   TRACE_WITHIN_SCOPE("MmioDriver::DoSubmit::Issue");
   RETURN_IF_ERROR(TryIssueDmas());
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status MmioDriver::TryIssueDmas() {
+Status MmioDriver::TryIssueDmas() {
   TRACE_SCOPE("MmioDriver::TryIssueDmas");
   // Both the dma_scheduler and instruction_queue is threadsafe on its own.
   // However, we also want to to make sure that DMAs popped from the dma
@@ -512,7 +519,7 @@ util::Status MmioDriver::TryIssueDmas() {
     TRACE_WITHIN_SCOPE("MmioDriver::TryIssueDmas::Enqueue");
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 void MmioDriver::HandleExecutionCompletion() {
@@ -529,25 +536,25 @@ void MmioDriver::HandleHostQueueCompletion(uint32 error_code) {
   if (error_code != 0) {
     // TODO: Parse the error code and attach a human readable string.
     CheckFatalError(
-        util::InternalError(StringPrintf("Host Queue error %d.", error_code)));
+        InternalError(StringPrintf("Host Queue error %d.", error_code)));
     return;
   }
   CHECK_OK(TryIssueDmas());
 }
 
-void MmioDriver::CheckFatalError(const util::Status& status) {
+void MmioDriver::CheckFatalError(const Status& status) {
   if (status.ok()) {
     return;
   }
   NotifyFatalError(status);
 }
 
-util::Status MmioDriver::DoSetRealtimeMode(bool on) {
+Status MmioDriver::DoSetRealtimeMode(bool on) {
   dma_scheduler_.SetRealtimeMode(on);
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status MmioDriver::PauseAllDmas() {
+Status MmioDriver::PauseAllDmas() {
   constexpr uint64 kPauseDmas = 1;
   RETURN_IF_ERROR(
       registers_->Write(hib_user_csr_offsets_.dma_pause, kPauseDmas));
@@ -555,8 +562,8 @@ util::Status MmioDriver::PauseAllDmas() {
   return registers_->Poll(hib_user_csr_offsets_.dma_paused, kAllDmasPaused);
 }
 
-util::Status MmioDriver::FixErrata() {
-  return util::OkStatus();
+Status MmioDriver::FixErrata() {
+  return OkStatus();
 }
 
 }  // namespace driver

@@ -38,7 +38,7 @@ DeviceBufferMapper::DeviceBufferMapper(AddressSpace* address_space)
   CHECK(address_space != nullptr);
 }
 
-util::Status DeviceBufferMapper::UnmapAll() {
+Status DeviceBufferMapper::UnmapAll() {
   TRACE_SCOPE("DeviceBufferMapper::UnmapAll");
 
   RETURN_IF_ERROR(UnmapMultiple(instruction_mappings_));
@@ -52,22 +52,22 @@ util::Status DeviceBufferMapper::UnmapAll() {
   output_mappings_.clear();
   instructions_.clear();
   instruction_mappings_.clear();
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status DeviceBufferMapper::MapInputs(const Buffer::NamedMap& buffers) {
+Status DeviceBufferMapper::MapInputs(const Buffer::NamedMap& buffers) {
   TRACE_SCOPE("DeviceBufferMapper::MapInputs");
   return MapMultiple(buffers, DmaDirection::kToDevice, inputs_,
                      input_mappings_);
 }
 
-util::Status DeviceBufferMapper::MapOutputs(const Buffer::NamedMap& buffers) {
+Status DeviceBufferMapper::MapOutputs(const Buffer::NamedMap& buffers) {
   TRACE_SCOPE("DeviceBufferMapper::MapOutputs");
   return MapMultiple(buffers, DmaDirection::kFromDevice, outputs_,
                      output_mappings_);
 }
 
-util::Status DeviceBufferMapper::MapScratch(const Buffer& buffer) {
+Status DeviceBufferMapper::MapScratch(const Buffer& buffer) {
   TRACE_SCOPE("DeviceBufferMapper::MapScratch");
   DCHECK(!scratch_.IsValid());
   ASSIGN_OR_RETURN(scratch_, Map(buffer, DmaDirection::kBidirectional));
@@ -78,14 +78,13 @@ util::Status DeviceBufferMapper::MapScratch(const Buffer& buffer) {
           scratch_.device_address()),
       scratch_.size_bytes());
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status DeviceBufferMapper::MapInstructions(
-    const std::vector<Buffer>& buffers) {
+Status DeviceBufferMapper::MapInstructions(const std::vector<Buffer>& buffers) {
   TRACE_SCOPE("DeviceBufferMapper::MapInstructions");
   if (!instruction_mappings_.empty()) {
-    return util::InvalidArgumentError("Instructions are already mapped.");
+    return InvalidArgumentError("Instructions are already mapped.");
   }
 
   static const std::string kInstructions = "instructions";
@@ -96,14 +95,14 @@ util::Status DeviceBufferMapper::MapInstructions(
   map[kInstructions] = buffers;
 
   DeviceBuffer::NamedMap device_map;
-  const util::Status ret = MapMultiple(map, DmaDirection::kToDevice, device_map,
-                                       instruction_mappings_);
+  const Status ret = MapMultiple(map, DmaDirection::kToDevice, device_map,
+                                 instruction_mappings_);
   instructions_ = std::move(device_map[kInstructions]);
   return ret;
 }
 
-util::StatusOr<DeviceBuffer> DeviceBufferMapper::Map(const Buffer& buffer,
-                                                     DmaDirection direction) {
+StatusOr<DeviceBuffer> DeviceBufferMapper::Map(const Buffer& buffer,
+                                               DmaDirection direction) {
   TRACE_SCOPE("DeviceBufferMapper::Map");
   if (buffer.IsValid()) {
     return address_space_->MapMemory(buffer, direction, MappingTypeHint::kAny);
@@ -111,20 +110,20 @@ util::StatusOr<DeviceBuffer> DeviceBufferMapper::Map(const Buffer& buffer,
   return DeviceBuffer();  // Invalid buffer.
 }
 
-util::Status DeviceBufferMapper::Unmap(DeviceBuffer buffer) {
+Status DeviceBufferMapper::Unmap(DeviceBuffer buffer) {
   TRACE_SCOPE("DeviceBufferMapper::Unmap");
   if (buffer.IsValid()) {
     return address_space_->UnmapMemory(std::move(buffer));
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status DeviceBufferMapper::MapMultiple(
+Status DeviceBufferMapper::MapMultiple(
     const Buffer::NamedMap& buffers, DmaDirection direction,
     /*out*/ DeviceBuffer::NamedMap& user_buffers,
     /*out*/ std::vector<DeviceBuffer>& mapped_buffers) {
   if (!user_buffers.empty() || !mapped_buffers.empty()) {
-    return util::InvalidArgumentError("Device buffer is already mapped.");
+    return InvalidArgumentError("Device buffer is already mapped.");
   }
 
   auto cleaner = MakeCleanup(
@@ -232,12 +231,12 @@ util::Status DeviceBufferMapper::MapMultiple(
   }
 
   cleaner.release();
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status DeviceBufferMapper::UnmapMultiple(
+Status DeviceBufferMapper::UnmapMultiple(
     std::vector<DeviceBuffer>& device_buffers) {
-  util::Status status;
+  Status status;
   for (auto& device_buffer : device_buffers) {
     status.Update(Unmap(std::move(device_buffer)));
   }

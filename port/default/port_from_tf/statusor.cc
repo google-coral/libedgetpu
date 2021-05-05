@@ -24,7 +24,6 @@ limitations under the License.
 
 namespace platforms {
 namespace darwinn {
-namespace util {
 namespace internal_statusor {
 
 void Helper::HandleInvalidStatusCtorArg(Status* status) {
@@ -48,6 +47,5 @@ void ThrowBadStatusOrAccess(Status status) {
 }
 
 }  // namespace internal_statusor
-}  // namespace util
 }  // namespace darwinn
 }  // namespace platforms

@@ -22,18 +22,18 @@ namespace platforms {
 namespace darwinn {
 namespace driver {
 
-util::StatusOr<DeviceBuffer> NopAddressSpace::MapMemory(
+StatusOr<DeviceBuffer> NopAddressSpace::MapMemory(
     const Buffer& buffer, DmaDirection direction,
     MappingTypeHint mapping_type) {
   if (!buffer.IsValid()) {
-    return util::InvalidArgumentError("Invalid buffer.");
+    return InvalidArgumentError("Invalid buffer.");
   }
 
   return DeviceBuffer(reinterpret_cast<uint64>(buffer.ptr()),
                       buffer.size_bytes());
 }
 
-util::StatusOr<const Buffer> NopAddressSpace::Translate(
+StatusOr<const Buffer> NopAddressSpace::Translate(
     const DeviceBuffer& buffer) const {
   return Buffer(reinterpret_cast<uint8*>(buffer.device_address()),
                 buffer.size_bytes());

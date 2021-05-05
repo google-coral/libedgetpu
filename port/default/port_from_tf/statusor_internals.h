@@ -22,7 +22,6 @@ limitations under the License.
 
 namespace platforms {
 namespace darwinn {
-namespace util {
 namespace internal_statusor {
 
 class Helper {
@@ -245,7 +244,6 @@ struct TraitsBase<false, false> {
 void ThrowBadStatusOrAccess(Status status);
 
 }  // namespace internal_statusor
-}  // namespace util
 }  // namespace darwinn
 }  // namespace platforms
 

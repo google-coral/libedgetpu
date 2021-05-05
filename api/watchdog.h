@@ -57,18 +57,18 @@ class Watchdog {
 
   // Starts the watch. It returns an activation id that can be later on
   // used to verify which activation an expiration callback belongs to.
-  virtual util::StatusOr<int64> Activate() = 0;
+  virtual StatusOr<int64> Activate() = 0;
 
   // Signals the watchdog that we are still active and healthy.
-  virtual util::Status Signal() = 0;
+  virtual Status Signal() = 0;
 
   // Ends the watch.
-  virtual util::Status Deactivate() = 0;
+  virtual Status Deactivate() = 0;
 
   // Updates watchdog timeout to the provided value in nanoseconds. By
   // definition, the new timeout will be effective from the next activation /
   // signal.
-  virtual util::Status UpdateTimeout(int64 timeout_ns) = 0;
+  virtual Status UpdateTimeout(int64 timeout_ns) = 0;
 };
 
 // A No-Op watchdog used for when we don't need a watch (e.g. in tests,
@@ -86,12 +86,10 @@ class NoopWatchdog : public Watchdog {
   NoopWatchdog(const NoopWatchdog&) = delete;
   NoopWatchdog& operator=(const NoopWatchdog&) = delete;
 
-  util::StatusOr<int64> Activate() override { return 0; }
-  util::Status Signal() override { return util::OkStatus(); }
-  util::Status Deactivate() override { return util::OkStatus(); }
-  util::Status UpdateTimeout(int64 timeout_ns) override {
-    return util::OkStatus();
-  }
+  StatusOr<int64> Activate() override { return 0; }
+  Status Signal() override { return OkStatus(); }
+  Status Deactivate() override { return OkStatus(); }
+  Status UpdateTimeout(int64 timeout_ns) override { return OkStatus(); }
 };
 
 // A watchdog implementation that uses timerfd (or similar timers) underneath.
@@ -139,10 +137,10 @@ class TimerFdWatchdog : public Watchdog {
     }
   }
 
-  util::StatusOr<int64> Activate() override LOCKS_EXCLUDED(mutex_);
-  util::Status Signal() override LOCKS_EXCLUDED(mutex_);
-  util::Status Deactivate() override LOCKS_EXCLUDED(mutex_);
-  util::Status UpdateTimeout(int64 timeout_ns) override LOCKS_EXCLUDED(mutex_);
+  StatusOr<int64> Activate() override LOCKS_EXCLUDED(mutex_);
+  Status Signal() override LOCKS_EXCLUDED(mutex_);
+  Status Deactivate() override LOCKS_EXCLUDED(mutex_);
+  Status UpdateTimeout(int64 timeout_ns) override LOCKS_EXCLUDED(mutex_);
 
  private:
   // This function runs the watch thread that periodically checks the last time
@@ -150,7 +148,7 @@ class TimerFdWatchdog : public Watchdog {
   void Watcher();
 
   // Validates that the watchdog is currently active.
-  util::Status ValidateActive() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status ValidateActive() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Callback function for when we time out.
   const Expire expire_;
@@ -190,11 +188,11 @@ class CountingWatch {
 
   // Increments the number of elements in the pipeline by 1. This will result in
   // activating the watchdog.
-  util::Status Increment() LOCKS_EXCLUDED(mutex_);
+  Status Increment() LOCKS_EXCLUDED(mutex_);
 
   // Decrements the number of elements in the pipeline. It fails if counter has
   // already reached 0.
-  util::Status Decrement() LOCKS_EXCLUDED(mutex_);
+  Status Decrement() LOCKS_EXCLUDED(mutex_);
 
  private:
   // The watchdog we are wrapping.
@@ -238,17 +236,17 @@ class CascadeWatchdog : public Watchdog {
   CascadeWatchdog(const CascadeWatchdog&) = delete;
   CascadeWatchdog& operator=(const CascadeWatchdog&) = delete;
 
-  util::StatusOr<int64> Activate() override LOCKS_EXCLUDED(mutex_);
-  util::Status Signal() override LOCKS_EXCLUDED(mutex_);
-  util::Status Deactivate() override LOCKS_EXCLUDED(mutex_);
+  StatusOr<int64> Activate() override LOCKS_EXCLUDED(mutex_);
+  Status Signal() override LOCKS_EXCLUDED(mutex_);
+  Status Deactivate() override LOCKS_EXCLUDED(mutex_);
 
   // Updates the timeout of the first child watchdog (the first one that expires
   // ). Use the overloaded method for updating timeouts of other child
   // watchdogs.
-  util::Status UpdateTimeout(int64 timeout_ns) override;
+  Status UpdateTimeout(int64 timeout_ns) override;
 
   // Updates the timeout of the child watchdog at the provided index.
-  util::Status UpdateTimeout(int child_index, int64 timeout_ns);
+  Status UpdateTimeout(int child_index, int64 timeout_ns);
 
  protected:
   // A method that can create and return a child watchdog to be used here.
@@ -271,10 +269,10 @@ class CascadeWatchdog : public Watchdog {
   void CallbackExecutor();
 
   // Start the first watchdog. Called by Activate and Signal.
-  util::Status StartFirstWatchdog() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status StartFirstWatchdog() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Implement actual Deactivate method here to simplify some mutex locking.
-  util::Status DeactivateInternal() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status DeactivateInternal() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // The list of watchdog configs as provided by the object owner.
   const std::vector<Config> configs_;

@@ -39,9 +39,14 @@ BAZEL_OUT_DIR := $(MAKEFILE_DIR)/bazel-out/$(CPU)-$(COMPILATION_MODE)/bin
 # Linux-specific parameters
 BAZEL_BUILD_TARGET_Linux := //tflite/public:libedgetpu_direct_all.so
 BAZEL_BUILD_FLAGS_Linux := --crosstool_top=@crosstool//:toolchains \
-                           --compiler=gcc
+                           --compiler=gcc \
+                           --linkopt=-l:libusb-1.0.so
 BAZEL_BUILD_OUTPUT_FILE_Linux := libedgetpu.so.1.0
 BAZEL_BUILD_OUTPUT_SYMLINK_Linux := libedgetpu.so.1
+
+ifeq ($(COMPILATION_MODE),opt)
+BAZEL_BUILD_FLAGS_Linux += --linkopt=-Wl,--strip-all
+endif
 
 ifeq ($(CPU), armv6)
 BAZEL_BUILD_FLAGS_Linux += --linkopt=-L/usr/lib/arm-linux-gnueabihf/
@@ -49,6 +54,9 @@ endif
 
 # Darwin-specific parameters
 BAZEL_BUILD_TARGET_Darwin := //tflite/public:libedgetpu_direct_usb.dylib
+BAZEL_BUILD_FLAGS_Darwin := --copt=-fvisibility=hidden \
+                            --linkopt=-L/opt/local/lib \
+                            --linkopt=-lusb-1.0
 BAZEL_BUILD_OUTPUT_FILE_Darwin := libedgetpu.1.0.dylib
 BAZEL_BUILD_OUTPUT_SYMLINK_Darwin := libedgetpu.1.dylib
 

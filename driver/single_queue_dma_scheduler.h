@@ -44,26 +44,24 @@ class SingleQueueDmaScheduler : public DmaScheduler {
   ~SingleQueueDmaScheduler() override = default;
 
   // Implements DmaScheduler interfaces.
-  util::Status Open() override LOCKS_EXCLUDED(mutex_);
-  util::Status Close(api::Driver::ClosingMode mode) override
+  Status Open() override LOCKS_EXCLUDED(mutex_);
+  Status Close(api::Driver::ClosingMode mode) override LOCKS_EXCLUDED(mutex_);
+  Status Submit(std::shared_ptr<TpuRequest> request) override
       LOCKS_EXCLUDED(mutex_);
-  util::Status Submit(std::shared_ptr<TpuRequest> request) override
+  StatusOr<DmaDescriptorType> PeekNextDma() const override
       LOCKS_EXCLUDED(mutex_);
-  util::StatusOr<DmaDescriptorType> PeekNextDma() const override
-      LOCKS_EXCLUDED(mutex_);
-  util::StatusOr<DmaInfo*> GetNextDma() override LOCKS_EXCLUDED(mutex_);
-  util::Status NotifyDmaCompletion(DmaInfo* dma_info) override
-      LOCKS_EXCLUDED(mutex_);
-  util::Status NotifyRequestCompletion() override LOCKS_EXCLUDED(mutex_);
-  util::Status CancelPendingRequests() override LOCKS_EXCLUDED(mutex_);
-  util::Status WaitActiveRequests() override LOCKS_EXCLUDED(mutex_);
+  StatusOr<DmaInfo*> GetNextDma() override LOCKS_EXCLUDED(mutex_);
+  Status NotifyDmaCompletion(DmaInfo* dma_info) override LOCKS_EXCLUDED(mutex_);
+  Status NotifyRequestCompletion() override LOCKS_EXCLUDED(mutex_);
+  Status CancelPendingRequests() override LOCKS_EXCLUDED(mutex_);
+  Status WaitActiveRequests() override LOCKS_EXCLUDED(mutex_);
   bool IsEmpty() const override LOCKS_EXCLUDED(mutex_) {
     StdMutexLock lock(&mutex_);
     return IsEmptyLocked();
   }
   int64 MaxRemainingCycles() const override LOCKS_EXCLUDED(mutex_);
-  util::StatusOr<std::shared_ptr<TpuRequest>> GetOldestActiveRequest()
-      const override LOCKS_EXCLUDED(mutex_);
+  StatusOr<std::shared_ptr<TpuRequest>> GetOldestActiveRequest() const override
+      LOCKS_EXCLUDED(mutex_);
 
  private:
   // A data structure for managing Request and associated DMAs.
@@ -105,8 +103,7 @@ class SingleQueueDmaScheduler : public DmaScheduler {
   };
 
   // Validates whether in "is_open" state.
-  util::Status ValidateOpenState(bool is_open) const
-      EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status ValidateOpenState(bool is_open) const EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Locked version of IsEmpty().
   bool IsEmptyLocked() const EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
@@ -115,17 +112,17 @@ class SingleQueueDmaScheduler : public DmaScheduler {
   }
 
   // Handles all completed DMAs related cleanups for given tasks.
-  util::Status HandleCompletedTasks() LOCKS_EXCLUDED(mutex_);
-  util::Status HandleActiveTasks() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status HandleCompletedTasks() LOCKS_EXCLUDED(mutex_);
+  Status HandleActiveTasks() EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Waits until all active DMAs are completed.
-  util::Status CloseActiveDmas() LOCKS_EXCLUDED(mutex_);
+  Status CloseActiveDmas() LOCKS_EXCLUDED(mutex_);
 
   // Cancels all the active DMAs and requests.
-  util::Status CancelActiveRequests() LOCKS_EXCLUDED(mutex_);
+  Status CancelActiveRequests() LOCKS_EXCLUDED(mutex_);
 
   // Cancels all the tasks in a provided queue.
-  util::Status CancelTaskQueue(std::deque<Task>& tasks)
+  Status CancelTaskQueue(std::deque<Task>& tasks)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Guards all the related queues.

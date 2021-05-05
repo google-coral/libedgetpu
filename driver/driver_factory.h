@@ -63,7 +63,7 @@ class DriverProvider {
   // Returns a driver instance that interfaces with specified device.
   // Custom options specified here would override default ones. The exact set of
   // possible key-value pairs is provider-specific.
-  virtual util::StatusOr<std::unique_ptr<api::Driver>> CreateDriver(
+  virtual StatusOr<std::unique_ptr<api::Driver>> CreateDriver(
       const api::Device& device, const api::DriverOptions& options) = 0;
 
  protected:
@@ -97,12 +97,12 @@ class DriverFactory : public api::DriverFactory {
   std::vector<api::Device> Enumerate() override LOCKS_EXCLUDED(mutex_);
 
   // Creates a driver instance that interfaces to the specified device.
-  util::StatusOr<std::unique_ptr<api::Driver>> CreateDriver(
+  StatusOr<std::unique_ptr<api::Driver>> CreateDriver(
       const api::Device& device) override LOCKS_EXCLUDED(mutex_);
 
   // Creates a driver instance that interfaces to the specified device with
   // custom options.
-  util::StatusOr<std::unique_ptr<api::Driver>> CreateDriver(
+  StatusOr<std::unique_ptr<api::Driver>> CreateDriver(
       const api::Device& device, const api::Driver::Options& options) override
       LOCKS_EXCLUDED(mutex_);
 

@@ -45,18 +45,16 @@ class NopAddressSpace : public AddressSpace {
 
   // Maps the given host buffer to the device buffer. Returns the mapped device
   // buffer on success.
-  util::StatusOr<DeviceBuffer> MapMemory(const Buffer& buffer,
-                                         DmaDirection direction,
-                                         MappingTypeHint mapping_type) override;
+  StatusOr<DeviceBuffer> MapMemory(const Buffer& buffer, DmaDirection direction,
+                                   MappingTypeHint mapping_type) override;
 
   // Unmaps the given device address range.
-  util::Status UnmapMemory(DeviceBuffer buffer) override {
-    return util::Status();  // OK
+  Status UnmapMemory(DeviceBuffer buffer) override {
+    return Status();  // OK
   }
 
   // Translates device buffer to host buffer.
-  util::StatusOr<const Buffer> Translate(
-      const DeviceBuffer& buffer) const;
+  StatusOr<const Buffer> Translate(const DeviceBuffer& buffer) const;
 };
 
 }  // namespace driver

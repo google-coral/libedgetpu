@@ -49,26 +49,24 @@ class SocketRegisters : public Registers {
   SocketRegisters& operator=(const SocketRegisters&) = delete;
 
   // Overrides from registers.h
-  util::Status Open() LOCKS_EXCLUDED(mutex_) override;
-  util::Status Close() LOCKS_EXCLUDED(mutex_) override;
-  util::Status Write(uint64 offset, uint64 value)
-      LOCKS_EXCLUDED(mutex_) override;
-  util::StatusOr<uint64> Read(uint64 offset) LOCKS_EXCLUDED(mutex_) override;
-  util::Status Write32(uint64 offset, uint32 value)
-      LOCKS_EXCLUDED(mutex_) override {
+  Status Open() LOCKS_EXCLUDED(mutex_) override;
+  Status Close() LOCKS_EXCLUDED(mutex_) override;
+  Status Write(uint64 offset, uint64 value) LOCKS_EXCLUDED(mutex_) override;
+  StatusOr<uint64> Read(uint64 offset) LOCKS_EXCLUDED(mutex_) override;
+  Status Write32(uint64 offset, uint32 value) LOCKS_EXCLUDED(mutex_) override {
     return Write(offset, value);
   }
-  util::StatusOr<uint32> Read32(uint64 offset) LOCKS_EXCLUDED(mutex_) override {
+  StatusOr<uint32> Read32(uint64 offset) LOCKS_EXCLUDED(mutex_) override {
     return Read(offset);
   }
 
  private:
   template <typename T>
-  util::Status Send(const T& message) EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
+  Status Send(const T& message) EXCLUSIVE_LOCKS_REQUIRED(mutex_) {
     if (send(socket_fd_, &message, sizeof(message), /*flags=*/0) < 0) {
-      return util::UnavailableError(StringPrintf("send failed (%d).", errno));
+      return UnavailableError(StringPrintf("send failed (%d).", errno));
     }
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   // IP address.

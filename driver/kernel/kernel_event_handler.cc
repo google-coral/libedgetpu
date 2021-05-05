@@ -41,15 +41,15 @@ KernelEventHandler::KernelEventHandler(const std::string& device_path,
   events_.resize(num_events_);
 }
 
-util::Status KernelEventHandler::Open() {
+Status KernelEventHandler::Open() {
   StdMutexLock lock(&mutex_);
   if (fd_ != INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device already open.");
+    return FailedPreconditionError("Device already open.");
   }
 
   fd_ = open(device_path_.c_str(), O_RDWR);
   if (fd_ < 0) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Device open failed : %d (%s)", fd_, strerror(errno)));
   }
 
@@ -58,16 +58,16 @@ util::Status KernelEventHandler::Open() {
     events_[i].reset();
   }
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status KernelEventHandler::Close() {
+Status KernelEventHandler::Close() {
   StdMutexLock lock(&mutex_);
   if (fd_ == INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device not open.");
+    return FailedPreconditionError("Device not open.");
   }
 
-  util::Status status;
+  Status status;
   for (int i = 0; i < num_events_; ++i) {
     events_[i].reset();
     status.Update(ReleaseEventFd(fd_, event_fds_[i], i));
@@ -79,11 +79,11 @@ util::Status KernelEventHandler::Close() {
   return status;
 }
 
-util::Status KernelEventHandler::RegisterEvent(int event_id,
-                                               KernelEvent::Handler handler) {
+Status KernelEventHandler::RegisterEvent(int event_id,
+                                         KernelEvent::Handler handler) {
   StdMutexLock lock(&mutex_);
   if (fd_ == INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device not open.");
+    return FailedPreconditionError("Device not open.");
   }
 
   RETURN_IF_ERROR(SetEventFd(fd_, event_fds_[event_id], event_id));
@@ -92,7 +92,7 @@ util::Status KernelEventHandler::RegisterEvent(int event_id,
   events_[event_id] =
       CreateKernelEvent(event_fds_[event_id], std::move(handler));
 
-  return util::Status();  // OK;
+  return Status();  // OK;
 }
 
 }  // namespace driver

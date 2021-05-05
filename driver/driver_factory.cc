@@ -57,12 +57,12 @@ std::vector<api::Device> DriverFactory::Enumerate() {
   return device_list;
 }
 
-util::StatusOr<std::unique_ptr<api::Driver>> DriverFactory::CreateDriver(
+StatusOr<std::unique_ptr<api::Driver>> DriverFactory::CreateDriver(
     const api::Device& device) {
   return CreateDriver(device, api::DriverOptionsHelper::Defaults());
 }
 
-util::StatusOr<std::unique_ptr<api::Driver>> DriverFactory::CreateDriver(
+StatusOr<std::unique_ptr<api::Driver>> DriverFactory::CreateDriver(
     const api::Device& device, const api::Driver::Options& opaque_options) {
   StdMutexLock lock(&mutex_);
 
@@ -70,11 +70,11 @@ util::StatusOr<std::unique_ptr<api::Driver>> DriverFactory::CreateDriver(
   const api::DriverOptions* options =
       api::GetDriverOptions(opaque_options.data());
   if (options == nullptr) {
-    return util::InvalidArgumentError("Invalid Driver::Options instance.");
+    return InvalidArgumentError("Invalid Driver::Options instance.");
   }
 
   if (options->version() != Driver::kOptionsVersion) {
-    return util::InvalidArgumentError("Invalid Driver::Options version.");
+    return InvalidArgumentError("Invalid Driver::Options version.");
   }
 
   // Update verbosity level.
@@ -112,7 +112,7 @@ util::StatusOr<std::unique_ptr<api::Driver>> DriverFactory::CreateDriver(
     }
   }
 
-  return util::NotFoundError("Unable to construct driver for device.");
+  return NotFoundError("Unable to construct driver for device.");
 }
 
 void DriverFactory::RegisterDriverProvider(

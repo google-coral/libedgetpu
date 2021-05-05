@@ -58,6 +58,11 @@ class ChipConfig {
 
   // Extracts CSR offsets for various modules in DarwiNN.
   virtual const HibKernelCsrOffsets& GetHibKernelCsrOffsets() const = 0;
+  virtual const HibKernelCsrOffsets& GetClusterSpecificHibKernelCsrOffsets(
+      int atomic_cluster_id) const {
+    CHECK_EQ(atomic_cluster_id, 0);
+    return GetHibKernelCsrOffsets();
+  }
   virtual const HibUserCsrOffsets& GetHibUserCsrOffsets() const = 0;
   virtual const QueueCsrOffsets& GetInstructionQueueCsrOffsets() const = 0;
   virtual const HibUserCsrOffsets& GetContextSpecificHibUserCsrOffsets(
@@ -65,40 +70,34 @@ class ChipConfig {
   virtual const QueueCsrOffsets& GetContextSpecificInstructionQueueCsrOffsets(
       int context_id) const = 0;
   virtual const ScalarCoreCsrOffsets& GetScalarCoreCsrOffsets() const = 0;
+  virtual const ScalarCoreCsrOffsets& GetClusterSpecificScalarCoreCsrOffsets(
+      int atomic_cluster_id) const {
+    CHECK_EQ(atomic_cluster_id, 0);
+    return GetScalarCoreCsrOffsets();
+  }
   virtual const TileConfigCsrOffsets& GetTileConfigCsrOffsets() const = 0;
+  virtual const TileConfigCsrOffsets& GetClusterSpecificTileConfigCsrOffsets(
+      int atomic_cluster_id) const {
+    CHECK_EQ(atomic_cluster_id, 0);
+    return GetTileConfigCsrOffsets();
+  }
   virtual const TileCsrOffsets& GetTileCsrOffsets() const = 0;
+  virtual const TileCsrOffsets& GetClusterSpecificTileCsrOffsets(
+      int atomic_cluster_id) const {
+    CHECK_EQ(atomic_cluster_id, 0);
+    return GetTileCsrOffsets();
+  }
   virtual bool HasThreadCsrOffsets() const { return false; }
-  virtual const TileThreadCsrOffsets& GetTileThread0CsrOffsets() const {
-    LOG(FATAL) << "Tile thread 0 not supported.";
+  virtual const int HasNumberOfThreads() const { return 8; }
+  virtual const TileThreadCsrOffsets& GetSpecificTileThreadCsrOffsets(
+      int tile_thread_id) const {
+    LOG(FATAL) << "Tile thread not supported.";
     unreachable();
   }
-  virtual const TileThreadCsrOffsets& GetTileThread1CsrOffsets() const {
-    LOG(FATAL) << "Tile thread 1 not supported.";
-    unreachable();
-  }
-  virtual const TileThreadCsrOffsets& GetTileThread2CsrOffsets() const {
-    LOG(FATAL) << "Tile thread 2 not supported.";
-    unreachable();
-  }
-  virtual const TileThreadCsrOffsets& GetTileThread3CsrOffsets() const {
-    LOG(FATAL) << "Tile thread 3 not supported.";
-    unreachable();
-  }
-  virtual const TileThreadCsrOffsets& GetTileThread4CsrOffsets() const {
-    LOG(FATAL) << "Tile thread 4 not supported.";
-    unreachable();
-  }
-  virtual const TileThreadCsrOffsets& GetTileThread5CsrOffsets() const {
-    LOG(FATAL) << "Tile thread 5 not supported.";
-    unreachable();
-  }
-  virtual const TileThreadCsrOffsets& GetTileThread6CsrOffsets() const {
-    LOG(FATAL) << "Tile thread 6 not supported.";
-    unreachable();
-  }
-  virtual const TileThreadCsrOffsets& GetTileThread7CsrOffsets() const {
-    LOG(FATAL) << "Tile thread 7 not supported.";
-    unreachable();
+  virtual const TileThreadCsrOffsets& GetClusterSpecificTileThreadCsrOffsets(
+      int atomic_cluster_id, int tile_thread_id) const {
+    CHECK_EQ(atomic_cluster_id, 0);
+    return GetSpecificTileThreadCsrOffsets(tile_thread_id);
   }
   virtual const InterruptCsrOffsets& GetScalarCoreInterruptCsrOffsets()
       const = 0;
@@ -126,6 +125,11 @@ class ChipConfig {
 
   // Extracts chip-specific constants in DarwiNN.
   virtual const ChipStructures& GetChipStructures() const = 0;
+  virtual const ChipStructures& GetClusterSpecificChipStructures(
+      int atomic_cluster_id) const {
+    CHECK_EQ(atomic_cluster_id, 0);
+    return GetChipStructures();
+  }
 
   // Extracts CSR offsets used by scalar core debugger in DarwiNN.
   virtual const BreakpointCsrOffsets& GetScalarCoreBreakpointCsrOffsets()

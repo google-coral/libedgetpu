@@ -49,15 +49,14 @@ WireInterruptHandler::WireInterruptHandler(
   interrupts_.resize(Interrupt::DW_INTERRUPT_COUNT);
 }
 
-util::Status WireInterruptHandler::ValidateOpenState(bool open) const {
+Status WireInterruptHandler::ValidateOpenState(bool open) const {
   if (open_ != open) {
-    return util::FailedPreconditionError(
-        "Invalid state in WireInterruptHandler.");
+    return FailedPreconditionError("Invalid state in WireInterruptHandler.");
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status WireInterruptHandler::Open() {
+Status WireInterruptHandler::Open() {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateOpenState(/*open=*/false));
   open_ = true;
@@ -66,14 +65,14 @@ util::Status WireInterruptHandler::Open() {
     interrupts_[i] = nullptr;
   }
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status WireInterruptHandler::Close(bool in_error) {
+Status WireInterruptHandler::Close(bool in_error) {
   // If in error, interrupt handler is already serving fatal error, and mutex is
   // already locked. To avoid deadlock, return immediately.
   if (in_error) {
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   StdMutexLock lock(&mutex_);
@@ -83,7 +82,7 @@ util::Status WireInterruptHandler::Close(bool in_error) {
   for (int i = 0; i < DW_INTERRUPT_COUNT; ++i) {
     interrupts_[i] = nullptr;
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 void WireInterruptHandler::MaskInterrupt(int interrupt_id, bool mask) {
@@ -138,7 +137,7 @@ uint64 WireInterruptHandler::ReadMaskArray() {
   return registers_->Read(wire_csr_offsets_.wire_int_mask_array).ValueOrDie();
 }
 
-util::Status WireInterruptHandler::WriteMaskArray(uint64 value) {
+Status WireInterruptHandler::WriteMaskArray(uint64 value) {
   return registers_->Write(wire_csr_offsets_.wire_int_mask_array, value);
 }
 
@@ -274,13 +273,12 @@ void WireInterruptHandler::InvokeAllPendingInterrupts(int wire_id) {
   }
 }
 
-util::Status WireInterruptHandler::Register(Interrupt interrupt,
-                                            Handler handler) {
+Status WireInterruptHandler::Register(Interrupt interrupt, Handler handler) {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateOpenState(/*open=*/true));
 
   interrupts_[interrupt] = std::move(handler);
-  return util::Status();  // OK;
+  return Status();  // OK;
 }
 
 PollingWireInterruptHandler::PollingWireInterruptHandler(
@@ -289,11 +287,10 @@ PollingWireInterruptHandler::PollingWireInterruptHandler(
     : WireInterruptHandler(registers, wire_csr_offsets, /*num_wires=*/1),
       sleep_(std::move(sleep)) {}
 
-util::Status PollingWireInterruptHandler::Open() {
+Status PollingWireInterruptHandler::Open() {
   StdMutexLock lock(&mutex_);
   if (enabled_) {
-    return util::FailedPreconditionError(
-        "Invalid state in WireInterruptHandler.");
+    return FailedPreconditionError("Invalid state in WireInterruptHandler.");
   }
   RETURN_IF_ERROR(WireInterruptHandler::Open());
   enabled_ = true;
@@ -301,15 +298,14 @@ util::Status PollingWireInterruptHandler::Open() {
   std::thread event_thread(&PollingWireInterruptHandler::PollInterrupts, this);
   thread_ = std::move(event_thread);
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status PollingWireInterruptHandler::Close(bool in_error) {
+Status PollingWireInterruptHandler::Close(bool in_error) {
   {
     StdMutexLock lock(&mutex_);
     if (!enabled_) {
-      return util::FailedPreconditionError(
-          "Invalid state in WireInterruptHandler.");
+      return FailedPreconditionError("Invalid state in WireInterruptHandler.");
     }
     enabled_ = false;
   }

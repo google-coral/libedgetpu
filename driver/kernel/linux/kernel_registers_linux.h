@@ -37,11 +37,11 @@ class KernelRegistersLinux : public KernelRegisters {
   ~KernelRegistersLinux() override;
 
  protected:
-  util::StatusOr<uint64*> MapRegion(FileDescriptor fd,
-                                    const MappedRegisterRegion& region,
-                                    bool read_only) override;
-  util::Status UnmapRegion(FileDescriptor fd,
-                           const MappedRegisterRegion& region) override;
+  StatusOr<uint64*> MapRegion(FileDescriptor fd,
+                              const MappedRegisterRegion& region,
+                              bool read_only) override;
+  Status UnmapRegion(FileDescriptor fd,
+                     const MappedRegisterRegion& region) override;
 };
 
 }  // namespace driver

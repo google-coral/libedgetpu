@@ -38,7 +38,7 @@ class RunController {
   RunController& operator=(const RunController&) = delete;
 
   // Performs run control.
-  virtual util::Status DoRunControl(RunControl run_state);
+  virtual Status DoRunControl(RunControl run_state);
 
  private:
   // CSR offsets.

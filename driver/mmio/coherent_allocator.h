@@ -35,20 +35,20 @@ class CoherentAllocator {
   virtual ~CoherentAllocator() = default;
 
   // Opens coherent allocator.
-  util::Status Open() LOCKS_EXCLUDED(mutex_);
+  Status Open() LOCKS_EXCLUDED(mutex_);
 
   // Closes coherent allocator.
-  util::Status Close() LOCKS_EXCLUDED(mutex_);
+  Status Close() LOCKS_EXCLUDED(mutex_);
 
   // Returns a chunk of coherent memory.
-  util::StatusOr<Buffer> Allocate(size_t size_bytes) LOCKS_EXCLUDED(mutex_);
+  StatusOr<Buffer> Allocate(size_t size_bytes) LOCKS_EXCLUDED(mutex_);
 
  protected:
   // Implements Open.
-  virtual util::StatusOr<char *> DoOpen(size_t size_bytes);
+  virtual StatusOr<char *> DoOpen(size_t size_bytes);
 
   // Implements close.
-  virtual util::Status DoClose(char *mem_base, size_t size_bytes);
+  virtual Status DoClose(char *mem_base, size_t size_bytes);
 
  private:
   // Alignment bytes for host memory.

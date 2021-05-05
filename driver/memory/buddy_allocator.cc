@@ -102,10 +102,10 @@ BuddyAllocator::BuddyAllocator(uint64 address_space_start,
   }
 }
 
-util::StatusOr<uint64> BuddyAllocator::Allocate(uint64 size_bytes) {
+StatusOr<uint64> BuddyAllocator::Allocate(uint64 size_bytes) {
   StdMutexLock lock(&mutex_);
   if (size_bytes == 0) {
-    return util::InvalidArgumentError("Cannot allocate 0 bytes.");
+    return InvalidArgumentError("Cannot allocate 0 bytes.");
   }
 
   const uint64 num_requested_pages = GetNumPages(size_bytes);
@@ -118,7 +118,7 @@ util::StatusOr<uint64> BuddyAllocator::Allocate(uint64 size_bytes) {
     ++nearest_bin;
   }
   if (nearest_bin >= free_blocks_.size()) {
-    return util::ResourceExhaustedError(
+    return ResourceExhaustedError(
         absl::StrFormat("Can't allocate for 0x%llx bytes.", size_bytes));
   }
 
@@ -139,7 +139,7 @@ util::StatusOr<uint64> BuddyAllocator::Allocate(uint64 size_bytes) {
   return allocated_address;
 }
 
-util::Status BuddyAllocator::Free(uint64 address, uint64 size_bytes) {
+Status BuddyAllocator::Free(uint64 address, uint64 size_bytes) {
   StdMutexLock lock(&mutex_);
   const uint64 num_pages = GetNumPages(size_bytes);
   const int bin = FindBin(num_pages * kHostPageSize);
@@ -147,7 +147,7 @@ util::Status BuddyAllocator::Free(uint64 address, uint64 size_bytes) {
   const uint64 offset = address - address_space_start_;
   auto allocated_iterator = allocated_blocks_[bin].find(offset);
   if (allocated_iterator == allocated_blocks_[bin].end()) {
-    return util::InvalidArgumentError(absl::StrFormat(
+    return InvalidArgumentError(absl::StrFormat(
         "Allocated block with address 0x%llx and size 0x%llx not found.",
         address, size_bytes));
   }
@@ -171,7 +171,7 @@ util::Status BuddyAllocator::Free(uint64 address, uint64 size_bytes) {
     }
   }
 
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
 }  // namespace driver

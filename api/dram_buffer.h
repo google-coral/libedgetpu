@@ -33,10 +33,10 @@ class DramBuffer {
   virtual size_t size_bytes() const = 0;
 
   // Copies size_bytes() bytes of data from source to the buffer.
-  virtual util::Status ReadFrom(void* source) = 0;
+  virtual Status ReadFrom(void* source) = 0;
 
   // Copies size_bytes() bytes ofr data from buffer to the destination address.
-  virtual util::Status WriteTo(void* destination) = 0;
+  virtual Status WriteTo(void* destination) = 0;
 };
 
 }  // namespace darwinn

@@ -78,7 +78,6 @@ limitations under the License.
 
 namespace platforms {
 namespace darwinn {
-namespace util {
 
 #if defined(__clang__)
 // Only clang supports warn_unused_result as a type annotation.
@@ -419,6 +418,12 @@ template <typename T>
 void StatusOr<T>::IgnoreError() const {
   // no-op
 }
+
+// TODO: Remove the following once DarwiNN clients removed util.
+namespace util {
+
+template <typename T>
+using StatusOr = ::platforms::darwinn::StatusOr<T>;
 
 }  // namespace util
 }  // namespace darwinn

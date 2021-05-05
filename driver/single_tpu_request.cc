@@ -97,15 +97,15 @@ SingleTpuRequest::~SingleTpuRequest() {
   CHECK_OK(Cleanup());
 }
 
-util::Status SingleTpuRequest::SetDone(Done done) {
+Status SingleTpuRequest::SetDone(Done done) {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kUninitialized));
   done_ = std::move(done);
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status SingleTpuRequest::AddInput(const std::string& name,
-                                        const Buffer& user_input) {
+Status SingleTpuRequest::AddInput(const std::string& name,
+                                  const Buffer& user_input) {
   TRACE_SCOPE("SingleTpuRequest::AddInput");
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kUninitialized));
@@ -120,17 +120,17 @@ util::Status SingleTpuRequest::AddInput(const std::string& name,
   if (layer->execution_count_per_inference() > 1 &&
       host_input.size_bytes() != layer->PaddedSizeBytes()) {
     if (user_input.IsDramType())
-      return util::UnimplementedError(
-              "DRAM input buffers currently do not support "
-              "execution_count_per_inference > 1");
+      return UnimplementedError(
+          "DRAM input buffers currently do not support "
+          "execution_count_per_inference > 1");
     host_input = ScatterInput(user_input, layer);
   }
 
   if (layer->SignedDataType()) {
     if (user_input.IsDramType())
-      return util::UnimplementedError(
-              "DRAM input buffers currently do not support "
-              "signed data type");
+      return UnimplementedError(
+          "DRAM input buffers currently do not support "
+          "signed data type");
     RETURN_IF_ERROR(layer->TransformSignedDataType(host_input));
   }
 
@@ -174,11 +174,10 @@ util::Status SingleTpuRequest::AddInput(const std::string& name,
   }
 
   host_inputs_[name].push_back(host_input);
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status SingleTpuRequest::AddOutput(const std::string& name,
-                                         Buffer output) {
+Status SingleTpuRequest::AddOutput(const std::string& name, Buffer output) {
   TRACE_SCOPE("SingleTpuRequest::AddOutput");
 
   StdMutexLock lock(&mutex_);
@@ -219,11 +218,10 @@ util::Status SingleTpuRequest::AddOutput(const std::string& name,
 
   user_outputs_[name].push_back(std::move(output));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status SingleTpuRequest::AddNoopInputs(const std::string& name,
-                                             int count) {
+Status SingleTpuRequest::AddNoopInputs(const std::string& name, int count) {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kUninitialized));
   VLOG(3) << StringPrintf("Adding %d noop inputs for layer \"%s\".", count,
@@ -240,11 +238,10 @@ util::Status SingleTpuRequest::AddNoopInputs(const std::string& name,
     inputs.push_back(buffer);
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status SingleTpuRequest::AddNoopOutputs(const std::string& name,
-                                              int count) {
+Status SingleTpuRequest::AddNoopOutputs(const std::string& name, int count) {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kUninitialized));
   VLOG(3) << StringPrintf("Adding %d noop outputs for layer \"%s\".", count,
@@ -262,28 +259,28 @@ util::Status SingleTpuRequest::AddNoopOutputs(const std::string& name,
     outputs.push_back(buffer);
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
-util::Status SingleTpuRequest::MapDataBuffers() {
+Status SingleTpuRequest::MapDataBuffers() {
   // Map activations except parameters, which is done at registration time.
   TRACE_SCOPE("Request::MapDataBuffers");
   RETURN_IF_ERROR(
       device_buffer_mapper_->MapScratch(executable_reference_.scratch()));
   RETURN_IF_ERROR(device_buffer_mapper_->MapInputs(host_inputs_));
   RETURN_IF_ERROR(device_buffer_mapper_->MapOutputs(host_outputs_));
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status SingleTpuRequest::MapInstructionBuffers() {
+Status SingleTpuRequest::MapInstructionBuffers() {
   TRACE_SCOPE("Request::MapInstructionBuffers");
   RETURN_IF_ERROR(device_buffer_mapper_->MapInstructions(
       instruction_buffers_->GetBuffers()));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status SingleTpuRequest::Cleanup() {
+Status SingleTpuRequest::Cleanup() {
   // Note that these calls are a no-op if request is already in a clean state.
   RETURN_IF_ERROR(device_buffer_mapper_->UnmapAll());
   if (instruction_buffers_) {
@@ -294,35 +291,35 @@ util::Status SingleTpuRequest::Cleanup() {
         .ReturnInstructionBuffers(std::move(instruction_buffers_));
   }
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status SingleTpuRequest::Validate() {
+Status SingleTpuRequest::Validate() {
   TRACE_SCOPE("Request::Validate");
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kUninitialized));
 
   // Validate instruction bit stream.
   if (VectorLength(executable().instruction_bitstreams()) == 0) {
-    return util::InvalidArgumentError(
+    return InvalidArgumentError(
         "Executable does not contain instruction bitstream.");
   }
   for (const auto& chunk : *executable().instruction_bitstreams()) {
     if (VectorLength(chunk->bitstream()) == 0) {
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           "Executable contains empty instruction bitstream chunk.");
     }
   }
 
   // Number of input / outputs should match with executable.
   if (host_inputs_.size() != VectorLength(executable().input_layers())) {
-    return util::InvalidArgumentError(
+    return InvalidArgumentError(
         "Added inputs does not match the number of required inputs for "
         "executable.");
   }
 
   if (host_outputs_.size() != VectorLength(executable().output_layers())) {
-    return util::InvalidArgumentError(
+    return InvalidArgumentError(
         "Added outputs does not match the number of required outputs for "
         "executable.");
   }
@@ -330,7 +327,7 @@ util::Status SingleTpuRequest::Validate() {
   // Number of input / output buffers must match configured batch size.
   for (const auto& name_and_input : host_inputs_) {
     if (name_and_input.second.size() != executable().batch_size()) {
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           StringPrintf("Number of input buffers for \"%s\" does not match "
                        "configured batch size. expected=%d, actual=%zu.",
                        name_and_input.first.c_str(), executable().batch_size(),
@@ -340,7 +337,7 @@ util::Status SingleTpuRequest::Validate() {
 
   for (const auto& name_and_output : host_outputs_) {
     if (name_and_output.second.size() != executable().batch_size()) {
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           StringPrintf("Number of output buffers for \"%s\" does not match "
                        "configured batch size. expected=%d, actual=%zu.",
                        name_and_output.first.c_str(), executable().batch_size(),
@@ -348,10 +345,10 @@ util::Status SingleTpuRequest::Validate() {
     }
   }
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status SingleTpuRequest::Prepare() {
+Status SingleTpuRequest::Prepare() {
   TRACE_SCOPE("Request::Prepare");
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kUninitialized));
@@ -386,7 +383,7 @@ util::Status SingleTpuRequest::Prepare() {
   return SetState(kCreated);
 }
 
-util::Status SingleTpuRequest::NotifyRequestSubmitted() {
+Status SingleTpuRequest::NotifyRequestSubmitted() {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kCreated));
 
@@ -394,7 +391,7 @@ util::Status SingleTpuRequest::NotifyRequestSubmitted() {
   return SetState(kSubmitted);
 }
 
-util::Status SingleTpuRequest::NotifyRequestActive() {
+Status SingleTpuRequest::NotifyRequestActive() {
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kSubmitted));
 
@@ -402,7 +399,7 @@ util::Status SingleTpuRequest::NotifyRequestActive() {
   return SetState(kActive);
 }
 
-util::Status SingleTpuRequest::NotifyCompletion(util::Status status) {
+Status SingleTpuRequest::NotifyCompletion(Status status) {
   TRACE_SCOPE("Request::NotifyCompletion");
   StdMutexLock lock(&mutex_);
   RETURN_IF_ERROR(ValidateState(kActive));
@@ -431,10 +428,10 @@ util::Status SingleTpuRequest::NotifyCompletion(util::Status status) {
   return SetState(kDone);
 }
 
-util::StatusOr<std::list<DmaInfo>> SingleTpuRequest::GetDmaInfos() const {
+StatusOr<std::list<DmaInfo>> SingleTpuRequest::GetDmaInfos() const {
   StdMutexLock lock(&mutex_);
   if (state_ != kCreated && state_ != kSubmitted) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Unexpected call to GetDmaInfos in state_ = %d.", state_));
   }
 
@@ -442,13 +439,13 @@ util::StatusOr<std::list<DmaInfo>> SingleTpuRequest::GetDmaInfos() const {
                                     *device_buffer_mapper_);
 }
 
-util::Status SingleTpuRequest::Cancel() {
+Status SingleTpuRequest::Cancel() {
   StdMutexLock lock(&mutex_);
 
   VLOG(3) << StringPrintf("[%d] Cancel()", id_);
 
   if (state_ == kUninitialized || state_ == State::kCreated) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Cannot cancel in state_=%d.", state_));
   }
 
@@ -457,7 +454,7 @@ util::Status SingleTpuRequest::Cancel() {
     // Run completed callback.
     // TODO: Share common code with NotifyCompletion.
     if (done_) {
-      done_(id_, util::CancelledError("Request cancelled."));
+      done_(id_, CancelledError("Request cancelled."));
       done_ = nullptr;  // See above for why this is needed.
     }
 
@@ -466,46 +463,46 @@ util::Status SingleTpuRequest::Cancel() {
   }
 
   // If State::kDone, do nothing because request is already complete.
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status SingleTpuRequest::ValidateState(State expected_state) const {
+Status SingleTpuRequest::ValidateState(State expected_state) const {
   if (state_ != expected_state) {
-    return util::FailedPreconditionError(StringPrintf(
+    return FailedPreconditionError(StringPrintf(
         "Bad request state. expected=%d, actual=%d.", expected_state, state_));
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status SingleTpuRequest::SetState(State next_state) {
+Status SingleTpuRequest::SetState(State next_state) {
   VLOG(5) << StringPrintf("[%d] SetState old=%d, new=%d.", id_, state_,
                           next_state);
   switch (state_) {
     case kUninitialized:
       if (next_state == kCreated) {
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
 
     case kCreated:
       if (next_state == kSubmitted) {
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
 
     case kSubmitted:
       if (next_state == kActive || next_state == kDone) {
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
 
     case kActive:
       if (next_state == kDone) {
         state_ = next_state;
-        return util::Status();  // OK
+        return Status();  // OK
       }
       break;
 
@@ -514,7 +511,7 @@ util::Status SingleTpuRequest::SetState(State next_state) {
   }
 
   // Illegal state transition.
-  return util::FailedPreconditionError(StringPrintf(
+  return FailedPreconditionError(StringPrintf(
       "Invalid state transition. current=%d, next=%d.", state_, next_state));
 }
 
@@ -534,13 +531,13 @@ bool SingleTpuRequest::IsBufferAligned(const Buffer& buffer) {
   return reinterpret_cast<intptr_t>(buffer.ptr()) % alignment_bytes_ == 0;
 }
 
-util::Status SingleTpuRequest::PostProcessOutputBuffers() {
+Status SingleTpuRequest::PostProcessOutputBuffers() {
   TRACE_SCOPE("SingleTpuRequest::PostProcessOutputBuffers");
   for (const auto& name_and_output : host_outputs_) {
     const auto& layer_name = name_and_output.first;
     auto user_output_name_and_buffers = user_outputs_.find(layer_name);
     if (user_output_name_and_buffers == user_outputs_.end()) {
-      return util::InternalError(
+      return InternalError(
           StringPrintf("Unable to find output layer %s in user outputs map.",
                        layer_name.c_str()));
     }
@@ -548,7 +545,7 @@ util::Status SingleTpuRequest::PostProcessOutputBuffers() {
     const auto& host_output_buffers = name_and_output.second;
     auto& user_output_buffers = user_output_name_and_buffers->second;
     if (host_output_buffers.size() < user_output_buffers.size()) {
-      return util::InternalError(
+      return InternalError(
           StringPrintf("Found %zu user output buffers which is greater than "
                        "%zu host output buffers for layer %s.",
                        user_output_buffers.size(), host_output_buffers.size(),
@@ -596,7 +593,7 @@ util::Status SingleTpuRequest::PostProcessOutputBuffers() {
     }
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 Buffer SingleTpuRequest::ScatterInput(const Buffer& input,

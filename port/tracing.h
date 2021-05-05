@@ -66,6 +66,13 @@
 // below.
 #define TRACE_SCOPE_CRITICAL(name)
 
+// Adds a trace event with the start and end time specified by the life time of
+// the created scope object. Appends "REQ_ID_" with `request_id` to the event
+// name for perfetto, xprof and csv backends, does not append `request_id` for
+// other backends. The "CRITICAL" makes it visible even for lab testing. See the
+// PNP_BENCHMARK below.
+#define TRACE_SCOPE_REQUEST_ID_CRITICAL(name, request_id)
+
 // Starts a trace event. A uint64 unique ID will be returned which could be used
 // to match the trace event in TRACE_SCOPE_CRITICAL_END. `device_paths` are
 // added as metadata to xprof, and ignored for other tracing backends.

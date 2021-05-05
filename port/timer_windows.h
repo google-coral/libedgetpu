@@ -35,11 +35,12 @@ class Timer {
 
   // Sets the timer to the specified nanoseconds. Countdown immediately starts
   // after setting. Setting to 0 will de-activate the timer.
-  virtual util::Status Set(int64 nanos);
+  virtual Status Set(int64 nanos);
 
   // Waits for the timer to reach 0 and returns. If timer is de-activated before
   // reaching 0 or never activated, this call will never return.
-  virtual util::StatusOr<uint64> Wait();
+  virtual StatusOr<uint64> Wait();
+
  private:
   // Handle for WaitableTimer.
   void* timer_handle_;

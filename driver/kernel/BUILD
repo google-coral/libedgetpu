@@ -15,13 +15,11 @@
 # Description:
 # Kernel driver specific functionality.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
-
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_mmu_mapper",
     srcs = ["kernel_mmu_mapper.cc"],
     hdrs = ["kernel_mmu_mapper.h"],
@@ -38,7 +36,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_event",
     hdrs = ["kernel_event.h"],
     deps = [
@@ -50,7 +48,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_event_handler",
     srcs = ["kernel_event_handler.cc"],
     hdrs = ["kernel_event_handler.h"],
@@ -65,7 +63,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_interrupt_handler",
     srcs = ["kernel_interrupt_handler.cc"],
     hdrs = ["kernel_interrupt_handler.h"],
@@ -79,7 +77,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_wire_interrupt_handler",
     srcs = ["kernel_wire_interrupt_handler.cc"],
     hdrs = ["kernel_wire_interrupt_handler.h"],
@@ -96,7 +94,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_coherent_allocator",
     srcs = ["kernel_coherent_allocator.cc"],
     hdrs = ["kernel_coherent_allocator.h"],
@@ -109,7 +107,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_registers",
     srcs = ["kernel_registers.cc"],
     hdrs = ["kernel_registers.h"],
@@ -124,7 +122,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "gasket_ioctl",
     hdrs = [
         "common_gasket_ioctl.inc",

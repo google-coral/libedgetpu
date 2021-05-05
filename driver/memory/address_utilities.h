@@ -85,14 +85,13 @@ static constexpr uint64 GetPageNumberFromAddress(uint64 address) {
 }
 
 // Returns whether the given address satisifes the given alighment.
-static inline util::Status IsAligned(const uint8 *buffer,
-                                     uint64 alignment_bytes) {
+static inline Status IsAligned(const uint8 *buffer, uint64 alignment_bytes) {
   if ((reinterpret_cast<uintptr_t>(buffer) % alignment_bytes) != 0) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Buffer is not aligned. address=%p, alignment=%llu.",
                      buffer, static_cast<unsigned long long>(alignment_bytes)));
   }
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 }  // namespace driver

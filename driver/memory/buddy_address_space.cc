@@ -39,19 +39,19 @@ BuddyAddressSpace::BuddyAddressSpace(uint64 device_virtual_address_start,
       allocator_(device_virtual_address_start,
                  device_virtual_address_size_bytes) {}
 
-util::StatusOr<DeviceBuffer> BuddyAddressSpace::MapMemory(
+StatusOr<DeviceBuffer> BuddyAddressSpace::MapMemory(
     const Buffer& buffer, DmaDirection direction,
     MappingTypeHint mapping_type) {
   TRACE_SCOPE("BuddyAddressSpace::MapMemory");
   const void* ptr = buffer.IsPtrType() ? buffer.ptr() : nullptr;
   if (!ptr && buffer.IsPtrType()) {
-    return util::InvalidArgumentError(
+    return InvalidArgumentError(
         "Cannot map an invalid host-memory-backed Buffer.");
   }
 
   const size_t size_bytes = buffer.size_bytes();
   if (size_bytes == 0) {
-    return util::InvalidArgumentError("Cannot map 0 bytes.");
+    return InvalidArgumentError("Cannot map 0 bytes.");
   }
 
   auto num_requested_pages = GetNumberPages(ptr, size_bytes);
@@ -71,7 +71,7 @@ util::StatusOr<DeviceBuffer> BuddyAddressSpace::MapMemory(
   return DeviceBuffer(device_va + GetPageOffset(ptr), size_bytes);
 }
 
-util::Status BuddyAddressSpace::UnmapMemory(DeviceBuffer buffer) {
+Status BuddyAddressSpace::UnmapMemory(DeviceBuffer buffer) {
   TRACE_SCOPE("BuddyAddressSpace::UnmapMemory");
   StdMutexLock lock(&mutex_);
   const uint64 device_address = buffer.device_address();
@@ -84,7 +84,7 @@ util::Status BuddyAddressSpace::UnmapMemory(DeviceBuffer buffer) {
   RETURN_IF_ERROR(Unmap(device_aligned_va, num_pages));
   RETURN_IF_ERROR(allocator_.Free(device_aligned_va, allocation_size));
 
-  return util::Status();  // OK.
+  return Status();  // OK.
 }
 
 }  // namespace driver

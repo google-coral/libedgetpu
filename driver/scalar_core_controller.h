@@ -41,27 +41,26 @@ class ScalarCoreController {
   virtual ~ScalarCoreController() = default;
 
   // Opens/closes the controller.
-  virtual util::Status Open() LOCKS_EXCLUDED(mutex_);
-  virtual util::Status Close() LOCKS_EXCLUDED(mutex_);
+  virtual Status Open() LOCKS_EXCLUDED(mutex_);
+  virtual Status Close() LOCKS_EXCLUDED(mutex_);
 
   // Enable/disables interrupts.
-  util::Status EnableInterrupts() LOCKS_EXCLUDED(mutex_);
-  util::Status DisableInterrupts() LOCKS_EXCLUDED(mutex_);
+  Status EnableInterrupts() LOCKS_EXCLUDED(mutex_);
+  Status DisableInterrupts() LOCKS_EXCLUDED(mutex_);
 
   // Clears interrupt status register to notify that host has received the
   // interrupt.
-  util::Status ClearInterruptStatus(int id) LOCKS_EXCLUDED(mutex_);
+  Status ClearInterruptStatus(int id) LOCKS_EXCLUDED(mutex_);
 
   // Reads and returns scalar core interrupt count register for given |id|. Read
   // is destructive in the sense that the second read to the same |id| will
   // return 0 assuming that there was no change in the CSR from the hardware
   // side.
-  virtual util::StatusOr<uint64> CheckInterruptCounts(int id)
-      LOCKS_EXCLUDED(mutex_);
+  virtual StatusOr<uint64> CheckInterruptCounts(int id) LOCKS_EXCLUDED(mutex_);
 
  private:
   // Returns an error if not |open|.
-  util::Status ValidateOpenState(bool open) const SHARED_LOCKS_REQUIRED(mutex_);
+  Status ValidateOpenState(bool open) const SHARED_LOCKS_REQUIRED(mutex_);
 
   // CSR offsets.
   const config::HibUserCsrOffsets& hib_user_csr_offsets_;

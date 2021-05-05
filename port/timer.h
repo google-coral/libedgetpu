@@ -17,10 +17,8 @@
 
 #if defined(_WIN32)
 #include "port/timer_windows.h"
-#elif defined(__APPLE__)
-#include "port/timer_darwin.h"
 #else
-#include "port/timer_linux.h"
-#endif  // defined(_WIN32)
+#include "port/timer_portable.h"
+#endif
 
 #endif  // DARWINN_PORT_TIMER_H_

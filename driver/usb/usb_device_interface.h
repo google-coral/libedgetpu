@@ -17,6 +17,7 @@
 
 #include "port/array_slice.h"
 #include "port/integral_types.h"
+#include "port/status.h"
 #include "port/statusor.h"
 
 namespace platforms {
@@ -170,11 +171,11 @@ class UsbDeviceInterface {
   // must check the amount received.
   // This callback receives two arguments, the number of bytes transferred, and
   // resulting status of the data in request.
-  using DataInDone = std::function<void(util::Status, size_t)>;
+  using DataInDone = std::function<void(Status, size_t)>;
 
   // Completion callback made when data out has been completed.
   // Note that short data transfer is considered an error.
-  using DataOutDone = std::function<void(util::Status)>;
+  using DataOutDone = std::function<void(Status)>;
 
   // Used to specify timeout, in number of milliseconds.
   using TimeoutMillis = int;
@@ -200,27 +201,27 @@ class UsbDeviceInterface {
   virtual ~UsbDeviceInterface() = default;
 
   // Closes the device and releases all associated resources.
-  virtual util::Status Close(CloseAction action) = 0;
+  virtual Status Close(CloseAction action) = 0;
 
   // Sets the active configuration. Application must not assume a default
   // configuration is already being set to active. Valid configuration starts
   // with 1. Setting configuration to -1 would set the device into unconfigured
   // state. All claimed interfaces must be released before one can change or
   // reset configuration.
-  virtual util::Status SetConfiguration(int configuration) = 0;
+  virtual Status SetConfiguration(int configuration) = 0;
 
   // Notifies underlying OS that this application intends to use this interface
   // in current configuration.
-  virtual util::Status ClaimInterface(int interface_number) = 0;
+  virtual Status ClaimInterface(int interface_number) = 0;
 
   // Releases ownership of this interface in current configuration.
-  virtual util::Status ReleaseInterface(int interface_number) = 0;
+  virtual Status ReleaseInterface(int interface_number) = 0;
 
   // Retrieves the specified descriptor from device.
-  virtual util::Status GetDescriptor(DescriptorType desc_type,
-                                     uint8_t desc_index, MutableBuffer data_in,
-                                     size_t* num_bytes_transferred,
-                                     const char* context) = 0;
+  virtual Status GetDescriptor(DescriptorType desc_type, uint8_t desc_index,
+                               MutableBuffer data_in,
+                               size_t* num_bytes_transferred,
+                               const char* context) = 0;
 
   virtual DeviceSpeed GetDeviceSpeed() const { return DeviceSpeed::kUnknown; }
 
@@ -236,77 +237,75 @@ class UsbDeviceInterface {
   }
 
   // Sets control command over endpoint 0, with no data phase
-  virtual util::Status SendControlCommand(const SetupPacket& command,
-                                          TimeoutMillis timeout_msec,
-                                          const char* context) = 0;
+  virtual Status SendControlCommand(const SetupPacket& command,
+                                    TimeoutMillis timeout_msec,
+                                    const char* context) = 0;
 
   // Sets control command over endpoint 0, with data out.
-  virtual util::Status SendControlCommandWithDataOut(const SetupPacket& command,
-                                                     ConstBuffer data_out,
-                                                     TimeoutMillis timeout_msec,
-                                                     const char* context) = 0;
+  virtual Status SendControlCommandWithDataOut(const SetupPacket& command,
+                                               ConstBuffer data_out,
+                                               TimeoutMillis timeout_msec,
+                                               const char* context) = 0;
 
   // Sets control command over endpoint 0, with data in.
-  virtual util::Status SendControlCommandWithDataIn(
-      const SetupPacket& command, MutableBuffer data_in,
-      size_t* num_bytes_transferred, TimeoutMillis timeout_msec,
-      const char* context) = 0;
+  virtual Status SendControlCommandWithDataIn(const SetupPacket& command,
+                                              MutableBuffer data_in,
+                                              size_t* num_bytes_transferred,
+                                              TimeoutMillis timeout_msec,
+                                              const char* context) = 0;
 
   // Transfers data on the specified bulk out endpoint.
   // This function returns after the bulk out has been done. Short transfer
   // is considered as an error.
-  virtual util::Status BulkOutTransfer(uint8_t endpoint, ConstBuffer data_out,
-                                       TimeoutMillis timeout_msec,
-                                       const char* context) = 0;
+  virtual Status BulkOutTransfer(uint8_t endpoint, ConstBuffer data_out,
+                                 TimeoutMillis timeout_msec,
+                                 const char* context) = 0;
 
   // Transfers data on the specified bulk in endpoint.
   // This function returns after the bulk in has been done. Short transfer
   // is expected and the number of bytes transferred is returned through
   // *num_bytes_transferred.
-  virtual util::Status BulkInTransfer(uint8_t endpoint, MutableBuffer data_in,
-                                      size_t* num_bytes_transferred,
-                                      TimeoutMillis timeout_msec,
-                                      const char* context) = 0;
+  virtual Status BulkInTransfer(uint8_t endpoint, MutableBuffer data_in,
+                                size_t* num_bytes_transferred,
+                                TimeoutMillis timeout_msec,
+                                const char* context) = 0;
 
   // Transfers data on the specified interrupt in endpoint.
   // This function returns after the interrupt in has been done. Short transfer
   // is expected and the number of bytes transferred is returned through
   // *num_bytes_transferred.
-  virtual util::Status InterruptInTransfer(uint8_t endpoint,
-                                           MutableBuffer data_in,
-                                           size_t* num_bytes_transferred,
-                                           TimeoutMillis timeout_msec,
-                                           const char* context) = 0;
+  virtual Status InterruptInTransfer(uint8_t endpoint, MutableBuffer data_in,
+                                     size_t* num_bytes_transferred,
+                                     TimeoutMillis timeout_msec,
+                                     const char* context) = 0;
 
   // Transfers data on the specified bulk out endpoint.
   // This function returns immediately after the data buffer is submitted into
   // lower layer. A callback will be made, most probably from another thread,
   // after the actual transfer is done.
-  virtual util::Status AsyncBulkOutTransfer(uint8_t endpoint,
-                                            ConstBuffer data_out,
-                                            TimeoutMillis timeout_msec,
-                                            DataOutDone callback,
-                                            const char* context) = 0;
+  virtual Status AsyncBulkOutTransfer(uint8_t endpoint, ConstBuffer data_out,
+                                      TimeoutMillis timeout_msec,
+                                      DataOutDone callback,
+                                      const char* context) = 0;
 
   // Transfers data on the specified bulk in endpoint.
   // This function returns immediately after the data buffer is submitted into
   // lower layer. A callback will be made, most probably from another thread,
   // after the actual transfer is done.
-  virtual util::Status AsyncBulkInTransfer(uint8_t endpoint,
-                                           MutableBuffer data_in,
-                                           TimeoutMillis timeout_msec,
-                                           DataInDone callback,
-                                           const char* context) = 0;
+  virtual Status AsyncBulkInTransfer(uint8_t endpoint, MutableBuffer data_in,
+                                     TimeoutMillis timeout_msec,
+                                     DataInDone callback,
+                                     const char* context) = 0;
 
   // Transfers data on the specified interrupt in endpoint.
   // This function returns immediately after the data buffer is submitted into
   // lower layer. A callback will be made, most probably from another thread,
   // after the actual transfer is done.
-  virtual util::Status AsyncInterruptInTransfer(uint8_t endpoint,
-                                                MutableBuffer data_in,
-                                                TimeoutMillis timeout_msec,
-                                                DataInDone callback,
-                                                const char* context) = 0;
+  virtual Status AsyncInterruptInTransfer(uint8_t endpoint,
+                                          MutableBuffer data_in,
+                                          TimeoutMillis timeout_msec,
+                                          DataInDone callback,
+                                          const char* context) = 0;
 
   // Cancels all current transfers. This is a best-effort request.
   virtual void TryCancelAllTransfers() = 0;
@@ -318,13 +317,13 @@ class UsbDeviceInterface {
   // in kernel space.
   // If not supported, the allocation would still be emulated in user space,
   // and data might have to be copied between user and kernel space.
-  virtual util::StatusOr<MutableBuffer> AllocateTransferBuffer(
+  virtual StatusOr<MutableBuffer> AllocateTransferBuffer(
       size_t buffer_size) = 0;
 
   // Releases transfer buffer previously allocated.
   // CloseDevice automatically releases all transfer buffers associated with the
   // device.
-  virtual util::Status ReleaseTransferBuffer(MutableBuffer buffer) = 0;
+  virtual Status ReleaseTransferBuffer(MutableBuffer buffer) = 0;
 };
 
 // This interface abstracts the enumeration for connected USB devices.
@@ -352,7 +351,7 @@ class UsbManager {
   // timeout_msec could be 0, which means no retry is allowed.
   // Negative timeout_msec, if supported, means unlimited/very long timeout and
   // retry.
-  virtual util::StatusOr<std::unique_ptr<UsbDeviceInterface>> OpenDevice(
+  virtual StatusOr<std::unique_ptr<UsbDeviceInterface>> OpenDevice(
       uint16_t vendor_id, uint16_t product_id, TimeoutMillis timeout_msec) = 0;
 
   // Equivalent to OpenDevice() above, but without product_id specifier. The
@@ -360,7 +359,7 @@ class UsbManager {
   // the product ID. Order of bus enumeration through this API is unreliable,
   // and hence it's not guaranteed to open the same device everytime if more
   // than one devices of the same vendor ID are present.
-  virtual util::StatusOr<std::unique_ptr<UsbDeviceInterface>> OpenDevice(
+  virtual StatusOr<std::unique_ptr<UsbDeviceInterface>> OpenDevice(
       uint16_t vendor_id, TimeoutMillis timeout_msec) = 0;
 
   static constexpr TimeoutMillis kDoNotRetry = 0;
@@ -384,12 +383,12 @@ class UsbDeviceFactory {
   // On success, returns a vector of strings for all connected USB devices
   // matching the vendor and product ID specified. The strings are
   // system-specific, but not limited to a particular factory instance.
-  virtual util::StatusOr<std::vector<std::string>> EnumerateDevices(
+  virtual StatusOr<std::vector<std::string>> EnumerateDevices(
       uint16_t vendor_id, uint16_t product_id) = 0;
 
   // Creates object implementing UsbDeviceInterface from the specified path
   // string. The timeout is meant for the enumerating and opening operation.
-  virtual util::StatusOr<std::unique_ptr<UsbDeviceInterface>> OpenDevice(
+  virtual StatusOr<std::unique_ptr<UsbDeviceInterface>> OpenDevice(
       const std::string& path, TimeoutMillis timeout_msec) = 0;
 };
 

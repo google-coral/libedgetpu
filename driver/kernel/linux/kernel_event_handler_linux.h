@@ -30,15 +30,15 @@ class KernelEventHandlerLinux : public KernelEventHandler {
 
  private:
   // Maps the specified event number with the specified id.
-  util::Status SetEventFd(FileDescriptor fd, FileDescriptor event_fd,
-                          int event_id) const override;
+  Status SetEventFd(FileDescriptor fd, FileDescriptor event_fd,
+                    int event_id) const override;
 
   // Performs platform specific event object handle initialization
   FileDescriptor InitializeEventFd(int event_id) const override;
 
   // Releases platform specific resources associated with event object handle
-  util::Status ReleaseEventFd(FileDescriptor fd, FileDescriptor event_fd,
-                              int event_id) const override;
+  Status ReleaseEventFd(FileDescriptor fd, FileDescriptor event_fd,
+                        int event_id) const override;
 
   // Creates platform specific KernelEvent backing object
   std::unique_ptr<KernelEvent> CreateKernelEvent(

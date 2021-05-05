@@ -33,35 +33,35 @@ class TopLevelInterruptManager {
   virtual ~TopLevelInterruptManager() = default;
 
   // Opens/closes the controller.
-  virtual util::Status Open() {
-    return util::Status();  // OK
+  virtual Status Open() {
+    return Status();  // OK
   }
-  virtual util::Status Close() {
-    return util::Status();  // OK
+  virtual Status Close() {
+    return Status();  // OK
   }
 
   // Enable/disables interrupts.
-  util::Status EnableInterrupts();
-  util::Status DisableInterrupts();
+  Status EnableInterrupts();
+  Status DisableInterrupts();
 
   // Handles interrupt.
-  util::Status HandleInterrupt(int id);
+  Status HandleInterrupt(int id);
 
   // Returns number of top level interrupts.
   int NumInterrupts() const { return interrupt_controller_->NumInterrupts(); }
 
  protected:
   // Actually enables/disables interrupts, which are system-specific.
-  virtual util::Status DoEnableInterrupts() {
-    return util::Status();  // OK
+  virtual Status DoEnableInterrupts() {
+    return Status();  // OK
   }
-  virtual util::Status DoDisableInterrupts() {
-    return util::Status();  // OK
+  virtual Status DoDisableInterrupts() {
+    return Status();  // OK
   }
 
   // Actually handles interrupts, which are system-specific.
-  virtual util::Status DoHandleInterrupt(int id) {
-    return util::Status();  // OK
+  virtual Status DoHandleInterrupt(int id) {
+    return Status();  // OK
   }
 
  private:

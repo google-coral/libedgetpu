@@ -37,17 +37,17 @@ class KernelEventHandler {
   KernelEventHandler(const std::string& device_path, int num_events);
   virtual ~KernelEventHandler() = default;
 
-  util::Status Open() LOCKS_EXCLUDED(mutex_);
-  util::Status Close() LOCKS_EXCLUDED(mutex_);
+  Status Open() LOCKS_EXCLUDED(mutex_);
+  Status Close() LOCKS_EXCLUDED(mutex_);
 
   // Registers and enables the specified event.
-  util::Status RegisterEvent(int event_id, KernelEvent::Handler handler)
+  Status RegisterEvent(int event_id, KernelEvent::Handler handler)
       LOCKS_EXCLUDED(mutex_);
 
  protected:
   // Maps the specified event number with the specified id.
-  virtual util::Status SetEventFd(FileDescriptor fd, FileDescriptor event_fd,
-                                  int event_id) const
+  virtual Status SetEventFd(FileDescriptor fd, FileDescriptor event_fd,
+                            int event_id) const
       SHARED_LOCKS_REQUIRED(mutex_) = 0;
 
   // Performs platform specific event object handle initialization
@@ -55,9 +55,8 @@ class KernelEventHandler {
       SHARED_LOCKS_REQUIRED(mutex_) = 0;
 
   // Releases platform specific resources associated with event object handle
-  virtual util::Status ReleaseEventFd(FileDescriptor fd,
-                                      FileDescriptor event_fd,
-                                      int event_id) const
+  virtual Status ReleaseEventFd(FileDescriptor fd, FileDescriptor event_fd,
+                                int event_id) const
       SHARED_LOCKS_REQUIRED(mutex_) = 0;
 
   // Creates platform specific KernelEvent backing object

@@ -32,7 +32,7 @@ class BeaglePciDriverProvider : public DriverProvider {
  public:
   std::vector<api::Device> Enumerate() override;
   bool CanCreate(const api::Device& device) override;
-  util::StatusOr<std::unique_ptr<api::Driver>> CreateDriver(
+  StatusOr<std::unique_ptr<api::Driver>> CreateDriver(
       const api::Device& device, const api::DriverOptions& options) override;
 
  protected:

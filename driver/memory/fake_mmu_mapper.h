@@ -39,25 +39,23 @@ class FakeMmuMapper : public MmuMapper {
   FakeMmuMapper& operator=(const FakeMmuMapper&) = delete;
 
   // Overrides from MmuMapper
-  util::Status Open(int num_simple_page_table_entries_requested) override {
-    return util::Status();  // OK
+  Status Open(int num_simple_page_table_entries_requested) override {
+    return Status();  // OK
   }
-  util::Status Close() override { return util::Status(); }
-  util::StatusOr<void*> TranslateDeviceAddress(
+  Status Close() override { return Status(); }
+  StatusOr<void*> TranslateDeviceAddress(
       uint64 device_virtual_address) const override;
 
  protected:
-  util::Status DoMap(const void* buffer, int num_pages,
-                     uint64 device_virtual_address,
-                     DmaDirection direction) override;
-  util::Status DoUnmap(const void* buffer, int num_pages,
-                       uint64 device_virtual_address) override;
+  Status DoMap(const void* buffer, int num_pages, uint64 device_virtual_address,
+               DmaDirection direction) override;
+  Status DoUnmap(const void* buffer, int num_pages,
+                 uint64 device_virtual_address) override;
 
   // Fake mapping: assuming physical address = fd * kHostPageSize.
-  util::Status DoMap(int fd, int num_pages, uint64 device_virtual_address,
-                     DmaDirection direction) override;
-  util::Status DoUnmap(int fd, int num_pages,
-                       uint64 device_virtual_address) override;
+  Status DoMap(int fd, int num_pages, uint64 device_virtual_address,
+               DmaDirection direction) override;
+  Status DoUnmap(int fd, int num_pages, uint64 device_virtual_address) override;
 
   // "Page table" to track device addr to host mappings.
   std::map<uint64, const uint8*> device_to_host_ GUARDED_BY(mutex_);

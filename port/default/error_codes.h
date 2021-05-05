@@ -17,7 +17,6 @@
 
 namespace platforms {
 namespace darwinn {
-namespace util {
 namespace error {
 
 // The canonical error codes.
@@ -139,7 +138,33 @@ enum Code {
 };
 
 }  // namespace error
+
+// TODO: Remove the following once DarwiNN clients removed util.
+namespace util {
+namespace error {
+
+using ::platforms::darwinn::error::Code;
+using ::platforms::darwinn::error::Code::OK;
+using ::platforms::darwinn::error::Code::CANCELLED;
+using ::platforms::darwinn::error::Code::UNKNOWN;
+using ::platforms::darwinn::error::Code::INVALID_ARGUMENT;
+using ::platforms::darwinn::error::Code::DEADLINE_EXCEEDED;
+using ::platforms::darwinn::error::Code::NOT_FOUND;
+using ::platforms::darwinn::error::Code::ALREADY_EXISTS;
+using ::platforms::darwinn::error::Code::PERMISSION_DENIED;
+using ::platforms::darwinn::error::Code::UNAUTHENTICATED;
+using ::platforms::darwinn::error::Code::RESOURCE_EXHAUSTED;
+using ::platforms::darwinn::error::Code::FAILED_PRECONDITION;
+using ::platforms::darwinn::error::Code::ABORTED;
+using ::platforms::darwinn::error::Code::OUT_OF_RANGE;
+using ::platforms::darwinn::error::Code::UNIMPLEMENTED;
+using ::platforms::darwinn::error::Code::INTERNAL;
+using ::platforms::darwinn::error::Code::UNAVAILABLE;
+using ::platforms::darwinn::error::Code::DATA_LOSS;
+
+}  // namespace error
 }  // namespace util
+
 }  // namespace darwinn
 }  // namespace platforms
 

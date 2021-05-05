@@ -48,9 +48,9 @@ KernelEventHandlerWindows::KernelEventHandlerWindows(
     const std::string& device_path, int num_events)
     : KernelEventHandler(device_path, num_events) {}
 
-util::Status KernelEventHandlerWindows::SetEventFd(FileDescriptor fd,
-                                                   FileDescriptor event_fd,
-                                                   int event_id) const {
+Status KernelEventHandlerWindows::SetEventFd(FileDescriptor fd,
+                                             FileDescriptor event_fd,
+                                             int event_id) const {
   gasket_set_event_ioctl gasket_set_event;
   gasket_set_event.int_num = event_id;
   std::wstring event_name = EventName(GetDevicePath(), event_id);
@@ -58,7 +58,7 @@ util::Status KernelEventHandlerWindows::SetEventFd(FileDescriptor fd,
 
   if (!DeviceIoControl(fd, GASKET_IOCTL_SET_EVENTFD, &gasket_set_event,
                        sizeof(gasket_set_event), NULL, 0, NULL, NULL)) {
-    return util::InternalError(
+    return InternalError(
         StringPrintf("Setting Interrupt event failed: event_id:%d gle=%d",
                      event_id, GetLastError()));
   }
@@ -66,7 +66,7 @@ util::Status KernelEventHandlerWindows::SetEventFd(FileDescriptor fd,
   VLOG(5) << StringPrintf("Set event fd : event_id:%d -> event_fd:%p, ",
                           event_id, event_fd);
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 FileDescriptor KernelEventHandlerWindows::InitializeEventFd(
@@ -80,11 +80,11 @@ FileDescriptor KernelEventHandlerWindows::InitializeEventFd(
   return event_fd;
 }
 
-util::Status KernelEventHandlerWindows::ReleaseEventFd(FileDescriptor fd,
-                                                       FileDescriptor event_fd,
-                                                       int event_id) const {
+Status KernelEventHandlerWindows::ReleaseEventFd(FileDescriptor fd,
+                                                 FileDescriptor event_fd,
+                                                 int event_id) const {
   if (fd == INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device not open.");
+    return FailedPreconditionError("Device not open.");
   }
 
   gasket_set_event_ioctl gasket_set_event;
@@ -94,19 +94,19 @@ util::Status KernelEventHandlerWindows::ReleaseEventFd(FileDescriptor fd,
 
   if (!DeviceIoControl(fd, GASKET_IOCTL_CLEAR_EVENTFD, &gasket_set_event,
                        sizeof(gasket_set_event), NULL, 0, NULL, NULL)) {
-    return util::InternalError(
+    return InternalError(
         StringPrintf("Clearing Interrupt event failed: event_id:%d gle=%d",
                      event_id, GetLastError()));
   }
 
   BOOL result = CloseHandle(event_fd);
   if (!result) {
-    return util::InternalError(
+    return InternalError(
         StringPrintf("Close Int Event failed: event_id:%d gle=%d", event_id,
                      GetLastError()));
   }
 
-  return util::OkStatus();
+  return OkStatus();
 }
 
 std::unique_ptr<KernelEvent> KernelEventHandlerWindows::CreateKernelEvent(

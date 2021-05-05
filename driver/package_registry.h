@@ -55,10 +55,10 @@ class ExecutableLayersInfo {
   ExecutableLayersInfo& operator=(const ExecutableLayersInfo&) = delete;
 
   // Returns the index of input layer with given name.
-  util::StatusOr<int> InputIndex(const std::string& name) const;
+  StatusOr<int> InputIndex(const std::string& name) const;
 
   // Returns the index of output layer with given name.
-  util::StatusOr<int> OutputIndex(const std::string& name) const;
+  StatusOr<int> OutputIndex(const std::string& name) const;
 
   // Returns number of input layers.
   int NumInputLayers() const { return inputs_.size(); }
@@ -85,11 +85,11 @@ class ExecutableLayersInfo {
   const api::OutputLayerInformation* OutputLayer(int index) const;
 
   // Returns information on given input layer.
-  util::StatusOr<const api::InputLayerInformation*> InputLayer(
+  StatusOr<const api::InputLayerInformation*> InputLayer(
       const std::string& layer_name) const;
 
   // Returns information on given output layer.
-  util::StatusOr<const api::OutputLayerInformation*> OutputLayer(
+  StatusOr<const api::OutputLayerInformation*> OutputLayer(
       const std::string& layer_name) const;
 
   // Returns the expected byte size of activations for given input layer index.
@@ -132,17 +132,17 @@ class ExecutableLayersInfo {
 
   // Returns the expected size of activations for given input layer.
   // Prefer index based APIs for performance.
-  util::StatusOr<int> InputLayerSizeBytes(const std::string& name) const;
+  StatusOr<int> InputLayerSizeBytes(const std::string& name) const;
 
   // Returns the expected size of activations for given input layer including
   // padding bytes (if any).
   // Prefer index based APIs for performance.
   // TODO Remove this method.
-  util::StatusOr<int> InputLayerPaddedSizeBytes(const std::string& name) const;
+  StatusOr<int> InputLayerPaddedSizeBytes(const std::string& name) const;
 
   // Returns the expected size of activations for given output layer.
   // Prefer index based APIs for performance.
-  util::StatusOr<int> OutputLayerSizeBytes(const std::string& name) const;
+  StatusOr<int> OutputLayerSizeBytes(const std::string& name) const;
 
   // Returns name for given input layer index.
   std::string InputLayerName(int index) const {
@@ -190,12 +190,12 @@ class ExecutableReference {
   ExecutableReference& operator=(const ExecutableReference&) = delete;
 
   // Returns the index of input layer with given name.
-  util::StatusOr<int> InputIndex(const std::string& name) const {
+  StatusOr<int> InputIndex(const std::string& name) const {
     return executable_layers_info_->InputIndex(name);
   }
 
   // Returns the index of output layer with given name.
-  util::StatusOr<int> OutputIndex(const std::string& name) const {
+  StatusOr<int> OutputIndex(const std::string& name) const {
     return executable_layers_info_->OutputIndex(name);
   }
 
@@ -232,13 +232,13 @@ class ExecutableReference {
   }
 
   // Returns information on given input layer.
-  util::StatusOr<const api::InputLayerInformation*> InputLayer(
+  StatusOr<const api::InputLayerInformation*> InputLayer(
       const std::string& layer_name) const {
     return executable_layers_info_->InputLayer(layer_name);
   }
 
   // Returns information on given output layer.
-  util::StatusOr<const api::OutputLayerInformation*> OutputLayer(
+  StatusOr<const api::OutputLayerInformation*> OutputLayer(
       const std::string& layer_name) const {
     return executable_layers_info_->OutputLayer(layer_name);
   }
@@ -274,7 +274,7 @@ class ExecutableReference {
 
   // Returns the expected size of activations for given input layer.
   // Prefer index based APIs for performance.
-  util::StatusOr<int> InputLayerSizeBytes(const std::string& name) const {
+  StatusOr<int> InputLayerSizeBytes(const std::string& name) const {
     return executable_layers_info_->InputLayerSizeBytes(name);
   }
 
@@ -282,13 +282,13 @@ class ExecutableReference {
   // padding bytes (if any).
   // Prefer index based APIs for performance.
   // TODO Remove this method.
-  util::StatusOr<int> InputLayerPaddedSizeBytes(const std::string& name) const {
+  StatusOr<int> InputLayerPaddedSizeBytes(const std::string& name) const {
     return executable_layers_info_->InputLayerPaddedSizeBytes(name);
   }
 
   // Returns the expected size of activations for given output layer.
   // Prefer index based APIs for performance.
-  util::StatusOr<int> OutputLayerSizeBytes(const std::string& name) const {
+  StatusOr<int> OutputLayerSizeBytes(const std::string& name) const {
     return executable_layers_info_->OutputLayerSizeBytes(name);
   }
 
@@ -315,10 +315,10 @@ class ExecutableReference {
   // Move-only. The given mapped_parameter will be unmapped during destruction
   // time, so we cannot allow copy-construction, to avoid doubly unmapping a
   // Device Buffer.
-  util::Status SetMappedParameters(MappedDeviceBuffer&& mapped_parameters);
+  Status SetMappedParameters(MappedDeviceBuffer&& mapped_parameters);
 
   // Unmaps the parameters buffer from the device.
-  util::Status UnmapParameters();
+  Status UnmapParameters();
 
   // Returns true if the parameters buffer is already mapped to the device.
   bool ParametersMapped() const { return parameters_mapped_; }
@@ -333,12 +333,12 @@ class ExecutableReference {
   Buffer scratch() const { return scratch_; }
 
   // Validates that the given input buffer is compatible with the executable.
-  util::Status ValidateInput(const std::string& input_name,
-                             const Buffer& input) const;
+  Status ValidateInput(const std::string& input_name,
+                       const Buffer& input) const;
 
   // Validates that the given output buffer is compatible with the executable.
-  util::Status ValidateOutput(const std::string& output_name,
-                              const Buffer& output) const;
+  Status ValidateOutput(const std::string& output_name,
+                        const Buffer& output) const;
 
   // Returns the parameter-caching token which is unique across models that are
   // compiled together and can cache their parameters on TPU SRAM at the same
@@ -371,7 +371,7 @@ class ExecutableReference {
 
   // Makes sure parameters are present in host or TPU DRAM to be used in an
   // inference. This method is not thread-safe.
-  util::Status PrepareParameters();
+  Status PrepareParameters();
 
   // Resets any assumptions about parameters being loaded on TPU DRAM. This
   // method is not thread-safe.
@@ -441,17 +441,17 @@ class PackageReference : public api::PackageReference {
   PackageReference& operator=(const PackageReference&) = delete;
 
   // Verifies the digital signature in the package.
-  util::Status VerifySignature() const override {
+  Status VerifySignature() const override {
     return verifier_->VerifySignature(package_buffer_.ptr());
   }
 
   // The following methods just call their counterpart in
   // MainExecutableReference().
-  util::StatusOr<int> InputIndex(const std::string& name) const override {
+  StatusOr<int> InputIndex(const std::string& name) const override {
     return MainExecutableReference()->InputIndex(name);
   }
 
-  util::StatusOr<int> OutputIndex(const std::string& name) const override {
+  StatusOr<int> OutputIndex(const std::string& name) const override {
     return MainExecutableReference()->OutputIndex(name);
   }
 
@@ -479,12 +479,12 @@ class PackageReference : public api::PackageReference {
     return MainExecutableReference()->OutputLayer(index);
   }
 
-  util::StatusOr<const api::InputLayerInformation*> InputLayer(
+  StatusOr<const api::InputLayerInformation*> InputLayer(
       const std::string& layer_name) const override {
     return MainExecutableReference()->InputLayer(layer_name);
   }
 
-  util::StatusOr<const api::OutputLayerInformation*> OutputLayer(
+  StatusOr<const api::OutputLayerInformation*> OutputLayer(
       const std::string& layer_name) const override {
     return MainExecutableReference()->OutputLayer(layer_name);
   }
@@ -510,19 +510,17 @@ class PackageReference : public api::PackageReference {
     return MainExecutableReference()->OutputLayerSize(index);
   }
 
-  util::StatusOr<int> InputLayerSizeBytes(
-      const std::string& name) const override {
+  StatusOr<int> InputLayerSizeBytes(const std::string& name) const override {
     return MainExecutableReference()->InputLayerSizeBytes(name);
   }
 
   // TODO Remove this method.
-  util::StatusOr<int> InputLayerPaddedSizeBytes(
+  StatusOr<int> InputLayerPaddedSizeBytes(
       const std::string& name) const override {
     return MainExecutableReference()->InputLayerPaddedSizeBytes(name);
   }
 
-  util::StatusOr<int> OutputLayerSizeBytes(
-      const std::string& name) const override {
+  StatusOr<int> OutputLayerSizeBytes(const std::string& name) const override {
     return MainExecutableReference()->OutputLayerSizeBytes(name);
   }
 
@@ -538,7 +536,7 @@ class PackageReference : public api::PackageReference {
     return MainExecutableReference()->BatchSize();
   }
 
-  util::Status SetLatencyTolerance(int64 latency_tolerance_ms) override;
+  Status SetLatencyTolerance(int64 latency_tolerance_ms) override;
 
   // Returns a vector of all executable references in this package.
   std::vector<driver::ExecutableReference*> AllExecutableReferences() const;
@@ -569,7 +567,7 @@ class PackageReference : public api::PackageReference {
   }
 
   // Returns true if parameters of this package are mapped to the device.
-  util::StatusOr<bool> ParametersMapped() const;
+  StatusOr<bool> ParametersMapped() const;
 
   // Specifies if this package needs on-chip DRAM to execute.
   bool NeedsDram() const;
@@ -618,7 +616,7 @@ class PackageReference : public api::PackageReference {
                    DramAllocator* dram_allocator, PackageVerifier* verifier);
 
   // Unmaps parameters of all executables in this package.
-  util::Status UnmapParameters();
+  Status UnmapParameters();
 
   // Buffer backing the package buffer.
   Buffer package_buffer_;
@@ -675,30 +673,30 @@ class PackageRegistry {
   PackageRegistry& operator=(const PackageRegistry&) = delete;
 
   // Returns the main executable layer info from the given executable binary.
-  static util::StatusOr<std::unique_ptr<ExecutableLayersInfo>>
+  static StatusOr<std::unique_ptr<ExecutableLayersInfo>>
   GetMainExecutableLayersInfoFromBinary(const char* executable_content,
                                         size_t length);
 
   // Registers a serialized executable binary. Once the executable is
   // registered, driver has its own copy of it so there would be no need to keep
   // the executable_content in memory.
-  util::StatusOr<const api::PackageReference*> RegisterSerialized(
+  StatusOr<const api::PackageReference*> RegisterSerialized(
       const std::string& executable_content);
-  util::StatusOr<const api::PackageReference*> RegisterSerialized(
+  StatusOr<const api::PackageReference*> RegisterSerialized(
       const char* executable_content, size_t length);
 
   // Same as above, but the executable is read from the given file.
-  util::StatusOr<const api::PackageReference*> RegisterFile(
+  StatusOr<const api::PackageReference*> RegisterFile(
       const std::string& executable_filename);
 
   // Unregisters an executable. Invokes the callback to unmap the parameter.
-  util::Status Unregister(const api::PackageReference* package_reference);
+  Status Unregister(const api::PackageReference* package_reference);
 
   // Unregisteres all registered executables.
-  util::Status UnregisterAll() LOCKS_EXCLUDED(registrations_mutex_);
+  Status UnregisterAll() LOCKS_EXCLUDED(registrations_mutex_);
 
   // Unmaps all parameters in all registered packages.
-  util::Status UnmapAllParameters() LOCKS_EXCLUDED(registrations_mutex_);
+  Status UnmapAllParameters() LOCKS_EXCLUDED(registrations_mutex_);
 
   // Returns the number of registered executables.
   int GetRegistrySize() const LOCKS_EXCLUDED(registrations_mutex_) {
@@ -718,18 +716,18 @@ class PackageRegistry {
   // Returns the main executable from the executable map.
   // Returns error if failed to find main executable or had unexpected
   // executable combinations.
-  static util::StatusOr<const Executable*> GetMainExecutableFromExecutableMap(
+  static StatusOr<const Executable*> GetMainExecutableFromExecutableMap(
       std::unordered_map<ExecutableType, const Executable*>);
 
   // Returns the parameter caching executable from the executable map.
   // Returns nullptr if no parameter caching executable could be found in the
   // map.
   // Returns error if had unexpected executable combinations.
-  static util::StatusOr<const Executable*> GetPCExecutableFromExecutableMap(
+  static StatusOr<const Executable*> GetPCExecutableFromExecutableMap(
       std::unordered_map<ExecutableType, const Executable*>);
 
   // Registers an executable package binary.
-  util::StatusOr<const api::PackageReference*> RegisterPackage(
+  StatusOr<const api::PackageReference*> RegisterPackage(
       const Buffer& package_buffer);
 
   // Takes in a multi-executable and returns a map of each executable type to
@@ -739,24 +737,24 @@ class PackageRegistry {
   //   1. A single executable (no matter what type).
   //   2. 1 parameter-caching and 1 inference executable.
   //   3. 1 parameter-caching, 1 inference and 1 stand-alone executable.
-  static util::StatusOr<std::unordered_map<ExecutableType, const Executable*>>
+  static StatusOr<std::unordered_map<ExecutableType, const Executable*>>
   ExtractExecutables(const MultiExecutable& multi_executable);
 
   // Takes in executable binary content and returns a map of each executable
   // type to its executable pointer.
   // The inputs are pointers to the executable binary, the length of the binary,
   // and the targeted chip to run this executables on.
-  static util::StatusOr<std::unordered_map<ExecutableType, const Executable*>>
+  static StatusOr<std::unordered_map<ExecutableType, const Executable*>>
   GetExecutablesFromBinary(const char* executable_content, size_t length);
 
   // Fetches an Executable from its serialized version and performs some
   // verification checks (does not include signature verification).
-  static util::StatusOr<const Executable*> FetchAndVerifyExecutable(
+  static StatusOr<const Executable*> FetchAndVerifyExecutable(
       const char* executable_serialized, size_t length);
 
   // Checks if the chip config specified in the executable binary matches the
   // one registered to this package registry.
-  util::Status VerifyExecutableMatchesChip(const Executable*) const;
+  Status VerifyExecutableMatchesChip(const Executable*) const;
 
   const api::PackageReference* SetRegistrations(
       std::unique_ptr<api::PackageReference> api_package_ref)

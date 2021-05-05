@@ -105,7 +105,7 @@ class BeagleChipConfig : public ChipConfig {
     LOG(FATAL) << "Wire interrupt not supported.";
     unreachable();
   }
-  const MiscCsrOffsets& GetMiscCsrOffsets() const {
+  const MiscCsrOffsets& GetMiscCsrOffsets() const override {
     return kBeagleMiscCsrOffsets;
   }
 
@@ -150,39 +150,44 @@ class BeagleChipConfig : public ChipConfig {
   }
 
   // Extracts CSR offsets used by tile debugger in DarwiNN.
-  const BreakpointCsrOffsets& GetTileOpTtuBreakpointCsrOffsets() const {
+  const BreakpointCsrOffsets& GetTileOpTtuBreakpointCsrOffsets()
+      const override {
     return kBeagleOpBreakpointCsrOffsets;
   }
   const BreakpointCsrOffsets& GetTileWideToNarrowTtuBreakpointCsrOffsets()
-      const {
+      const override {
     return kBeagleWidetonarrowBreakpointCsrOffsets;
   }
   const BreakpointCsrOffsets& GetTileNarrowToWideTtuBreakpointCsrOffsets()
-      const {
+      const override {
     return kBeagleNarrowtowideBreakpointCsrOffsets;
   }
   const BreakpointCsrOffsets& GetTileRingBusConsumer0TtuBreakpointCsrOffsets()
-      const {
+      const override {
     return kBeagleRingbusconsumer0BreakpointCsrOffsets;
   }
   const BreakpointCsrOffsets& GetTileRingBusConsumer1TtuBreakpointCsrOffsets()
-      const {
+      const override {
     return kBeagleRingbusconsumer1BreakpointCsrOffsets;
   }
   const BreakpointCsrOffsets& GetTileRingBusProducerTtuBreakpointCsrOffsets()
-      const {
+      const override {
     return kBeagleRingbusproducerBreakpointCsrOffsets;
   }
-  const BreakpointCsrOffsets& GetTileMeshBus0TtuBreakpointCsrOffsets() const {
+  const BreakpointCsrOffsets& GetTileMeshBus0TtuBreakpointCsrOffsets()
+      const override {
     return kBeagleMeshbus0BreakpointCsrOffsets;
   }
-  const BreakpointCsrOffsets& GetTileMeshBus1TtuBreakpointCsrOffsets() const {
+  const BreakpointCsrOffsets& GetTileMeshBus1TtuBreakpointCsrOffsets()
+      const override {
     return kBeagleMeshbus1BreakpointCsrOffsets;
   }
-  const BreakpointCsrOffsets& GetTileMeshBus2TtuBreakpointCsrOffsets() const {
+  const BreakpointCsrOffsets& GetTileMeshBus2TtuBreakpointCsrOffsets()
+      const override {
     return kBeagleMeshbus2BreakpointCsrOffsets;
   }
-  const BreakpointCsrOffsets& GetTileMeshBus3TtuBreakpointCsrOffsets() const {
+  const BreakpointCsrOffsets& GetTileMeshBus3TtuBreakpointCsrOffsets()
+      const override {
     return kBeagleMeshbus3BreakpointCsrOffsets;
   }
 
@@ -209,34 +214,39 @@ class BeagleChipConfig : public ChipConfig {
   }
 
   // Extracts CSR offsets used by tile performance tracing.
-  const TraceCsrOffsets& GetTileOpTtuTraceCsrOffsets() const {
+  const TraceCsrOffsets& GetTileOpTtuTraceCsrOffsets() const override {
     return kBeagleOpTraceCsrOffsets;
   }
-  const TraceCsrOffsets& GetTileWideToNarrowTtuTraceCsrOffsets() const {
+  const TraceCsrOffsets& GetTileWideToNarrowTtuTraceCsrOffsets()
+      const override {
     return kBeagleDmawidetonarrowTraceCsrOffsets;
   }
-  const TraceCsrOffsets& GetTileNarrowToWideTtuTraceCsrOffsets() const {
+  const TraceCsrOffsets& GetTileNarrowToWideTtuTraceCsrOffsets()
+      const override {
     return kBeagleDmanarrowtowideTraceCsrOffsets;
   }
-  const TraceCsrOffsets& GetTileRingBusConsumer0TtuTraceCsrOffsets() const {
+  const TraceCsrOffsets& GetTileRingBusConsumer0TtuTraceCsrOffsets()
+      const override {
     return kBeagleDmaringbusconsumer0TraceCsrOffsets;
   }
-  const TraceCsrOffsets& GetTileRingBusConsumer1TtuTraceCsrOffsets() const {
+  const TraceCsrOffsets& GetTileRingBusConsumer1TtuTraceCsrOffsets()
+      const override {
     return kBeagleDmaringbusconsumer1TraceCsrOffsets;
   }
-  const TraceCsrOffsets& GetTileRingBusProducerTtuTraceCsrOffsets() const {
+  const TraceCsrOffsets& GetTileRingBusProducerTtuTraceCsrOffsets()
+      const override {
     return kBeagleDmaringbusproducerTraceCsrOffsets;
   }
-  const TraceCsrOffsets& GetTileMeshBus0TtuTraceCsrOffsets() const {
+  const TraceCsrOffsets& GetTileMeshBus0TtuTraceCsrOffsets() const override {
     return kBeagleDmameshbus0TraceCsrOffsets;
   }
-  const TraceCsrOffsets& GetTileMeshBus1TtuTraceCsrOffsets() const {
+  const TraceCsrOffsets& GetTileMeshBus1TtuTraceCsrOffsets() const override {
     return kBeagleDmameshbus1TraceCsrOffsets;
   }
-  const TraceCsrOffsets& GetTileMeshBus2TtuTraceCsrOffsets() const {
+  const TraceCsrOffsets& GetTileMeshBus2TtuTraceCsrOffsets() const override {
     return kBeagleDmameshbus2TraceCsrOffsets;
   }
-  const TraceCsrOffsets& GetTileMeshBus3TtuTraceCsrOffsets() const {
+  const TraceCsrOffsets& GetTileMeshBus3TtuTraceCsrOffsets() const override {
     return kBeagleDmameshbus3TraceCsrOffsets;
   }
 

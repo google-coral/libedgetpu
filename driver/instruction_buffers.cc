@@ -38,10 +38,10 @@ InstructionBuffers::InstructionBuffers(
   buffers_.reserve(VectorLength(&instruction_bitstreams));
 
   for (const auto& chunk : instruction_bitstreams) {
-    auto buffer = allocator->MakeBuffer(chunk->bitstream()->Length());
+    auto buffer = allocator->MakeBuffer(chunk->bitstream()->size());
     buffers_.push_back(std::move(buffer));
     memcpy(buffers_.back().ptr(), chunk->bitstream()->data(),
-           chunk->bitstream()->Length());
+           chunk->bitstream()->size());
   }
   VLOG(10) << "InstructionBuffers created.";
 }

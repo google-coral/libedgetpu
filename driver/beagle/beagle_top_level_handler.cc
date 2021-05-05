@@ -49,7 +49,7 @@ BeagleTopLevelHandler::BeagleTopLevelHandler(
   CHECK(registers != nullptr);
 }
 
-util::Status BeagleTopLevelHandler::Open() {
+Status BeagleTopLevelHandler::Open() {
   // By reading top level registers, figure out whether chip is in clock gated
   // mode.
   software_clock_gated_ = false;
@@ -75,10 +75,10 @@ util::Status BeagleTopLevelHandler::Open() {
     hardware_clock_gated_ = true;
   }
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelHandler::QuitReset() {
+Status BeagleTopLevelHandler::QuitReset() {
   // Disable Sleep Mode (Partial Software Control)
   // 1. Make "rg_force_sleep" to be b10. Read the register to preserve other
   // fields.
@@ -128,7 +128,7 @@ util::Status BeagleTopLevelHandler::QuitReset() {
       break;
 
     default:
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           StringPrintf("Bad performance setting %d.", performance_));
   }
 
@@ -177,17 +177,17 @@ util::Status BeagleTopLevelHandler::QuitReset() {
   RETURN_IF_ERROR(
       registers_->Write(tile_offsets_.deepSleep, deep_sleep_reg.raw()));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelHandler::EnableReset() {
+Status BeagleTopLevelHandler::EnableReset() {
   // If already in reset, skip reset. Otherwise, HIB CSR accesses will not be
   // valid.
   ASSIGN_OR_RETURN(uint32 scu_ctrl_3_reg,
                    registers_->Read32(reset_offsets_.scu_ctrl_3));
   config::registers::ScuCtrl3 helper(scu_ctrl_3_reg);
   if (helper.rg_force_sleep() == 0x3) {
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   // Enable Sleep Mode (Partial Software Control).
@@ -223,9 +223,9 @@ util::Status BeagleTopLevelHandler::EnableReset() {
   return registers_->Write32(cb_bridge_offsets_.gcbb_credit0, 0x0);
 }
 
-util::Status BeagleTopLevelHandler::EnableHardwareClockGate() {
+Status BeagleTopLevelHandler::EnableHardwareClockGate() {
   if (hardware_clock_gated_) {
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   // Enable Hardware Clock Gate (GCB)
@@ -238,12 +238,12 @@ util::Status BeagleTopLevelHandler::EnableHardwareClockGate() {
       registers_->Write32(reset_offsets_.scu_ctrl_2, scu_ctrl_2.raw()));
 
   hardware_clock_gated_ = true;
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelHandler::DisableHardwareClockGate() {
+Status BeagleTopLevelHandler::DisableHardwareClockGate() {
   if (!hardware_clock_gated_) {
-    return util::Status();  // OK
+    return Status();  // OK
   }
 
   // Disable Software Clock Gate (GCB)
@@ -257,7 +257,7 @@ util::Status BeagleTopLevelHandler::DisableHardwareClockGate() {
       registers_->Write32(reset_offsets_.scu_ctrl_2, scu_ctrl_2.raw()));
 
   hardware_clock_gated_ = false;
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 }  // namespace driver

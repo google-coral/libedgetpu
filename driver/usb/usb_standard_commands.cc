@@ -38,7 +38,7 @@ UsbStandardCommands::UsbStandardCommands(
 
 UsbStandardCommands::~UsbStandardCommands() { VLOG(10) << __func__; }
 
-util::StatusOr<UsbStandardCommands::DeviceDescriptor>
+StatusOr<UsbStandardCommands::DeviceDescriptor>
 UsbStandardCommands::GetDeviceDescriptor() {
   VLOG(10) << __func__;
   // The raw size of standard USB device descriptor.
@@ -53,7 +53,7 @@ UsbStandardCommands::GetDeviceDescriptor() {
                     &num_bytes_transferred, __func__));
 
   if (num_bytes_transferred < kDeviceDescriptorRawByteSize) {
-    return util::UnknownError("Device descriptor is too short");
+    return UnknownError("Device descriptor is too short");
   }
 
   DeviceDescriptor descriptor = {0};
@@ -81,7 +81,7 @@ UsbStandardCommands::GetDeviceDescriptor() {
   return descriptor;
 }
 
-util::StatusOr<UsbStandardCommands::ConfigurationDescriptor>
+StatusOr<UsbStandardCommands::ConfigurationDescriptor>
 UsbStandardCommands::GetConfigurationDescriptor(uint8_t index,
                                                 size_t max_extra_data_length) {
   VLOG(10) << StringPrintf("%s index %d", __func__, index);
@@ -100,7 +100,7 @@ UsbStandardCommands::GetConfigurationDescriptor(uint8_t index,
                     &num_bytes_transferred, __func__));
 
   if (num_bytes_transferred < kConfigDescriptorRawByteSize) {
-    return util::UnknownError("Device descriptor is too short");
+    return UnknownError("Device descriptor is too short");
   }
 
   descriptor.raw_data.resize(num_bytes_transferred);

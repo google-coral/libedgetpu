@@ -49,23 +49,23 @@ BeagleTopLevelInterruptManager::BeagleTopLevelInterruptManager(
   CHECK(registers != nullptr);
 }
 
-util::Status BeagleTopLevelInterruptManager::DoEnableInterrupts() {
+Status BeagleTopLevelInterruptManager::DoEnableInterrupts() {
   RETURN_IF_ERROR(EnableThermalWarningInterrupt());
   RETURN_IF_ERROR(EnableMbistInterrupt());
   RETURN_IF_ERROR(EnablePcieErrorInterrupt());
   RETURN_IF_ERROR(EnableThermalShutdownInterrupt());
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::DoDisableInterrupts() {
+Status BeagleTopLevelInterruptManager::DoDisableInterrupts() {
   RETURN_IF_ERROR(DisableThermalWarningInterrupt());
   RETURN_IF_ERROR(DisableMbistInterrupt());
   RETURN_IF_ERROR(DisablePcieErrorInterrupt());
   RETURN_IF_ERROR(DisableThermalShutdownInterrupt());
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::DoHandleInterrupt(int id) {
+Status BeagleTopLevelInterruptManager::DoHandleInterrupt(int id) {
   switch (id) {
     case kThermalWarningId:
       return HandleThermalWarningInterrupt();
@@ -80,12 +80,11 @@ util::Status BeagleTopLevelInterruptManager::DoHandleInterrupt(int id) {
       return HandleThermalShutdownInterrupt();
 
     default:
-      return util::InvalidArgumentError(
-          StringPrintf("Unknown top level id: %d", id));
+      return InvalidArgumentError(StringPrintf("Unknown top level id: %d", id));
   }
 }
 
-util::Status BeagleTopLevelInterruptManager::EnableThermalWarningInterrupt() {
+Status BeagleTopLevelInterruptManager::EnableThermalWarningInterrupt() {
   // 1. Enable thermal warning through omc0_d4.
   // Read register to preserve other fields.
   ASSIGN_OR_RETURN(const uint32 omc0_d4_read,
@@ -100,10 +99,10 @@ util::Status BeagleTopLevelInterruptManager::EnableThermalWarningInterrupt() {
   // TODO: This is important in the real chip, but not for DV purposes
   // now.
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::EnableMbistInterrupt() {
+Status BeagleTopLevelInterruptManager::EnableMbistInterrupt() {
   // 1. Unmask interrupts, and clear interrupt status.
   // Read register to preserve other fields.
   ASSIGN_OR_RETURN(const uint32 rambist_ctrl_1_read,
@@ -131,10 +130,10 @@ util::Status BeagleTopLevelInterruptManager::EnableMbistInterrupt() {
   RETURN_IF_ERROR(
       registers_->Write32(scu_csr_offsets_.scu_ctr_7, scu7_helper.raw()));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::EnablePcieErrorInterrupt() {
+Status BeagleTopLevelInterruptManager::EnablePcieErrorInterrupt() {
   RETURN_IF_ERROR(registers_->Write32(apex_csr_offsets_.slv_abm_en, 1));
   RETURN_IF_ERROR(registers_->Write32(apex_csr_offsets_.mst_abm_en, 1));
   // Write 0x3 to unmask.
@@ -143,10 +142,10 @@ util::Status BeagleTopLevelInterruptManager::EnablePcieErrorInterrupt() {
   RETURN_IF_ERROR(
       registers_->Write32(apex_csr_offsets_.mst_err_resp_isr_mask, 0x3));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::EnableThermalShutdownInterrupt() {
+Status BeagleTopLevelInterruptManager::EnableThermalShutdownInterrupt() {
   // 1. Enable thermal shutdown through omc0_d8.
   // Read register to preserve other fields.
   ASSIGN_OR_RETURN(const uint32 omc0_d8_read,
@@ -161,10 +160,10 @@ util::Status BeagleTopLevelInterruptManager::EnableThermalShutdownInterrupt() {
   // TODO: This is important in the real chip, but not for DV purposes
   // now.
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::DisableThermalWarningInterrupt() {
+Status BeagleTopLevelInterruptManager::DisableThermalWarningInterrupt() {
   // Read register to preserve other fields.
   ASSIGN_OR_RETURN(const uint32 omc0_d4_read,
                    registers_->Read32(apex_csr_offsets_.omc0_d4));
@@ -174,10 +173,10 @@ util::Status BeagleTopLevelInterruptManager::DisableThermalWarningInterrupt() {
   RETURN_IF_ERROR(
       registers_->Write32(apex_csr_offsets_.omc0_d4, omc0_d4_helper.raw()));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::DisableMbistInterrupt() {
+Status BeagleTopLevelInterruptManager::DisableMbistInterrupt() {
   // Read register to preserve other fields.
   ASSIGN_OR_RETURN(const uint32 rambist_ctrl_1_read,
                    registers_->Read32(apex_csr_offsets_.rambist_ctrl_1));
@@ -197,10 +196,10 @@ util::Status BeagleTopLevelInterruptManager::DisableMbistInterrupt() {
   RETURN_IF_ERROR(
       registers_->Write32(scu_csr_offsets_.scu_ctr_7, scu7_helper.raw()));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::DisablePcieErrorInterrupt() {
+Status BeagleTopLevelInterruptManager::DisablePcieErrorInterrupt() {
   RETURN_IF_ERROR(registers_->Write32(apex_csr_offsets_.slv_abm_en, 0));
   RETURN_IF_ERROR(registers_->Write32(apex_csr_offsets_.mst_abm_en, 0));
   // Write 0x0 to mask.
@@ -209,10 +208,10 @@ util::Status BeagleTopLevelInterruptManager::DisablePcieErrorInterrupt() {
   RETURN_IF_ERROR(
       registers_->Write32(apex_csr_offsets_.mst_err_resp_isr_mask, 0));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::DisableThermalShutdownInterrupt() {
+Status BeagleTopLevelInterruptManager::DisableThermalShutdownInterrupt() {
   // Read register to preserve other fields.
   ASSIGN_OR_RETURN(const uint32 omc0_d8_read,
                    registers_->Read32(apex_csr_offsets_.omc0_d8));
@@ -222,10 +221,10 @@ util::Status BeagleTopLevelInterruptManager::DisableThermalShutdownInterrupt() {
   RETURN_IF_ERROR(
       registers_->Write32(apex_csr_offsets_.omc0_d8, omc0_d8_helper.raw()));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::HandleThermalWarningInterrupt() {
+Status BeagleTopLevelInterruptManager::HandleThermalWarningInterrupt() {
   // Read register to preserve other fields. Also, warn_o field needs to be read
   // before clearing warn_clear, i.e. read before write field.
   ASSIGN_OR_RETURN(const uint32 omc0_dc_read,
@@ -241,10 +240,10 @@ util::Status BeagleTopLevelInterruptManager::HandleThermalWarningInterrupt() {
   }
   RETURN_IF_ERROR(registers_->Write32(apex_csr_offsets_.omc0_dc, helper.raw()));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::HandleMbistInterrupt() {
+Status BeagleTopLevelInterruptManager::HandleMbistInterrupt() {
   ASSIGN_OR_RETURN(const uint32 rambist_ctrl_1_read,
                    registers_->Read32(apex_csr_offsets_.rambist_ctrl_1));
   driver::config::registers::RamBistCtrl1 ram_bist_ctrl_1_helper(
@@ -297,10 +296,10 @@ util::Status BeagleTopLevelInterruptManager::HandleMbistInterrupt() {
   RETURN_IF_ERROR(
       registers_->Write32(scu_csr_offsets_.scu_ctr_7, scu7_helper.raw()));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::HandlePcieErrorInterrupt() {
+Status BeagleTopLevelInterruptManager::HandlePcieErrorInterrupt() {
   // Disable and enable abm_en to handle interrupts.
   ASSIGN_OR_RETURN(const uint32 slave_write_error,
                    registers_->Read32(apex_csr_offsets_.slv_wr_err_resp));
@@ -332,10 +331,10 @@ util::Status BeagleTopLevelInterruptManager::HandlePcieErrorInterrupt() {
     RETURN_IF_ERROR(registers_->Write32(apex_csr_offsets_.mst_abm_en, 1));
   }
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
-util::Status BeagleTopLevelInterruptManager::HandleThermalShutdownInterrupt() {
+Status BeagleTopLevelInterruptManager::HandleThermalShutdownInterrupt() {
   // Read register to preserve other fields. Also, sd_o field needs to be read
   // before clearing sd_clear, i.e. read before write field.
   ASSIGN_OR_RETURN(const uint32 omc0_dc_read,
@@ -351,7 +350,7 @@ util::Status BeagleTopLevelInterruptManager::HandleThermalShutdownInterrupt() {
   }
   RETURN_IF_ERROR(registers_->Write32(apex_csr_offsets_.omc0_dc, helper.raw()));
 
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 }  // namespace driver

@@ -21,7 +21,6 @@
 load(
     "@flatbuffers//:build_defs.bzl",
     "flatbuffer_cc_library",
-    "flatbuffer_py_library",
 )
 
 licenses(["notice"])

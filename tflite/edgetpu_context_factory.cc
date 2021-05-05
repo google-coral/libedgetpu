@@ -48,7 +48,7 @@ EdgeTpuContextFactory::GetDescriptionForPerformanceExpectationOptions() {
   return desc;
 }
 
-util::StatusOr<std::unique_ptr<edgetpu::EdgeTpuContext>>
+StatusOr<std::unique_ptr<edgetpu::EdgeTpuContext>>
 EdgeTpuContextFactory::CreateEdgeTpuContext(const std::string& device_type,
                                             const std::string& device_path,
                                             int performance_expectation) {
@@ -62,20 +62,20 @@ EdgeTpuContextFactory::CreateEdgeTpuContext(const std::string& device_type,
   edgetpu::DeviceType device_type_enum;
   if (device_type == kDeviceTypeDefault) {
     if (device_path != kDevicePathDefault) {
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           StringPrintf("device_path must be %s when device_type is %s",
                        kDevicePathDefault, kDeviceTypeDefault));
     }
 
     if (performance_expectation != kPerformanceExpectationDefault) {
-      return util::InvalidArgumentError(StringPrintf(
+      return InvalidArgumentError(StringPrintf(
           "performance_expectation has no effect when device_type is %s",
           kDeviceTypeDefault));
     }
 
     auto result = tpu_manager->NewEdgeTpuContext();
     if (!result) {
-      return util::NotFoundError("Failed opening default Edge TPU.");
+      return NotFoundError("Failed opening default Edge TPU.");
     }
     return std::move(result);
   } else if (device_type == kDeviceTypeApexUsb) {
@@ -86,7 +86,7 @@ EdgeTpuContextFactory::CreateEdgeTpuContext(const std::string& device_type,
     device_type_enum =
         static_cast<edgetpu::DeviceType>(DeviceTypeExtended::kApexReference);
   } else {
-    return util::InvalidArgumentError("Unrecognized device type.");
+    return InvalidArgumentError("Unrecognized device type.");
   }
 
   std::string performance_expectation_str;
@@ -111,13 +111,13 @@ EdgeTpuContextFactory::CreateEdgeTpuContext(const std::string& device_type,
       device_type_enum, device_path,
       {{"Performance", performance_expectation_str}});
   if (!result) {
-    return util::NotFoundError("Failed opening specified Edge TPU.");
+    return NotFoundError("Failed opening specified Edge TPU.");
   }
 
   return std::move(result);
 }
 
-util::StatusOr<std::shared_ptr<edgetpu::EdgeTpuContext>>
+StatusOr<std::shared_ptr<edgetpu::EdgeTpuContext>>
 EdgeTpuContextFactory::OpenEdgeTpuContext(const std::string& device_type,
                                           const std::string& device_path,
                                           int performance_expectation) {
@@ -131,20 +131,20 @@ EdgeTpuContextFactory::OpenEdgeTpuContext(const std::string& device_type,
   edgetpu::DeviceType device_type_enum;
   if (device_type == kDeviceTypeDefault) {
     if (device_path != kDevicePathDefault) {
-      return util::InvalidArgumentError(
+      return InvalidArgumentError(
           StringPrintf("device_path must be %s when device_type is %s",
                        kDevicePathDefault, kDeviceTypeDefault));
     }
 
     if (performance_expectation != kPerformanceExpectationDefault) {
-      return util::InvalidArgumentError(StringPrintf(
+      return InvalidArgumentError(StringPrintf(
           "performance_expectation has no effect when device_type is %s",
           kDeviceTypeDefault));
     }
 
     auto result = tpu_manager->OpenDevice();
     if (!result) {
-      return util::NotFoundError("Failed opening default Edge TPU.");
+      return NotFoundError("Failed opening default Edge TPU.");
     }
     return std::move(result);
   } else if (device_type == kDeviceTypeApexUsb) {
@@ -155,7 +155,7 @@ EdgeTpuContextFactory::OpenEdgeTpuContext(const std::string& device_type,
     device_type_enum =
         static_cast<edgetpu::DeviceType>(DeviceTypeExtended::kApexReference);
   } else {
-    return util::InvalidArgumentError("Unrecognized device type.");
+    return InvalidArgumentError("Unrecognized device type.");
   }
 
   std::string performance_expectation_str;
@@ -180,18 +180,18 @@ EdgeTpuContextFactory::OpenEdgeTpuContext(const std::string& device_type,
       tpu_manager->OpenDevice(device_type_enum, device_path,
                               {{"Performance", performance_expectation_str}});
   if (!result) {
-    return util::NotFoundError("Failed opening specified Edge TPU.");
+    return NotFoundError("Failed opening specified Edge TPU.");
   }
 
   return std::move(result);
 }
 
-util::StatusOr<std::vector<edgetpu::EdgeTpuManager::DeviceEnumerationRecord>>
+StatusOr<std::vector<edgetpu::EdgeTpuManager::DeviceEnumerationRecord>>
 EdgeTpuContextFactory::EnumerateEdgeTpu(const std::string& device_type) {
   auto tpu_manager = edgetpu::EdgeTpuManager::GetSingleton();
 
   if (tpu_manager == nullptr) {
-    return util::FailedPreconditionError("Cannot enumerate NNAPI devices.");
+    return FailedPreconditionError("Cannot enumerate NNAPI devices.");
   }
 
   auto devices = tpu_manager->EnumerateEdgeTpu();
@@ -207,7 +207,7 @@ EdgeTpuContextFactory::EnumerateEdgeTpu(const std::string& device_type) {
       device_type_enum =
           static_cast<edgetpu::DeviceType>(DeviceTypeExtended::kApexReference);
     } else {
-      return util::InvalidArgumentError("Unrecognized device type.");
+      return InvalidArgumentError("Unrecognized device type.");
     }
 
     // Filter out all devices not of the specified type.
@@ -221,8 +221,7 @@ EdgeTpuContextFactory::EnumerateEdgeTpu(const std::string& device_type) {
   }
 
   if (devices.empty()) {
-    return util::NotFoundError(
-        "Failed finding any Edge TPU of specified type.");
+    return NotFoundError("Failed finding any Edge TPU of specified type.");
   }
 
   return devices;

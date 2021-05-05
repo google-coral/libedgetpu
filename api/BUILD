@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
-
 # Description:
 #   Darwinn API headers
 load(
@@ -25,35 +23,37 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-libedgetpu_cc_library(
+cc_library(
     name = "chip",
     hdrs = ["chip.h"],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "tensor_util",
     srcs = ["tensor_util.cc"],
     hdrs = ["tensor_util.h"],
     deps = [
+        "@com_google_absl//absl/types:optional",
         "//executable:executable_fbs",
         "//port",
         "//port:string_util",
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "layer_information",
     srcs = ["layer_information.cc"],
     hdrs = ["layer_information.h"],
     deps = [
         ":buffer",
         ":tensor_util",
+        "@com_google_absl//absl/types:optional",
         "//executable:executable_fbs",
         "//port",
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "request",
     hdrs = ["request.h"],
     deps = [
@@ -62,7 +62,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "driver",
     hdrs = ["driver.h"],
     deps = [
@@ -75,7 +75,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "driver_options_helper",
     srcs = ["driver_options_helper.cc"],
     hdrs = ["driver_options_helper.h"],
@@ -85,20 +85,20 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "allocated_buffer",
     srcs = ["allocated_buffer.cc"],
     hdrs = ["allocated_buffer.h"],
     deps = ["//port"],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "dram_buffer",
     hdrs = ["dram_buffer.h"],
     deps = ["//port"],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "buffer",
     srcs = ["buffer.cc"],
     hdrs = ["buffer.h"],
@@ -109,7 +109,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "driver_factory",
     srcs = ["driver_factory.cc"],
     hdrs = ["driver_factory.h"],
@@ -121,7 +121,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "package_reference",
     hdrs = ["package_reference.h"],
     deps = [
@@ -132,7 +132,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "runtime_version",
     hdrs = ["runtime_version.h"],
 )
@@ -143,7 +143,7 @@ flatbuffer_cc_library(
     flatc_args = [""],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "timing",
     hdrs = ["timing.h"],
     deps = [
@@ -151,7 +151,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "watchdog",
     srcs = ["watchdog.cc"],
     hdrs = ["watchdog.h"],
@@ -163,7 +163,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "telemeter_interface",
     hdrs = [
         "telemeter_interface.h",
@@ -173,7 +173,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "execution_context_interface",
     hdrs = [
         "execution_context_interface.h",

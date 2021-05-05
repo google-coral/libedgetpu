@@ -55,84 +55,75 @@ class LocalUsbDevice : public UsbDeviceInterface {
   // Destructor. Calls Close implicitly.
   ~LocalUsbDevice() override;
 
-  util::Status Close(CloseAction action) override LOCKS_EXCLUDED(mutex_);
+  Status Close(CloseAction action) override LOCKS_EXCLUDED(mutex_);
 
-  util::Status SetConfiguration(int configuration) override
-      LOCKS_EXCLUDED(mutex_);
+  Status SetConfiguration(int configuration) override LOCKS_EXCLUDED(mutex_);
 
-  util::Status ClaimInterface(int interface_number) override
-      LOCKS_EXCLUDED(mutex_);
+  Status ClaimInterface(int interface_number) override LOCKS_EXCLUDED(mutex_);
 
-  util::Status ReleaseInterface(int interface_number) override
-      LOCKS_EXCLUDED(mutex_);
+  Status ReleaseInterface(int interface_number) override LOCKS_EXCLUDED(mutex_);
 
-  util::Status GetDescriptor(DescriptorType desc_type, uint8_t desc_index,
-                             MutableBuffer data_in,
-                             size_t* num_bytes_transferred,
-                             const char* context) override
-      LOCKS_EXCLUDED(mutex_);
+  Status GetDescriptor(DescriptorType desc_type, uint8_t desc_index,
+                       MutableBuffer data_in, size_t* num_bytes_transferred,
+                       const char* context) override LOCKS_EXCLUDED(mutex_);
 
   DeviceSpeed GetDeviceSpeed() const override LOCKS_EXCLUDED(mutex_);
 
-  util::Status SendControlCommand(const SetupPacket& command,
-                                  TimeoutMillis timeout_msec,
-                                  const char* context) override
+  Status SendControlCommand(const SetupPacket& command,
+                            TimeoutMillis timeout_msec,
+                            const char* context) override
       LOCKS_EXCLUDED(mutex_);
 
-  util::Status SendControlCommandWithDataOut(const SetupPacket& command,
-                                             ConstBuffer data_out,
-                                             TimeoutMillis timeout_msec,
-                                             const char* context) override
+  Status SendControlCommandWithDataOut(const SetupPacket& command,
+                                       ConstBuffer data_out,
+                                       TimeoutMillis timeout_msec,
+                                       const char* context) override
       LOCKS_EXCLUDED(mutex_);
 
-  util::Status SendControlCommandWithDataIn(const SetupPacket& command,
-                                            MutableBuffer data_in,
-                                            size_t* num_bytes_transferred,
-                                            TimeoutMillis timeout_msec,
-                                            const char* context) override
+  Status SendControlCommandWithDataIn(const SetupPacket& command,
+                                      MutableBuffer data_in,
+                                      size_t* num_bytes_transferred,
+                                      TimeoutMillis timeout_msec,
+                                      const char* context) override
       LOCKS_EXCLUDED(mutex_);
 
-  util::Status BulkOutTransfer(uint8_t endpoint, ConstBuffer data_out,
-                               TimeoutMillis timeout_msec,
-                               const char* context) override
+  Status BulkOutTransfer(uint8_t endpoint, ConstBuffer data_out,
+                         TimeoutMillis timeout_msec,
+                         const char* context) override LOCKS_EXCLUDED(mutex_);
+
+  Status BulkInTransfer(uint8_t endpoint, MutableBuffer data_in,
+                        size_t* num_bytes_transferred,
+                        TimeoutMillis timeout_msec,
+                        const char* context) override LOCKS_EXCLUDED(mutex_);
+
+  Status InterruptInTransfer(uint8_t endpoint, MutableBuffer data_in,
+                             size_t* num_bytes_transferred,
+                             TimeoutMillis timeout_msec,
+                             const char* context) override
       LOCKS_EXCLUDED(mutex_);
 
-  util::Status BulkInTransfer(uint8_t endpoint, MutableBuffer data_in,
-                              size_t* num_bytes_transferred,
-                              TimeoutMillis timeout_msec,
+  Status AsyncBulkOutTransfer(uint8_t endpoint, ConstBuffer data_out,
+                              TimeoutMillis timeout_msec, DataOutDone callback,
                               const char* context) override
       LOCKS_EXCLUDED(mutex_);
 
-  util::Status InterruptInTransfer(uint8_t endpoint, MutableBuffer data_in,
-                                   size_t* num_bytes_transferred,
-                                   TimeoutMillis timeout_msec,
-                                   const char* context) override
+  Status AsyncBulkInTransfer(uint8_t endpoint, MutableBuffer data_in,
+                             TimeoutMillis timeout_msec, DataInDone callback,
+                             const char* context) override
       LOCKS_EXCLUDED(mutex_);
 
-  util::Status AsyncBulkOutTransfer(uint8_t endpoint, ConstBuffer data_out,
-                                    TimeoutMillis timeout_msec,
-                                    DataOutDone callback,
-                                    const char* context) override
-      LOCKS_EXCLUDED(mutex_);
-
-  util::Status AsyncBulkInTransfer(uint8_t endpoint, MutableBuffer data_in,
-                                   TimeoutMillis timeout_msec,
-                                   DataInDone callback,
-                                   const char* context) override
-      LOCKS_EXCLUDED(mutex_);
-
-  util::Status AsyncInterruptInTransfer(uint8_t endpoint, MutableBuffer data_in,
-                                        TimeoutMillis timeout_msec,
-                                        DataInDone callback,
-                                        const char* context) override
+  Status AsyncInterruptInTransfer(uint8_t endpoint, MutableBuffer data_in,
+                                  TimeoutMillis timeout_msec,
+                                  DataInDone callback,
+                                  const char* context) override
       LOCKS_EXCLUDED(mutex_);
 
   void TryCancelAllTransfers() override LOCKS_EXCLUDED(mutex_);
 
-  util::StatusOr<MutableBuffer> AllocateTransferBuffer(
-      size_t buffer_size) override LOCKS_EXCLUDED(mutex_);
+  StatusOr<MutableBuffer> AllocateTransferBuffer(size_t buffer_size) override
+      LOCKS_EXCLUDED(mutex_);
 
-  util::Status ReleaseTransferBuffer(MutableBuffer buffer) override
+  Status ReleaseTransferBuffer(MutableBuffer buffer) override
       LOCKS_EXCLUDED(mutex_);
 
  private:
@@ -165,7 +156,7 @@ class LocalUsbDevice : public UsbDeviceInterface {
   // Callback function provided to libubs for data in completion callback.
   static void LibUsbDataInCallback(libusb_transfer* transfer);
 
-  util::Status CheckForNullHandle(const char* context) const
+  Status CheckForNullHandle(const char* context) const
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   void UnregisterCompletedTransfer(libusb_transfer* transfer)
@@ -181,7 +172,7 @@ class LocalUsbDevice : public UsbDeviceInterface {
   // to perform bookkeeping of records. Although this function doesn't
   // explicitly modify any shared data, the underlying data in a libusb device
   // handle could be affected.
-  util::Status DoReleaseTransferBuffer(MutableBuffer buffer)
+  Status DoReleaseTransferBuffer(MutableBuffer buffer)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   libusb_transfer* NewAsyncTransfer();
@@ -245,15 +236,15 @@ class LocalUsbDeviceFactory : public UsbDeviceFactory {
   LocalUsbDeviceFactory(const LocalUsbDeviceFactory&) = delete;
   LocalUsbDeviceFactory& operator=(const LocalUsbDeviceFactory&) = delete;
 
-  util::StatusOr<std::vector<std::string>> EnumerateDevices(
+  StatusOr<std::vector<std::string>> EnumerateDevices(
       uint16_t vendor_id, uint16_t product_id) override;
 
-  util::StatusOr<std::unique_ptr<UsbDeviceInterface>> OpenDevice(
+  StatusOr<std::unique_ptr<UsbDeviceInterface>> OpenDevice(
       const std::string& path, TimeoutMillis timeout_msec) override;
 
   // Visible for testing.
   // Returns a path broken down to components.
-  static util::StatusOr<ParsedPath> ParsePathString(const std::string& path);
+  static StatusOr<ParsedPath> ParsePathString(const std::string& path);
 
   // Visible for testing.
   // Composes a path string from components.

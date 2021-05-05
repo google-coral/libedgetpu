@@ -31,62 +31,95 @@ struct ScalarCoreCsrOffsets {
   uint64 executeControl;
   uint64 avDataPopRunControl;
   uint64 parameterPopRunControl;
+  uint64 scalarCoreRunStatus;
+  uint64 avDataPopRunStatus;
+  uint64 parameterPopRunStatus;
 
   // Context 0
   uint64 scalarDatapath_0RunControl;
   uint64 executeControl_0;
   uint64 avDataPop_0RunControl;
   uint64 parameterPop_0RunControl;
+  uint64 scalarDatapath_0RunStatus;
+  uint64 avDataPop_0RunStatus;
+  uint64 parameterPop_0RunStatus;
+
   // Context 1
   uint64 scalarDatapath_1RunControl;
   uint64 executeControl_1;
   uint64 avDataPop_1RunControl;
   uint64 parameterPop_1RunControl;
+  uint64 scalarDatapath_1RunStatus;
+  uint64 avDataPop_1RunStatus;
+  uint64 parameterPop_1RunStatus;
+
   // Context 2
   uint64 scalarDatapath_2RunControl;
   uint64 executeControl_2;
   uint64 avDataPop_2RunControl;
   uint64 parameterPop_2RunControl;
+  uint64 scalarDatapath_2RunStatus;
+  uint64 avDataPop_2RunStatus;
+  uint64 parameterPop_2RunStatus;
+
   // Context 3
   uint64 scalarDatapath_3RunControl;
   uint64 executeControl_3;
   uint64 avDataPop_3RunControl;
   uint64 parameterPop_3RunControl;
+  uint64 scalarDatapath_3RunStatus;
+  uint64 avDataPop_3RunStatus;
+  uint64 parameterPop_3RunStatus;
 
   // Legacy
   uint64 infeedRunControl;
   uint64 outfeedRunControl;
+  uint64 infeedRunStatus;
+  uint64 outfeedRunStatus;
   uint64 infeed1RunControl;
   uint64 outfeed1RunControl;
 
-  // TODO: Separate out context switching related stuff to
-  // scalar_core_context_csr_offsets.h
   // Context Switching
   uint64 contextControl;
   uint64 contextStatus;
   uint64 contextSwitchCount;
   uint64 contextSwitchTimeoutCount;
 
+  // Multi Cluster mode switch related CSRs.
+  uint64 clusterPortControl;
+  uint64 clusterPortStatus;
+
   // Context 0
   uint64 infeed_0_0RunControl;
   uint64 outfeed_0_0RunControl;
   uint64 infeed_0_1RunControl;
   uint64 outfeed_0_1RunControl;
+  uint64 infeed_0_0RunStatus;
+  uint64 outfeed_0_0RunStatus;
+
   // Context 1
   uint64 infeed_1_0RunControl;
   uint64 outfeed_1_0RunControl;
   uint64 infeed_1_1RunControl;
   uint64 outfeed_1_1RunControl;
+  uint64 infeed_1_0RunStatus;
+  uint64 outfeed_1_0RunStatus;
+
   // Context 2
   uint64 infeed_2_0RunControl;
   uint64 outfeed_2_0RunControl;
   uint64 infeed_2_1RunControl;
   uint64 outfeed_2_1RunControl;
+  uint64 infeed_2_0RunStatus;
+  uint64 outfeed_2_0RunStatus;
+
   // Context 3
   uint64 infeed_3_0RunControl;
   uint64 outfeed_3_0RunControl;
   uint64 infeed_3_1RunControl;
   uint64 outfeed_3_1RunControl;
+  uint64 infeed_3_0RunStatus;
+  uint64 outfeed_3_0RunStatus;
 
   // Ring bus credit control
   // Context 0
@@ -137,6 +170,8 @@ struct ScalarCoreCsrOffsets {
   uint64 cycleCount;
 
   // Error Registers
+  uint64 Error_ScalarCore;
+
   uint64 Error_ScalarCoreDatapath_0;
   uint64 Error_Mask_ScalarCoreDatapath_0;
   uint64 Error_Force_ScalarCoreDatapath_0;

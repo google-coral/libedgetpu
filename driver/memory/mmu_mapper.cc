@@ -21,18 +21,18 @@ namespace platforms {
 namespace darwinn {
 namespace driver {
 
-util::Status MmuMapper::Map(const Buffer &buffer, uint64 device_virtual_address,
-                            DmaDirection direction) {
+Status MmuMapper::Map(const Buffer &buffer, uint64 device_virtual_address,
+                      DmaDirection direction) {
   TRACE_SCOPE("MmuMapper::Map");
   // Buffers backed by file descriptors do not have valid ptr().
   const void *ptr = buffer.FileDescriptorBacked() ? nullptr : buffer.ptr();
   if (buffer.IsPtrType() && ptr == nullptr) {
-    return util::InvalidArgumentError("Cannot map a Buffer of nullptr.");
+    return InvalidArgumentError("Cannot map a Buffer of nullptr.");
   }
 
   const size_t size_bytes = buffer.size_bytes();
   if (size_bytes == 0) {
-    return util::InvalidArgumentError("Cannot map 0 bytes.");
+    return InvalidArgumentError("Cannot map 0 bytes.");
   }
 
   auto num_requested_pages = GetNumberPages(ptr, size_bytes);
@@ -48,18 +48,17 @@ util::Status MmuMapper::Map(const Buffer &buffer, uint64 device_virtual_address,
   }
 }
 
-util::Status MmuMapper::Unmap(const Buffer &buffer,
-                              uint64 device_virtual_address) {
+Status MmuMapper::Unmap(const Buffer &buffer, uint64 device_virtual_address) {
   TRACE_SCOPE("MmuMapper::Unmap");
   // Buffers backed by file descriptors do not have valid ptr().
   const void *ptr = buffer.FileDescriptorBacked() ? nullptr : buffer.ptr();
   if (buffer.IsPtrType() && ptr == nullptr) {
-    return util::InvalidArgumentError("Cannot unmap a Buffer of nullptr.");
+    return InvalidArgumentError("Cannot unmap a Buffer of nullptr.");
   }
 
   const size_t size_bytes = buffer.size_bytes();
   if (size_bytes == 0) {
-    return util::InvalidArgumentError("Cannot unmap 0 bytes.");
+    return InvalidArgumentError("Cannot unmap 0 bytes.");
   }
 
   auto num_mapped_pages = GetNumberPages(ptr, size_bytes);
@@ -73,7 +72,6 @@ util::Status MmuMapper::Unmap(const Buffer &buffer,
                    device_virtual_address);
   }
 }
-
 
 }  // namespace driver
 }  // namespace darwinn

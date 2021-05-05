@@ -39,14 +39,14 @@ KernelCoherentAllocator::KernelCoherentAllocator(const std::string &device_path,
     : CoherentAllocator(alignment_bytes, size_bytes),
       device_path_(device_path) {}
 
-util::StatusOr<char *> KernelCoherentAllocator::DoOpen(size_t size_bytes) {
+StatusOr<char *> KernelCoherentAllocator::DoOpen(size_t size_bytes) {
   if (fd_ != INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device already open.");
+    return FailedPreconditionError("Device already open.");
   }
 
   fd_ = open(device_path_.c_str(), O_RDWR);
   if (fd_ == INVALID_FD_VALUE) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Device open failed : %d (%s)", fd_, strerror(errno)));
   }
 
@@ -64,7 +64,7 @@ util::StatusOr<char *> KernelCoherentAllocator::DoOpen(size_t size_bytes) {
   ioctl_buffer.enable = 1;
   ioctl_buffer.size = size_bytes;
   if (ioctl(fd_, GASKET_IOCTL_CONFIG_COHERENT_ALLOCATOR, &ioctl_buffer) != 0) {
-    return util::FailedPreconditionError(StringPrintf(
+    return FailedPreconditionError(StringPrintf(
         "Could not enable coherent allocator size %" PRIu64 ". : fd=%d (%s)",
         ioctl_buffer.size, fd_, strerror(errno)));
   }
@@ -92,12 +92,11 @@ util::StatusOr<char *> KernelCoherentAllocator::DoOpen(size_t size_bytes) {
   return mem_base;
 }
 
-util::Status KernelCoherentAllocator::DoClose(char *mem_base,
-                                              size_t size_bytes) {
+Status KernelCoherentAllocator::DoClose(char *mem_base, size_t size_bytes) {
   if (fd_ == INVALID_FD_VALUE) {
-    return util::FailedPreconditionError("Device not open.");
+    return FailedPreconditionError("Device not open.");
   }
-  util::Status status = Unmap(fd_, mem_base, size_bytes);
+  Status status = Unmap(fd_, mem_base, size_bytes);
 
   // Release the memory block.
   gasket_coherent_alloc_config_ioctl ioctl_buffer;
@@ -107,7 +106,7 @@ util::Status KernelCoherentAllocator::DoClose(char *mem_base,
   ioctl_buffer.dma_address = dma_address_;
   ioctl_buffer.size = size_bytes;
   if (ioctl(fd_, GASKET_IOCTL_CONFIG_COHERENT_ALLOCATOR, &ioctl_buffer) != 0) {
-    status.Update(util::FailedPreconditionError(StringPrintf(
+    status.Update(FailedPreconditionError(StringPrintf(
         "Could not disable coherent allocator size %" PRIu64 ". : %d (%s)",
         ioctl_buffer.size, fd_, strerror(errno))));
     return status;
@@ -116,7 +115,7 @@ util::Status KernelCoherentAllocator::DoClose(char *mem_base,
   close(fd_);
   fd_ = INVALID_FD_VALUE;
   dma_address_ = 0;
-  return util::Status();  // OK
+  return Status();  // OK
 }
 
 }  // namespace driver

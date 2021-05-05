@@ -52,9 +52,8 @@ class BuddyAllocator : public AddressSpaceAllocator {
   //////////////////////////////////////////////////////////////////////////////
   // Implementation of Allocator interface
   //
-  util::StatusOr<uint64> Allocate(uint64 size_bytes) override
-      LOCKS_EXCLUDED(mutex_);
-  util::Status Free(uint64 address, uint64 size_bytes) override
+  StatusOr<uint64> Allocate(uint64 size_bytes) override LOCKS_EXCLUDED(mutex_);
+  Status Free(uint64 address, uint64 size_bytes) override
       LOCKS_EXCLUDED(mutex_);
 
  private:

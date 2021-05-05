@@ -43,12 +43,12 @@ class GroupedInterruptController : public InterruptControllerInterface {
   ~GroupedInterruptController() = default;
 
   // Enable/disables interrupts.
-  util::Status EnableInterrupts() override;
-  util::Status DisableInterrupts() override;
+  Status EnableInterrupts() override;
+  Status DisableInterrupts() override;
 
   // Clears interrupt status register to notify that host has received the
   // interrupt.
-  util::Status ClearInterruptStatus(int id) override;
+  Status ClearInterruptStatus(int id) override;
 
  private:
   // CSR offsets.

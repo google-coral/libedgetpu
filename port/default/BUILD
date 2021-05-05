@@ -15,8 +15,6 @@
 # Description:
 #  Port of various google3 libraries and utilities.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
-
 package(default_visibility = ["//visibility:public"])
 
 # All Google Owned Code except :
@@ -31,7 +29,7 @@ config_setting(
 )
 
 #  Independent headers that can be included by port_from_tf.
-libedgetpu_cc_library(
+cc_library(
     name = "port_base",
     hdrs = [
         "error_codes.h",
@@ -44,7 +42,7 @@ libedgetpu_cc_library(
 )
 
 #  Port of various google3 libraries and utilities.
-libedgetpu_cc_library(
+cc_library(
     name = "port",
     srcs = [
         "status_macros.cc",
@@ -82,7 +80,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "thread_annotations",
     hdrs = [
         "thread_annotations.h",
@@ -92,7 +90,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "semaphore",
     hdrs = [
         "semaphore.h",
@@ -105,14 +103,14 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "strcat",
     hdrs = [
         "strcat.h",
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "unreachable",
     hdrs = [
         "unreachable.h",
@@ -122,7 +120,7 @@ libedgetpu_cc_library(
     }),
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "cleanup",
     hdrs = ["cleanup.h"],
     deps = [
@@ -130,60 +128,12 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "cpu",
     hdrs = ["cpu.h"],
 )
 
-libedgetpu_cc_library(
-    name = "restartable_thread",
-    hdrs = ["restartable_thread.h"],
-    deps = [
-        "//firmware/common:log",
-        "//firmware/common/callback",
-        "//firmware/os:restartable_thread_interface",
-        "//thread/fiber",
-    ],
-)
-
-libedgetpu_cc_library(
-    name = "blocking_queue",
-    hdrs = ["blocking_queue.h"],
-    deps = [
-        "@com_google_absl//absl/memory",
-        "//firmware/common:log",
-        "//firmware/common:status",
-        "//firmware/os:queue_interface",
-        "//thread/fiber",
-    ],
-)
-
-libedgetpu_cc_library(
+cc_library(
     name = "memory_barriers",
     hdrs = ["memory_barriers.h"],
-)
-
-libedgetpu_cc_library(
-    name = "dma330",
-    hdrs = ["dma330.h"],
-    deps = [
-        ":port",
-        "//firmware/common:iomem",
-        "//firmware/common:status",
-        "//firmware/common/callback",
-        "//firmware/driver/dma:dma330_interface",
-    ],
-)
-
-libedgetpu_cc_library(
-    name = "dma_manager",
-    hdrs = ["dma_manager.h"],
-    deps = [
-        ":port",
-        "//firmware/common:iomem",
-        "//firmware/common:status",
-        "//firmware/common/callback",
-        "//firmware/driver/dma:dma330_interface",
-        "//firmware/driver/dma:dma_manager_interface",
-    ],
 )

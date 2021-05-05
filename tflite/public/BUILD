@@ -14,8 +14,6 @@
 
 # BUILD rules for DarwiNN TfLite Custom-op public interface.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_binary", "libedgetpu_cc_library")
-
 package(
     default_visibility = ["//visibility:public"],
 )
@@ -62,7 +60,7 @@ genrule(
 )
 
 # Header for external use.
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu",
     hdrs = [
         "edgetpu.h",
@@ -76,7 +74,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_c",
     hdrs = [
         "edgetpu_c.h",
@@ -92,7 +90,7 @@ libedgetpu_cc_library(
 
 # Shared library for external use.
 # Explicit variant for all(pci/usb).
-libedgetpu_cc_binary(
+cc_binary(
     name = "libedgetpu_direct_all.so",
     linkopts = SHARED_LIBRARY_LINKOPTS,
     linkshared = 1,
@@ -105,7 +103,7 @@ libedgetpu_cc_binary(
 
 # Shared library for external use.
 # Explicit variant for Beagle PCIe.
-libedgetpu_cc_binary(
+cc_binary(
     name = "libedgetpu_direct_pci.so",
     linkopts = SHARED_LIBRARY_LINKOPTS,
     linkshared = 1,
@@ -117,7 +115,7 @@ libedgetpu_cc_binary(
 )
 
 # Shared library for linking of applications not depending on a particular driver provider.
-libedgetpu_cc_binary(
+cc_binary(
     name = "libedgetpu_bare.so",
     linkopts = SHARED_LIBRARY_LINKOPTS,
     linkshared = 1,
@@ -130,7 +128,7 @@ libedgetpu_cc_binary(
 
 # Shared library for external use.
 # Explicit variant for Beagle USB.
-libedgetpu_cc_binary(
+cc_binary(
     name = "libedgetpu_direct_usb.so",
     linkopts = SHARED_LIBRARY_LINKOPTS,
     linkshared = 1,
@@ -141,7 +139,7 @@ libedgetpu_cc_binary(
     ],
 )
 
-libedgetpu_cc_binary(
+cc_binary(
     name = "libedgetpu_direct_usb.dylib",
     linkopts = [
         "-Wl,-install_name,@rpath/libedgetpu." + VERSION + ".dylib",
@@ -158,7 +156,7 @@ libedgetpu_cc_binary(
     ],
 )
 
-libedgetpu_cc_binary(
+cc_binary(
     name = "edgetpu_direct_usb.dll",
     additional_linker_inputs = DLL_ADDITIONAL_LINKOPTS,
     linkopts = DLL_LINKOPTS,
@@ -174,7 +172,7 @@ libedgetpu_cc_binary(
     ],
 )
 
-libedgetpu_cc_binary(
+cc_binary(
     name = "edgetpu_direct_pci.dll",
     additional_linker_inputs = DLL_ADDITIONAL_LINKOPTS,
     linkopts = DLL_LINKOPTS,
@@ -204,7 +202,7 @@ cc_import(
     shared_library = ":edgetpu_direct_pci.dll",
 )
 
-libedgetpu_cc_binary(
+cc_binary(
     name = "edgetpu_direct_all.dll",
     additional_linker_inputs = DLL_ADDITIONAL_LINKOPTS,
     linkopts = DLL_LINKOPTS,
@@ -235,7 +233,7 @@ cc_import(
     shared_library = ":edgetpu_direct_all.dll",
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_internal_direct_all",
     deps = [
         "//driver/beagle:beagle_all_driver_provider_linux",
@@ -243,7 +241,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_internal_direct_all_windows",
     deps = [
         "//driver/beagle:beagle_all_driver_provider_windows",
@@ -251,7 +249,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_internal_direct_pci",
     deps = [
         "//driver/beagle:beagle_pci_driver_provider_linux",
@@ -259,7 +257,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_internal_direct_pci_windows",
     deps = [
         "//driver/beagle:beagle_pci_driver_provider_windows",
@@ -267,7 +265,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "edgetpu_internal_direct_usb",
     deps = [
         "//driver/beagle:beagle_usb_driver_provider",

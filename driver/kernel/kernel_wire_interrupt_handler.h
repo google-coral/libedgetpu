@@ -48,9 +48,9 @@ class KernelWireInterruptHandler : public InterruptHandler {
   KernelWireInterruptHandler& operator=(const KernelWireInterruptHandler&) =
       delete;
 
-  util::Status Open() override;
-  util::Status Close(bool in_error) override;
-  util::Status Register(Interrupt interrupt, Handler handler) override;
+  Status Open() override;
+  Status Close(bool in_error) override;
+  Status Register(Interrupt interrupt, Handler handler) override;
 
  private:
   // Backing wire interrupt handler.

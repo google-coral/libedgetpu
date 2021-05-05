@@ -56,20 +56,18 @@ class EdgeTpuContextFactory {
   static const char* GetDescriptionForPerformanceExpectationOptions();
 
   // Creates an EdgeTpu context holder on success.
-  static util::StatusOr<std::unique_ptr<edgetpu::EdgeTpuContext>>
+  static StatusOr<std::unique_ptr<edgetpu::EdgeTpuContext>>
   CreateEdgeTpuContext(const std::string& device_type,
                        const std::string& device_path,
                        int performance_expectation);
 
   // Creates an EdgeTpu context holder on success, intended to be shared.
-  static util::StatusOr<std::shared_ptr<edgetpu::EdgeTpuContext>>
-  OpenEdgeTpuContext(const std::string& device_type,
-                     const std::string& device_path,
-                     int performance_expectation);
+  static StatusOr<std::shared_ptr<edgetpu::EdgeTpuContext>> OpenEdgeTpuContext(
+      const std::string& device_type, const std::string& device_path,
+      int performance_expectation);
 
   // Enumerates Edge TPU devices of the specified type.
-  static util::StatusOr<
-      std::vector<edgetpu::EdgeTpuManager::DeviceEnumerationRecord>>
+  static StatusOr<std::vector<edgetpu::EdgeTpuManager::DeviceEnumerationRecord>>
   EnumerateEdgeTpu(const std::string& device_type);
 };
 

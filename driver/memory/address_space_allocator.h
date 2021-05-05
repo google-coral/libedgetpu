@@ -30,10 +30,10 @@ class AddressSpaceAllocator {
 
   // Allocates |size_bytes| bytes of address space and returns the base address
   // of the allocation.
-  virtual util::StatusOr<uint64> Allocate(uint64 size_bytes) = 0;
+  virtual StatusOr<uint64> Allocate(uint64 size_bytes) = 0;
 
   // Frees the allocation with base address |address| and of size |size_bytes|.
-  virtual util::Status Free(uint64 address, uint64 size_bytes) = 0;
+  virtual Status Free(uint64 address, uint64 size_bytes) = 0;
 };
 
 }  // namespace driver

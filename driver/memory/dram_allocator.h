@@ -36,12 +36,12 @@ class DramAllocator {
   // Open and close the allocator. Buffer allocation can happen even when the
   // allocator is closed but thos buffers should not be used when allocator is
   // closed.
-  virtual util::Status Open() = 0;
-  virtual util::Status Close() = 0;
+  virtual Status Open() = 0;
+  virtual Status Close() = 0;
 
   // Allocates and returns a DRAM buffer of requested size. It returns an error
   // if there is not enough space.
-  virtual util::StatusOr<std::shared_ptr<DramBuffer>> AllocateBuffer(
+  virtual StatusOr<std::shared_ptr<DramBuffer>> AllocateBuffer(
       size_t size_bytes) = 0;
 };
 

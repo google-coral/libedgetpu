@@ -25,7 +25,6 @@
 #  For compiling as part of Android system however, DARWINN_PORT_ANDROID
 #  must be defined as part of the Android build system.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
 load("//:build_defs.bzl", "darwinn_port_defines")
 
 package(default_visibility = ["//visibility:public"])
@@ -34,7 +33,7 @@ package(default_visibility = ["//visibility:public"])
 # - certain files in port/default/ that are under Apache 2.0 license.
 licenses(["notice"])
 
-libedgetpu_cc_library(
+cc_library(
     name = "port",
     hdrs = [
         "aligned_malloc.h",
@@ -63,16 +62,6 @@ libedgetpu_cc_library(
         "//:darwinn_portable": [
             "//port/default:port",
         ],
-        "//conditions:default": [
-            "//base",
-            "//base:port",
-            "//util/gtl:ptr_util",
-            "//util/math:mathutil",
-            "//util/task:status",
-            "@com_google_absl//absl/time",
-            "@com_google_absl//absl/types:span",
-            "@com_google_absl//absl/status:statusor",
-        ],
     }) + [
         "@com_google_absl//absl/flags:parse",
         "@com_google_absl//absl/flags:flag",
@@ -81,7 +70,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "aligned_malloc",
     hdrs = [
         "aligned_malloc.h",
@@ -92,14 +81,10 @@ libedgetpu_cc_library(
         "//:darwinn_portable": [
             "//port/default:port",
         ],
-        "//conditions:default": [
-            "//base",
-            "//base:port",
-        ],
     }),
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "math_util",
     hdrs = [
         "defs.h",
@@ -110,13 +95,10 @@ libedgetpu_cc_library(
         "//:darwinn_portable": [
             "//port/default:port",
         ],
-        "//conditions:default": [
-            "//util/math:mathutil",
-        ],
     }),
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "unreachable",
     hdrs = [
         "unreachable.h",
@@ -127,7 +109,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "macros",
     hdrs = [
         "defs.h",
@@ -138,16 +120,10 @@ libedgetpu_cc_library(
         "//:darwinn_portable": [
             "//port/default:port",
         ],
-        "//:darwinn_firmware": [
-            "//port/default:port",
-        ],
-        "//conditions:default": [
-            "//base",
-        ],
     }),
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "logging",
     hdrs = [
         "defs.h",
@@ -158,17 +134,11 @@ libedgetpu_cc_library(
         "//:darwinn_portable": [
             "//port/default:port",
         ],
-        "//:darwinn_firmware": [
-            "//port/firmware:logging",
-        ],
-        "//conditions:default": [
-            "//base",
-        ],
     }),
 )
 
 # This library is used for Darwinn 1.0 runtime only (Android/Google3).
-libedgetpu_cc_library(
+cc_library(
     name = "thread_annotations",
     hdrs = [
         "defs.h",
@@ -180,7 +150,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "integral_types",
     hdrs = [
         "defs.h",
@@ -191,16 +161,10 @@ libedgetpu_cc_library(
         "//:darwinn_portable": [
             "//port/default:port",
         ],
-        "//:darwinn_firmware": [
-            "//port/default:port",
-        ],
-        "//conditions:default": [
-            "//base",
-        ],
     }),
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "std_mutex_lock",
     hdrs = ["std_mutex_lock.h"],
     deps = [
@@ -209,7 +173,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "shared_mutex",
     srcs = [
         "shared_mutex.cc",
@@ -221,7 +185,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "mutex",
     hdrs = [
         "defs.h",
@@ -233,35 +197,11 @@ libedgetpu_cc_library(
             "//port/default:port",
             "//port:thread_annotations",
         ],
-        "//:darwinn_firmware": [
-            "//third_party/safertos_addons",
-        ],
-        "//conditions:default": [
-            "@com_google_absl//absl/synchronization",
-        ],
     }),
     alwayslink = 1,
 )
 
-libedgetpu_cc_library(
-    name = "dma330",
-    hdrs = [
-        "defs.h",
-        "dma330.h",
-    ],
-    defines = darwinn_port_defines(),
-    deps = select({
-        "//:darwinn_firmware": [
-            "//firmware/driver/dma:dma330",
-        ],
-        "//conditions:default": [
-            "//port/default:dma330",
-        ],
-    }),
-    alwayslink = 1,
-)
-
-libedgetpu_cc_library(
+cc_library(
     name = "semaphore",
     hdrs = [
         "defs.h",
@@ -269,9 +209,6 @@ libedgetpu_cc_library(
     ],
     defines = darwinn_port_defines(),
     deps = select({
-        "//:darwinn_firmware": [
-            "//third_party/safertos_addons",
-        ],
         "//conditions:default": [
             "//port/default:semaphore",
         ],
@@ -279,7 +216,7 @@ libedgetpu_cc_library(
     alwayslink = 1,
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "condition_variable",
     hdrs = [
         "condition_variable.h",
@@ -287,9 +224,6 @@ libedgetpu_cc_library(
     ],
     defines = darwinn_port_defines(),
     deps = select({
-        "//:darwinn_firmware": [
-            "//firmware/common:condition_variable",
-        ],
         "//conditions:default": [
             "@com_google_absl//absl/synchronization",
             "@com_google_absl//absl/time",
@@ -298,41 +232,19 @@ libedgetpu_cc_library(
     alwayslink = 1,
 )
 
-libedgetpu_cc_library(
-    name = "restartable_thread",
-    hdrs = ["restartable_thread.h"],
-    defines = darwinn_port_defines(),
-    deps = select({
-        "//:darwinn_firmware": ["//port/firmware:restartable_thread"],
-        "//conditions:default": ["//port/default:restartable_thread"],
-    }),
-    alwayslink = 1,
-)
-
-libedgetpu_cc_library(
+cc_library(
     name = "blocking_queue",
     hdrs = ["blocking_queue.h"],
     defines = darwinn_port_defines(),
     deps = select({
-        "//:darwinn_firmware": ["//port/firmware:blocking_queue"],
-        "//conditions:default": ["//port/default:blocking_queue"],
+        "//conditions:default": [
+            "//port/default:blocking_queue",
+        ],
     }),
     alwayslink = 1,
 )
 
-libedgetpu_cc_library(
-    name = "lock_guard",
-    srcs = ["lock_guard.cc"],
-    hdrs = ["lock_guard.h"],
-    defines = darwinn_port_defines(),
-    deps = [
-        "//port:mutex",
-        "//port:thread_annotations_firmware",
-    ],
-    alwayslink = 1,
-)
-
-libedgetpu_cc_library(
+cc_library(
     name = "blocking_counter",
     srcs = ["blocking_counter.cc"],
     hdrs = ["blocking_counter.h"],
@@ -385,13 +297,21 @@ config_setting(
     },
 )
 
-libedgetpu_cc_library(
+# If --define etm_tracing=1, sets up ETM registers for tracing
+config_setting(
+    name = "etm_tracing",
+    values = {
+        "define": "etm_tracing=1",
+    },
+)
+
+cc_library(
     name = "tracing",
     hdrs = ["tracing.h"],
     defines = darwinn_port_defines(),
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "string_util",
     hdrs = ["string_util.h"],
     deps = [
@@ -399,24 +319,22 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "timer",
     srcs = select({
         "//:windows": ["timer_windows.cc"],
-        "//:darwin": ["timer_darwin.cc"],
-        "//conditions:default": ["timer_linux.cc"],
+        "//conditions:default": ["timer_portable.cc"],
     }),
     hdrs = ["timer.h"] + select({
         "//:windows": ["timer_windows.h"],
-        "//:darwin": ["timer_darwin.h"],
-        "//conditions:default": ["timer_linux.h"],
+        "//conditions:default": ["timer_portable.h"],
     }),
     deps = [
         ":port",
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "posix_time",
     srcs = ["posix_time.cc"],
     hdrs = ["posix_time.h"],
@@ -425,7 +343,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "fileio",
     srcs = select({
         "//:windows": ["fileio_windows.cc"],
@@ -440,52 +358,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
-    name = "cpu",
-    hdrs = ["cpu.h"],
-    defines = darwinn_port_defines(),
-    deps = select({
-        "//:darwinn_firmware": ["//port/firmware:cpu"],
-        "//conditions:default": ["//port/default:cpu"],
-    }),
-)
-
-libedgetpu_cc_library(
-    name = "demangle",
-    hdrs = [
-        "defs.h",
-        "demangle.h",
-    ],
-    defines = darwinn_port_defines(),
-    deps = select({
-        "//conditions:default": [
-            "//base",
-        ],
-        "//:darwinn_portable": [
-        ],
-        "//:darwinn_firmware": [
-        ],
-    }),
-)
-
-libedgetpu_cc_library(
-    name = "bsp",
-    hdrs = [
-        "bsp.h",
-        "defs.h",
-    ],
-    defines = darwinn_port_defines(),
-    deps = select({
-        "//:darwinn_firmware": [
-            "//firmware:bsp",
-        ],
-        "//conditions:default": [
-        ],
-    }),
-    alwayslink = 1,
-)
-
-libedgetpu_cc_library(
+cc_library(
     name = "status_macros",
     hdrs = [
         "defs.h",
@@ -500,22 +373,4 @@ libedgetpu_cc_library(
             "//util/task:status",
         ],
     }),
-)
-
-libedgetpu_cc_library(
-    name = "dma_manager",
-    hdrs = [
-        "defs.h",
-        "dma_manager.h",
-    ],
-    defines = darwinn_port_defines(),
-    deps = select({
-        "//:darwinn_firmware": [
-            "//firmware/driver/dma:dma_manager",
-        ],
-        "//conditions:default": [
-            "//port/default:dma_manager",
-        ],
-    }),
-    alwayslink = 1,
 )

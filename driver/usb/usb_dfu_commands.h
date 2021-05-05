@@ -201,8 +201,7 @@ class UsbDfuCommands : public UsbStandardCommands {
   ~UsbDfuCommands() override;
 
   // Gets DFU functional descriptor from device.
-  util::StatusOr<
-      std::pair<std::list<InterfaceDescriptor>, DfuFunctionalDescriptor>>
+  StatusOr<std::pair<std::list<InterfaceDescriptor>, DfuFunctionalDescriptor>>
   FindDfuInterfaces(const std::vector<uint8_t>& raw_configuration_descriptor);
 
   // Sets the target interface number for DFU interface-specific commands,
@@ -212,36 +211,33 @@ class UsbDfuCommands : public UsbStandardCommands {
   void SetDfuInterface(int interface_number) LOCKS_EXCLUDED(mutex_);
 
   // Detaches from application mode.
-  util::Status DfuDetach(uint16_t timeout_msec);
+  Status DfuDetach(uint16_t timeout_msec);
 
   // Retrieves DFU status from device.
-  util::StatusOr<DfuStatus> DfuGetStatus() LOCKS_EXCLUDED(mutex_);
+  StatusOr<DfuStatus> DfuGetStatus() LOCKS_EXCLUDED(mutex_);
 
   // Clears error status in DFU mode.
-  util::Status DfuClearStatus() LOCKS_EXCLUDED(mutex_);
+  Status DfuClearStatus() LOCKS_EXCLUDED(mutex_);
 
   // Aborts current DFU operation.
-  util::Status DfuAbort() LOCKS_EXCLUDED(mutex_);
+  Status DfuAbort() LOCKS_EXCLUDED(mutex_);
 
   // Retrieves DFU state from device without affecting the virtual state.
-  util::StatusOr<State> DfuGetState() LOCKS_EXCLUDED(mutex_);
+  StatusOr<State> DfuGetState() LOCKS_EXCLUDED(mutex_);
 
   // Downloads a block of firmware from host to device.
-  util::Status DfuDownloadBlock(uint16_t block_number, ConstBuffer block_buffer)
+  Status DfuDownloadBlock(uint16_t block_number, ConstBuffer block_buffer)
       LOCKS_EXCLUDED(mutex_);
 
   // Uploads a block of firmware frmo device to host.
-  util::Status DfuUploadBlock(uint16_t block_number, MutableBuffer block_buffer,
-                              size_t* num_bytes_transferred)
-      LOCKS_EXCLUDED(mutex_);
+  Status DfuUploadBlock(uint16_t block_number, MutableBuffer block_buffer,
+                        size_t* num_bytes_transferred) LOCKS_EXCLUDED(mutex_);
 
-  util::Status UpdateFirmware(const DfuFunctionalDescriptor& descriptor,
-                              ConstBuffer firmware_image)
-      LOCKS_EXCLUDED(mutex_);
+  Status UpdateFirmware(const DfuFunctionalDescriptor& descriptor,
+                        ConstBuffer firmware_image) LOCKS_EXCLUDED(mutex_);
 
-  util::Status ValidateFirmware(const DfuFunctionalDescriptor& descriptor,
-                                ConstBuffer firmware_image)
-      LOCKS_EXCLUDED(mutex_);
+  Status ValidateFirmware(const DfuFunctionalDescriptor& descriptor,
+                          ConstBuffer firmware_image) LOCKS_EXCLUDED(mutex_);
 
  private:
   // Serializes access to this interface and hence shared data.

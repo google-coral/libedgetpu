@@ -22,7 +22,6 @@ limitations under the License.
 
 namespace platforms {
 namespace darwinn {
-namespace util {
 
 Status::Status(error::Code code, const std::string& msg) {
   assert(code != error::OK);
@@ -136,6 +135,5 @@ std::string* CheckOpHelperOutOfLine(const Status& v, const char* msg) {
   return new std::string(r);
 }
 
-}  // namespace util
 }  // namespace darwinn
 }  // namespace platforms

@@ -43,13 +43,13 @@ class PackageReference {
   PackageReference& operator=(const PackageReference&) = delete;
 
   // Verifies the digital signature of the backing executable package.
-  virtual util::Status VerifySignature() const = 0;
+  virtual Status VerifySignature() const = 0;
 
   // Returns the index of input layer with given name.
-  virtual util::StatusOr<int> InputIndex(const std::string& name) const = 0;
+  virtual StatusOr<int> InputIndex(const std::string& name) const = 0;
 
   // Returns the index of output layer with given name.
-  virtual util::StatusOr<int> OutputIndex(const std::string& name) const = 0;
+  virtual StatusOr<int> OutputIndex(const std::string& name) const = 0;
 
   // Returns number of input layers.
   virtual int NumInputLayers() const = 0;
@@ -72,11 +72,11 @@ class PackageReference {
   virtual const OutputLayerInformation* OutputLayer(int index) const = 0;
 
   // Returns information on given input layer.
-  virtual util::StatusOr<const api::InputLayerInformation*> InputLayer(
+  virtual StatusOr<const api::InputLayerInformation*> InputLayer(
       const std::string& layer_name) const = 0;
 
   // Returns information on given output layer.
-  virtual util::StatusOr<const api::OutputLayerInformation*> OutputLayer(
+  virtual StatusOr<const api::OutputLayerInformation*> OutputLayer(
       const std::string& layer_name) const = 0;
 
   // Returns the expected byte size of activations for given input layer index.
@@ -100,20 +100,18 @@ class PackageReference {
 
   // Returns the expected size of activations for given input layer.
   // Prefer index based APIs for performance.
-  virtual util::StatusOr<int> InputLayerSizeBytes(
-      const std::string& name) const = 0;
+  virtual StatusOr<int> InputLayerSizeBytes(const std::string& name) const = 0;
 
   // Returns the expected size of activations for given input layer including
   // padding bytes.
   // Prefer index based APIs for performance.
   // TODO Remove this method.
-  virtual util::StatusOr<int> InputLayerPaddedSizeBytes(
+  virtual StatusOr<int> InputLayerPaddedSizeBytes(
       const std::string& name) const = 0;
 
   // Returns the expected size of activations for given output layer.
   // Prefer index based APIs for performance.
-  virtual util::StatusOr<int> OutputLayerSizeBytes(
-      const std::string& name) const = 0;
+  virtual StatusOr<int> OutputLayerSizeBytes(const std::string& name) const = 0;
 
   // Returns name for given input layer index.
   virtual std::string InputLayerName(int index) const = 0;
@@ -137,7 +135,7 @@ class PackageReference {
   // needs to run in order to complete an inference will be counted towards this
   // target. If a batch request is submitted, the total time to complete the
   // batch is counted (not a single batch element).
-  virtual util::Status SetLatencyTolerance(int64 max_latency_ms) = 0;
+  virtual Status SetLatencyTolerance(int64 max_latency_ms) = 0;
 
   // Returns a unique user-specified string identifies the model. It returns
   // empty string if no identifier is set. This is available for limited cases

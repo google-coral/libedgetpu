@@ -54,29 +54,29 @@ class AddressSpace {
 
   // Maps the buffer to the device buffer. Returns the mapped device
   // buffer on success.
-  util::StatusOr<DeviceBuffer> MapMemory(const Buffer& buffer) {
+  StatusOr<DeviceBuffer> MapMemory(const Buffer& buffer) {
     return MapMemory(buffer, DmaDirection::kBidirectional,
                      MappingTypeHint::kAny);
   }
 
   // Same as above but with a hint indicating the buffer transfer direction and
   // a hint indicating whether to use simple or extended mappings.
-  virtual util::StatusOr<DeviceBuffer> MapMemory(
-      const Buffer& buffer, DmaDirection direction,
-      MappingTypeHint mapping_type) = 0;
+  virtual StatusOr<DeviceBuffer> MapMemory(const Buffer& buffer,
+                                           DmaDirection direction,
+                                           MappingTypeHint mapping_type) = 0;
 
   // Same as above but for coherent memory, which may be mapped differently.
-  virtual util::StatusOr<DeviceBuffer> MapCoherentMemory(
+  virtual StatusOr<DeviceBuffer> MapCoherentMemory(
       const Buffer& buffer, DmaDirection direction,
       MappingTypeHint mapping_type) {
     return MapMemory(buffer, direction, mapping_type);
   }
 
   // Unmaps the given device buffer.
-  virtual util::Status UnmapMemory(DeviceBuffer buffer) = 0;
+  virtual Status UnmapMemory(DeviceBuffer buffer) = 0;
 
   // Same as above but for coherent memory, which may be handled differently.
-  virtual util::Status UnmapCoherentMemory(DeviceBuffer buffer) {
+  virtual Status UnmapCoherentMemory(DeviceBuffer buffer) {
     return UnmapMemory(buffer);
   }
 };

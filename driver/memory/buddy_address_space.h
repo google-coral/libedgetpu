@@ -50,13 +50,12 @@ class BuddyAddressSpace final : public MmioAddressSpace {
 
   // Maps the given host buffer to the device buffer. Returns the mapped device
   // buffer on success.
-  util::StatusOr<DeviceBuffer> MapMemory(const Buffer& buffer,
-                                         DmaDirection direction,
-                                         MappingTypeHint mapping_type) override
+  StatusOr<DeviceBuffer> MapMemory(const Buffer& buffer, DmaDirection direction,
+                                   MappingTypeHint mapping_type) override
       LOCKS_EXCLUDED(mutex_);
 
   // Unmaps the given device buffer.
-  util::Status UnmapMemory(DeviceBuffer buffer) override LOCKS_EXCLUDED(mutex_);
+  Status UnmapMemory(DeviceBuffer buffer) override LOCKS_EXCLUDED(mutex_);
 
  private:
   mutable std::mutex mutex_;

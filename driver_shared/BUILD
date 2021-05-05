@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
-
 # Darwinn ddriver libraries shared across runtime generations.
 package(
     default_visibility = ["//visibility:public"],
@@ -22,7 +20,7 @@ package(
 # Google Owned Code
 licenses(["unencumbered"])
 
-libedgetpu_cc_library(
+cc_library(
     name = "registers",
     hdrs = ["registers.h"],
     deps = ["//port"],

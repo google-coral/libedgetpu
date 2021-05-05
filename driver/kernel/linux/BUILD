@@ -15,13 +15,11 @@
 # Description:
 # Kernel driver specific functionality.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
-
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_event_linux",
     srcs = ["kernel_event_linux.cc"],
     hdrs = ["kernel_event_linux.h"],
@@ -35,7 +33,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_event_handler_linux",
     srcs = ["kernel_event_handler_linux.cc"],
     hdrs = ["kernel_event_handler_linux.h"],
@@ -52,7 +50,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_coherent_allocator_linux",
     srcs = ["kernel_coherent_allocator_linux.cc"],
     hdrs = ["kernel_coherent_allocator_linux.h"],
@@ -66,7 +64,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "kernel_registers_linux",
     srcs = ["kernel_registers_linux.cc"],
     hdrs = ["kernel_registers_linux.h"],

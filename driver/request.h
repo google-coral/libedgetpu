@@ -51,21 +51,21 @@ class Request : public api::Request {
   Request& operator=(const Request&) = delete;
 
   // Adds an input buffer. Please refer to the API documentation for more info.
-  util::Status AddInput(const std::string& name, const Buffer& input) override
+  Status AddInput(const std::string& name, const Buffer& input) override
       LOCKS_EXCLUDED(mutex_);
 
   // Adds an output buffer. Please refer to the API documentation for more info.
-  util::Status AddOutput(const std::string& name, Buffer output) override
+  Status AddOutput(const std::string& name, Buffer output) override
       LOCKS_EXCLUDED(mutex_);
 
-  util::Status SetPriority(int priority) override LOCKS_EXCLUDED(mutex_);
+  Status SetPriority(int priority) override LOCKS_EXCLUDED(mutex_);
 
   // Returns the unique ID of this request.
   int id() const override { return id_; }
 
   // Returns the timing information of this request. Please refer to the API
   // documentation for more info.
-  util::StatusOr<Timing> GetTiming() const override LOCKS_EXCLUDED(mutex_);
+  StatusOr<Timing> GetTiming() const override LOCKS_EXCLUDED(mutex_);
 
   // Returns a reference to the executable this request belongs to.
   const ExecutableReference& MainExecutableReference() const {
@@ -78,22 +78,22 @@ class Request : public api::Request {
 
   // Sets the done callback function. This function is called the request has
   // finished execution.
-  util::Status SetDone(Done done) LOCKS_EXCLUDED(mutex_);
+  Status SetDone(Done done) LOCKS_EXCLUDED(mutex_);
 
   // Prepares the request to be broken down to TPU requests. This should be
   // called after we are through adding input/outputs, and have called the
   // SetDone() function.
-  util::Status Prepare() LOCKS_EXCLUDED(mutex_);
+  Status Prepare() LOCKS_EXCLUDED(mutex_);
 
   // Returns the number of TPU requests that are needed to be prepared and
   // submitted for this request to be fully carried out.
-  util::StatusOr<int> RemainingTpuRequestCount() const LOCKS_EXCLUDED(mutex_);
+  StatusOr<int> RemainingTpuRequestCount() const LOCKS_EXCLUDED(mutex_);
 
   // Sets the input/output buffers and callback of the provided TPU request
   // based on the input/output buffers in this request. Can only be called after
   // Prepare(). It needs to be called as many times as RequiredTpuRequestCount()
   // to ensure that TPU requests for all batch elements are created.
-  util::Status PrepareTpuRequest(std::shared_ptr<TpuRequest> tpu_request)
+  Status PrepareTpuRequest(std::shared_ptr<TpuRequest> tpu_request)
       LOCKS_EXCLUDED(mutex_);
 
   // Notifies the request that a part (or all) of it has been submitted to the
@@ -114,8 +114,7 @@ class Request : public api::Request {
   // Marks num_requests_done pending TpuRequests of this request as done with
   // the provided status. It executes the done callback if all TPU requests are
   // done at this point.
-  util::Status HandleTpuRequestsDone(const util::Status& status,
-                                     int num_requests_done)
+  Status HandleTpuRequestsDone(const Status& status, int num_requests_done)
       LOCKS_EXCLUDED(mutex_);
 
  private:
@@ -128,24 +127,22 @@ class Request : public api::Request {
   };
 
   // Sets the state of the request. Returns an error for an illegal transition.
-  util::Status SetState(State next_state) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status SetState(State next_state) EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Verifies that the current state is equal to the provided state.
-  util::Status ValidateState(State state) const
-      EXCLUSIVE_LOCKS_REQUIRED(mutex_);
+  Status ValidateState(State state) const EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Prepares a single TPU request for a request that has no input/outputs.
-  util::Status PrepareNoIORequest(std::shared_ptr<TpuRequest> tpu_request)
+  Status PrepareNoIORequest(std::shared_ptr<TpuRequest> tpu_request)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Sets the input/output buffers and callback of the provided TPU request
   // based on the input/output buffers in this request.
-  util::Status PrepareIORequest(std::shared_ptr<TpuRequest> tpu_request)
+  Status PrepareIORequest(std::shared_ptr<TpuRequest> tpu_request)
       EXCLUSIVE_LOCKS_REQUIRED(mutex_);
 
   // Gets called on every TPU request callback.
-  void TpuRequestDone(int id, const util::Status& status)
-      LOCKS_EXCLUDED(mutex_);
+  void TpuRequestDone(int id, const Status& status) LOCKS_EXCLUDED(mutex_);
 
   // The unique ID of this request.
   const int id_;
@@ -188,7 +185,7 @@ class Request : public api::Request {
   int pending_tpu_requests_ GUARDED_BY(mutex_) = 0;
 
   // Stores the request done status. Each tpu_request done status updates this.
-  util::Status done_status_ GUARDED_BY(mutex_);
+  Status done_status_ GUARDED_BY(mutex_);
 
   // Gets the current time in nanoseconds.
   const driver_shared::TimeStamper& current_time_;

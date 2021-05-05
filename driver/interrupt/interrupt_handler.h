@@ -53,12 +53,12 @@ class InterruptHandler {
   virtual ~InterruptHandler() = default;
 
   // Open / Close the interrupt handler.
-  virtual util::Status Open() = 0;
-  virtual util::Status Close(bool in_error) = 0;
-  util::Status Close() { return Close(/*in_error=*/false); }
+  virtual Status Open() = 0;
+  virtual Status Close(bool in_error) = 0;
+  Status Close() { return Close(/*in_error=*/false); }
 
   // Registers interrupt.
-  virtual util::Status Register(Interrupt interrupt, Handler handler) = 0;
+  virtual Status Register(Interrupt interrupt, Handler handler) = 0;
 };
 
 }  // namespace driver

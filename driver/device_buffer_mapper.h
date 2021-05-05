@@ -46,13 +46,13 @@ class DeviceBufferMapper {
 
   // Unmaps all per-request buffers. It is safe to call this method for cleanup
   // even if DeviceBuffers are partially mapped.
-  util::Status UnmapAll();
+  Status UnmapAll();
 
   // Maps given buffers to DeviceBuffers.
-  util::Status MapInputs(const Buffer::NamedMap& buffers);
-  util::Status MapOutputs(const Buffer::NamedMap& buffers);
-  util::Status MapScratch(const Buffer& buffer);
-  util::Status MapInstructions(const std::vector<Buffer>& buffers);
+  Status MapInputs(const Buffer::NamedMap& buffers);
+  Status MapOutputs(const Buffer::NamedMap& buffers);
+  Status MapScratch(const Buffer& buffer);
+  Status MapInstructions(const std::vector<Buffer>& buffers);
 
   // Returns mapped DeviceBuffers.
   const DeviceBuffer::NamedMap& GetInputDeviceBuffers() const {
@@ -83,12 +83,11 @@ class DeviceBufferMapper {
  private:
   // Convenience function that wraps AddressSpace#Map() handling invalid
   // buffers.
-  util::StatusOr<DeviceBuffer> Map(const Buffer& buffer,
-                                   DmaDirection direction);
+  StatusOr<DeviceBuffer> Map(const Buffer& buffer, DmaDirection direction);
 
   // Convenience function that wraps AddressSpace#UnmapMemory() handling invalid
   // buffers.
-  util::Status Unmap(DeviceBuffer buffer);
+  Status Unmap(DeviceBuffer buffer);
 
   // Helper function to map multiple buffers, merging adjacent buffers.
   // - Fills user_buffers with a map of device buffers that directly correspond
@@ -97,14 +96,13 @@ class DeviceBufferMapper {
   // are suitable for use in the instruction linking process.
   // - Fills mapped_buffers with the merged list of device buffers that actually
   // got mapped. These are the device buffers that need to be unmapped later.
-  util::Status MapMultiple(const Buffer::NamedMap& buffers,
-                           DmaDirection direction,
-                           /*out*/ DeviceBuffer::NamedMap& user_buffers,
-                           /*out*/ std::vector<DeviceBuffer>& mapped_buffers);
+  Status MapMultiple(const Buffer::NamedMap& buffers, DmaDirection direction,
+                     /*out*/ DeviceBuffer::NamedMap& user_buffers,
+                     /*out*/ std::vector<DeviceBuffer>& mapped_buffers);
 
   // Helper function to unmap multiple buffers. All passed in buffers will be
   // invalidated by this call.
-  util::Status UnmapMultiple(std::vector<DeviceBuffer>& device_buffers);
+  Status UnmapMultiple(std::vector<DeviceBuffer>& device_buffers);
 
   // Address space used for mapping.
   AddressSpace* const address_space_;
@@ -134,9 +132,8 @@ class DeviceBufferMapper {
 class MappedDeviceBuffer {
  public:
   MappedDeviceBuffer() = default;
-  MappedDeviceBuffer(
-      const DeviceBuffer& device_buffer,
-      const std::function<util::Status(const DeviceBuffer&)>& unmapper)
+  MappedDeviceBuffer(const DeviceBuffer& device_buffer,
+                     const std::function<Status(const DeviceBuffer&)>& unmapper)
       : device_buffer_(device_buffer),
         unmap_(std::bind(unmapper, device_buffer)) {}
 
@@ -157,15 +154,15 @@ class MappedDeviceBuffer {
   const DeviceBuffer& device_buffer() const { return device_buffer_; }
 
   // Unmaps the associated DeviceBuffer using the given unmapper.
-  util::Status Unmap() {
+  Status Unmap() {
     if (unmap_) RETURN_IF_ERROR(unmap_());
     unmap_ = nullptr;
-    return util::Status();  // OK.
+    return Status();  // OK.
   }
 
  private:
   DeviceBuffer device_buffer_;
-  std::function<util::Status()> unmap_;
+  std::function<Status()> unmap_;
 };
 
 }  // namespace driver

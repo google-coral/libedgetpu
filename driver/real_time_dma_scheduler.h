@@ -56,34 +56,34 @@ class RealTimeDmaScheduler : public DmaScheduler {
   ~RealTimeDmaScheduler() override = default;
 
   // Implements DmaScheduler interfaces.
-  util::Status Open() override;
-  util::Status Close(api::Driver::ClosingMode mode) override;
+  Status Open() override;
+  Status Close(api::Driver::ClosingMode mode) override;
 
   // Submits a request. Forwards everything to the backing DMA scheduler (Single
   // queue DMA) in normal mode; accepts the request if real-time constraint can
   // be met, i.e. not impacting other service guarantees, otherwise rejects the
   // request in real-time mode. For details, please refer to
   // go/darwinn-qos-design.
-  util::Status Submit(std::shared_ptr<TpuRequest> request) override
+  Status Submit(std::shared_ptr<TpuRequest> request) override
       LOCKS_EXCLUDED(mutex_);
 
   // DmaScheduler interface. Simply forward them to the backing scheduler.
-  util::Status NotifyRequestCompletion() override;
-  util::Status CancelPendingRequests() override {
+  Status NotifyRequestCompletion() override;
+  Status CancelPendingRequests() override {
     return backing_scheduler_->CancelPendingRequests();
   }
-  util::Status WaitActiveRequests() override {
+  Status WaitActiveRequests() override {
     return backing_scheduler_->WaitActiveRequests();
   }
   // Implements lower level DMA routines. They should be directly forwarded to
   // the backing driver.
-  util::StatusOr<DmaDescriptorType> PeekNextDma() const override {
+  StatusOr<DmaDescriptorType> PeekNextDma() const override {
     return backing_scheduler_->PeekNextDma();
   }
-  util::StatusOr<DmaInfo *> GetNextDma() override {
+  StatusOr<DmaInfo *> GetNextDma() override {
     return backing_scheduler_->GetNextDma();
   }
-  util::Status NotifyDmaCompletion(DmaInfo *dma_info) override {
+  Status NotifyDmaCompletion(DmaInfo *dma_info) override {
     return backing_scheduler_->NotifyDmaCompletion(dma_info);
   }
   bool IsEmpty() const override {
@@ -92,7 +92,7 @@ class RealTimeDmaScheduler : public DmaScheduler {
   int64 MaxRemainingCycles() const override {
     return backing_scheduler_->MaxRemainingCycles();
   }
-  util::StatusOr<std::shared_ptr<TpuRequest>> GetOldestActiveRequest()
+  StatusOr<std::shared_ptr<TpuRequest>> GetOldestActiveRequest()
       const override {
     return backing_scheduler_->GetOldestActiveRequest();
   }
@@ -110,35 +110,33 @@ class RealTimeDmaScheduler : public DmaScheduler {
   // milliseconds) for an executable reference.
   // -1 in any of the fields of api::Timing means keeping that individual value
   // unchanged but updating the rest.
-  util::Status SetExecutableTiming(const ExecutableReference *executable,
-                                   const api::Timing &timing)
-      LOCKS_EXCLUDED(mutex_);
+  Status SetExecutableTiming(const ExecutableReference *executable,
+                             const api::Timing &timing) LOCKS_EXCLUDED(mutex_);
 
   // Removes timing information for a registered model.
-  util::Status RemoveExecutableTiming(const ExecutableReference *executable)
+  Status RemoveExecutableTiming(const ExecutableReference *executable)
       LOCKS_EXCLUDED(mutex_);
 
   // Returns the arrival rate and FPS of a given executable reference.
-  util::StatusOr<api::Timing> GetExecutableTiming(
+  StatusOr<api::Timing> GetExecutableTiming(
       const ExecutableReference *executable) const LOCKS_EXCLUDED(mutex_);
 
   // Returns the arrival time of last request for a given executable reference.
   int64 GetLastArrivalTime(const ExecutableReference *executable) const
       LOCKS_EXCLUDED(mutex_);
 
-  util::StatusOr<int> GetExecutableFPS(
-      const ExecutableReference *executable) const {
+  StatusOr<int> GetExecutableFPS(const ExecutableReference *executable) const {
     ASSIGN_OR_RETURN(const auto timing, GetExecutableTiming(executable));
     return timing.fps;
   }
 
-  util::StatusOr<int> GetExecutableMaxExecutionTimeMs(
+  StatusOr<int> GetExecutableMaxExecutionTimeMs(
       const ExecutableReference *executable) const {
     ASSIGN_OR_RETURN(const auto timing, GetExecutableTiming(executable));
     return timing.max_execution_time_ms;
   }
 
-  util::StatusOr<int> GetExecutableToleranceMs(
+  StatusOr<int> GetExecutableToleranceMs(
       const ExecutableReference *executable) const {
     ASSIGN_OR_RETURN(const auto timing, GetExecutableTiming(executable));
     return timing.tolerance_ms;
@@ -158,10 +156,9 @@ class RealTimeDmaScheduler : public DmaScheduler {
     int64 tolerance_us() const { return tolerance_ms * 1000; }
 
     // Returns per frame time in microseconds, or error when FPS == 0.
-    util::StatusOr<int64> frame_time_us() const {
+    StatusOr<int64> frame_time_us() const {
       if (fps == 0) {
-        return util::InvalidArgumentError(
-            "Can't calculate frame time of 0 FPS");
+        return InvalidArgumentError("Can't calculate frame time of 0 FPS");
       }
       return 1e6 / fps;
     }

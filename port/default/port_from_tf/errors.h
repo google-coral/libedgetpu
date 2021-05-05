@@ -24,7 +24,6 @@ limitations under the License.
 
 namespace platforms {
 namespace darwinn {
-namespace util {
 
 typedef error::Code Code;
 
@@ -43,13 +42,13 @@ void AppendToMessage(Status* status, Args... args) {
 //   if (error::IsInvalidArgument(status)) { ... }
 //   switch (status.code()) { case error::INVALID_ARGUMENT: ... }
 
-#define DECLARE_ERROR(FUNC, CONST)                                            \
-  template <typename... Args>                                                 \
-  Status FUNC##Error(Args... args) {                                          \
-    return Status(::platforms::darwinn::util::error::CONST, StrCat(args...)); \
-  }                                                                           \
-  inline bool Is##FUNC(const Status& status) {                                \
-    return status.code() == ::platforms::darwinn::util::error::CONST;         \
+#define DECLARE_ERROR(FUNC, CONST)                                      \
+  template <typename... Args>                                           \
+  Status FUNC##Error(Args... args) {                                    \
+    return Status(::platforms::darwinn::error::CONST, StrCat(args...)); \
+  }                                                                     \
+  inline bool Is##FUNC(const Status& status) {                          \
+    return status.code() == ::platforms::darwinn::error::CONST;         \
   }
 
 DECLARE_ERROR(Cancelled, CANCELLED)
@@ -72,7 +71,44 @@ DECLARE_ERROR(Unauthenticated, UNAUTHENTICATED)
 #undef DECLARE_ERROR
 
 // The CanonicalCode() for non-errors.
-using ::platforms::darwinn::util::error::OK;
+using ::platforms::darwinn::error::OK;
+
+// TODO: Remove the following once DarwiNN clients removed util.
+namespace util {
+
+// Allows portable clients to use platforms::darwinn::*Errors.
+using ::platforms::darwinn::AbortedError;
+using ::platforms::darwinn::AlreadyExistsError;
+using ::platforms::darwinn::CancelledError;
+using ::platforms::darwinn::DataLossError;
+using ::platforms::darwinn::DeadlineExceededError;
+using ::platforms::darwinn::FailedPreconditionError;
+using ::platforms::darwinn::InternalError;
+using ::platforms::darwinn::InvalidArgumentError;
+using ::platforms::darwinn::IsAborted;
+using ::platforms::darwinn::IsAlreadyExists;
+using ::platforms::darwinn::IsCancelled;
+using ::platforms::darwinn::IsDataLoss;
+using ::platforms::darwinn::IsDeadlineExceeded;
+using ::platforms::darwinn::IsFailedPrecondition;
+using ::platforms::darwinn::IsInternal;
+using ::platforms::darwinn::IsInvalidArgument;
+using ::platforms::darwinn::IsNotFound;
+using ::platforms::darwinn::IsOutOfRange;
+using ::platforms::darwinn::IsPermissionDenied;
+using ::platforms::darwinn::IsResourceExhausted;
+using ::platforms::darwinn::IsUnauthenticated;
+using ::platforms::darwinn::IsUnavailable;
+using ::platforms::darwinn::IsUnimplemented;
+using ::platforms::darwinn::IsUnknown;
+using ::platforms::darwinn::NotFoundError;
+using ::platforms::darwinn::OutOfRangeError;
+using ::platforms::darwinn::PermissionDeniedError;
+using ::platforms::darwinn::ResourceExhaustedError;
+using ::platforms::darwinn::UnauthenticatedError;
+using ::platforms::darwinn::UnavailableError;
+using ::platforms::darwinn::UnimplementedError;
+using ::platforms::darwinn::UnknownError;
 
 }  // namespace util
 }  // namespace darwinn

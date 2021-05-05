@@ -15,13 +15,11 @@
 # Description:
 # USB driver specific functionality.
 
-load("//:libedgetpu_cc_rules.bzl", "libedgetpu_cc_library")
-
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-libedgetpu_cc_library(
+cc_library(
     name = "usb_device_interface",
     hdrs = ["usb_device_interface.h"],
     deps = ["//port"],
@@ -32,7 +30,7 @@ LIBUSB_OPTIONS_SRC = select({
     "//conditions:default": ["libusb_options_default.cc"],
 })
 
-libedgetpu_cc_library(
+cc_library(
     name = "libusb_options",
     srcs = LIBUSB_OPTIONS_SRC,
     hdrs = ["libusb_options.h"],
@@ -42,7 +40,7 @@ libedgetpu_cc_library(
     }),
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "libusb_options_no_external_release",
     srcs = LIBUSB_OPTIONS_SRC,
     hdrs = ["libusb_options.h"],
@@ -53,7 +51,7 @@ libedgetpu_cc_library(
 )
 
 # libUSB is dynamically linked in this version.
-libedgetpu_cc_library(
+cc_library(
     name = "local_usb_device",
     srcs = ["local_usb_device.cc"],
     hdrs = ["local_usb_device.h"],
@@ -71,7 +69,7 @@ libedgetpu_cc_library(
 )
 
 # libUSB is statically linked in this version.
-libedgetpu_cc_library(
+cc_library(
     name = "local_usb_device_no_external_release",
     srcs = ["local_usb_device.cc"],
     hdrs = ["local_usb_device.h"],
@@ -86,7 +84,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "usb_standard_commands",
     srcs = ["usb_standard_commands.cc"],
     hdrs = ["usb_standard_commands.h"],
@@ -97,7 +95,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "usb_dfu_commands",
     srcs = ["usb_dfu_commands.cc"],
     hdrs = ["usb_dfu_commands.h"],
@@ -134,7 +132,7 @@ genrule(
     """,
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "usb_ml_commands",
     srcs = ["usb_ml_commands.cc"],
     hdrs = ["usb_ml_commands.h"],
@@ -146,7 +144,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "usb_registers",
     srcs = ["usb_registers.cc"],
     hdrs = ["usb_registers.h"],
@@ -157,7 +155,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "usb_dfu_util",
     srcs = ["usb_dfu_util.cc"],
     hdrs = ["usb_dfu_util.h"],
@@ -169,7 +167,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "usb_io_request",
     srcs = ["usb_io_request.cc"],
     hdrs = ["usb_io_request.h"],
@@ -182,7 +180,7 @@ libedgetpu_cc_library(
     ],
 )
 
-libedgetpu_cc_library(
+cc_library(
     name = "usb_driver",
     srcs = [
         "usb_driver.cc",

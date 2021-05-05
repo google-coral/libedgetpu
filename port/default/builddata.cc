@@ -16,7 +16,7 @@ extern "C" const char kDarwinnRuntimeBuildEmbedLabel[];
 const char kDarwinnRuntimeBuildEmbedLabel[] = BUILD_EMBED_LABEL;
 
 extern "C" const char kDarwinnRuntimeBaseChangeList[];
-const char kDarwinnRuntimeBaseChangeList[] = "CL_NUMBER=339933739";
+const char kDarwinnRuntimeBaseChangeList[] = "CL_NUMBER=372182141";
 
 namespace {
 // Build a type whose constructor will contain references to all the build data

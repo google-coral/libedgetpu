@@ -59,7 +59,7 @@ class Driver {
 
   // Callback for fatal, unrecoverable failure. Set with
   // SetFatalErrorCallback().
-  using FatalErrorCallback = std::function<void(const util::Status&)>;
+  using FatalErrorCallback = std::function<void(const Status&)>;
 
   // Driver options. Opaque pointer to an options::Options FB object.
   using Options = std::vector<uint8_t>;
@@ -124,61 +124,60 @@ class Driver {
   // Registers a file containing pre-compiled DarwiNN executable and returns a
   // reference to the registered executable. The reference can be used for
   // constructing requests later on.
-  virtual util::StatusOr<const PackageReference*> RegisterExecutableFile(
+  virtual StatusOr<const PackageReference*> RegisterExecutableFile(
       const std::string& executable_filename) = 0;
 
   // Registers a string with serialized contents of a pre-compiled DarwiNN
   // executable and returns a reference to the registered executable. The
   // reference can be used for constructing requests later on.
-  virtual util::StatusOr<const PackageReference*> RegisterExecutableSerialized(
+  virtual StatusOr<const PackageReference*> RegisterExecutableSerialized(
       const std::string& executable_content) = 0;
-  virtual util::StatusOr<const PackageReference*> RegisterExecutableSerialized(
+  virtual StatusOr<const PackageReference*> RegisterExecutableSerialized(
       const char* executable_content, size_t length) = 0;
 
   // Unregisters a previously registered model.
-  virtual util::Status UnregisterExecutable(
+  virtual Status UnregisterExecutable(
       const PackageReference* executable_ref) = 0;
 
   // Opens and initializes the underlying hardware. If debug_mode is true,
   // the hardware is setup for use with a debugger. If context_lost is true
   // driver assumes all data on chip (e.g. on DRAM) a from previous open has
   // been lost.
-  virtual util::Status Open(bool debug_mode = false,
-                            bool context_lost = false) = 0;
+  virtual Status Open(bool debug_mode = false, bool context_lost = false) = 0;
 
   // Creates a request object initialized with the given ExecutableReference.
-  virtual util::StatusOr<std::shared_ptr<Request>> CreateRequest(
+  virtual StatusOr<std::shared_ptr<Request>> CreateRequest(
       const PackageReference* executable_ref) = 0;
 
   // Submits a request for asynchronous execution. On success, done_callback
   // will eventually be executed with the request status. The caller is expected
   // to exit the done_callback as soon as possible. It is acceptable to only
   // call #Submit() in the context of this callback.
-  virtual util::Status Submit(std::shared_ptr<Request> request,
-                              Request::Done done_callback) = 0;
+  virtual Status Submit(std::shared_ptr<Request> request,
+                        Request::Done done_callback) = 0;
 
   // Executes a request synchronously. Calling thread will block until execution
   // is complete.
-  virtual util::Status Execute(std::shared_ptr<Request> request) = 0;
+  virtual Status Execute(std::shared_ptr<Request> request) = 0;
 
   // Executes a series of requests synchronously in the given order. Calling
   // thread will block until execution is complete.
-  virtual util::Status Execute(
+  virtual Status Execute(
       const std::vector<std::shared_ptr<Request>>& request) = 0;
 
   // Attempts to cancel a request. This is best effort cancellation. As in,
   // requests already submitted to the hardware will be allowed to complete.
   // Other requests will be cancelled, and will invoke done_callback with
   // cancelled error.
-  virtual util::Status Cancel(std::shared_ptr<Request> request) = 0;
+  virtual Status Cancel(std::shared_ptr<Request> request) = 0;
 
   // Best effort cancellation of all submitted requests.
-  virtual util::Status CancelAllRequests() = 0;
+  virtual Status CancelAllRequests() = 0;
 
   // Closes and shutdowns underlying hardware possibly, switching it off.
   // Pending requests are cancelled or completed and callbacks issued. Once
   // closed, requests can no longer be submitted.
-  virtual util::Status Close(ClosingMode mode) = 0;
+  virtual Status Close(ClosingMode mode) = 0;
 
   // Buffer allocation alignment and granularity.
   // Buffers allocated with this alignment may avoid additional copies within
@@ -204,19 +203,19 @@ class Driver {
   // Enters/leaves real-time mode, if applicable. This is best effort as it
   // relies on user provided timing information, and the fact that current
   // generations of DarwiNN is not preemptable.
-  virtual util::Status SetRealtimeMode(bool on) = 0;
+  virtual Status SetRealtimeMode(bool on) = 0;
 
   // Sets expected arrival rates and max execution time (in milliseconds) for an
   // package. Only used in real-time mode.
-  virtual util::Status SetExecutableTiming(
-      const api::PackageReference* executable, const api::Timing& timing) = 0;
+  virtual Status SetExecutableTiming(const api::PackageReference* executable,
+                                     const api::Timing& timing) = 0;
 
   // Sets the provided execution preference for the provided package. Execution
   // preferences are hints to the driver for how to adjust its settings in
   // accordance with power/perf trade-off. Driver will try to keep all requested
   // preferences satisfied erring on the side of performance.
-  virtual util::Status SetExecutionPreference(
-      const api::PackageReference* package, ExecutionPreference preference) = 0;
+  virtual Status SetExecutionPreference(const api::PackageReference* package,
+                                        ExecutionPreference preference) = 0;
 
   // Sets the perferred telemeter interface. This interface is platform
   // specific. By default, telemetry operations are NOPs. The

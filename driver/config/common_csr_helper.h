@@ -476,7 +476,7 @@ class TileConfig : public TileConfigInterface {
   void set_broadcast() override {
     reg_.tile_ = static_cast<uint64>(-1) & reg_.tile_.mask();
   }
-  void set_tile(uint64 value) { reg_.tile_ = value; }
+  void set_tile(uint64 value) override { reg_.tile_ = value; }
   uint64 tile() const override { return reg_.tile_(); }
 
  private:

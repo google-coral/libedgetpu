@@ -33,8 +33,8 @@ class FakeDramBuffer : public DramBuffer {
   int fd() const override { return 1; }
   size_t size_bytes() const override { return size_bytes_; }
 
-  util::Status ReadFrom(void* source) override;
-  util::Status WriteTo(void* destination) override;
+  Status ReadFrom(void* source) override;
+  Status WriteTo(void* destination) override;
 
  private:
   // Size of the buffer.
@@ -55,10 +55,10 @@ class FakeDramAllocator : public DramAllocator {
   FakeDramAllocator(const FakeDramAllocator&) = delete;
   FakeDramAllocator& operator=(const FakeDramAllocator&) = delete;
 
-  util::Status Open() override { return util::OkStatus(); }
-  util::Status Close() override { return util::OkStatus(); }
+  Status Open() override { return OkStatus(); }
+  Status Close() override { return OkStatus(); }
 
-  util::StatusOr<std::shared_ptr<DramBuffer>> AllocateBuffer(
+  StatusOr<std::shared_ptr<DramBuffer>> AllocateBuffer(
       size_t size_bytes) override;
 };
 

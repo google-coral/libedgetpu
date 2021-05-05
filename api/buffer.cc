@@ -137,9 +137,9 @@ int Buffer::fd() const {
   return file_descriptor_;
 }
 
-util::StatusOr<std::shared_ptr<DramBuffer>> Buffer::GetDramBuffer() {
+StatusOr<std::shared_ptr<DramBuffer>> Buffer::GetDramBuffer() {
   if (type_ != Type::kDram) {
-    return util::FailedPreconditionError(
+    return FailedPreconditionError(
         StringPrintf("Called GetDramBuffer on a buffer of type %d.", type_));
   }
   return dram_buffer_;

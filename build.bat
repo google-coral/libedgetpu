@@ -53,8 +53,8 @@ set BAZEL_BUILD_FLAGS= ^
 --experimental_repo_remote_exec ^
 --compilation_mode %COMPILATION_MODE% ^
 --define darwinn_portable=1 ^
---copt=/D_HAS_DEPRECATED_RESULT_OF ^
---copt=/std:c++latest
+--copt=/DWIN32_LEAN_AND_MEAN ^
+--copt=/std:c++14
 
 bazel build %BAZEL_BUILD_FLAGS% %LEFTOVER_ARGS% %TARGET%
 md %OUT_DIR%\direct\%CPU%

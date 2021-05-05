@@ -122,7 +122,7 @@ class Buffer {
 
   // Returns the underlying DRAM Buffer if this buffer is wrapping one managed
   // by the runtime.
-  util::StatusOr<std::shared_ptr<DramBuffer>> GetDramBuffer();
+  StatusOr<std::shared_ptr<DramBuffer>> GetDramBuffer();
 
   // Returns a string representation of the buffer for logging/debugging.
   std::string ToString() const;

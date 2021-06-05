@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 
@@ -224,7 +225,8 @@ Status DeviceBufferMapper::MapMultiple(
           name_and_buffer.first.c_str(), buffer.ToString().c_str(),
           static_cast<unsigned long long>(  // NOLINT(runtime/int)
               device_buffer.device_address()),
-          device_buffer.size_bytes(), direction);
+          device_buffer.size_bytes(),
+          static_cast<std::underlying_type<DmaDirection>::type>(direction));
 
       user_buffers[name_and_buffer.first].push_back(std::move(device_buffer));
     }

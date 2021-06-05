@@ -16,6 +16,7 @@
 #define DARWINN_DRIVER_MEMORY_FAKE_MMU_MAPPER_H_
 
 #include <map>
+#include <mutex>
 
 #include "driver/memory/dma_direction.h"
 #include "driver/memory/mmu_mapper.h"

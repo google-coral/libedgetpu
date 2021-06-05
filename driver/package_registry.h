@@ -794,7 +794,11 @@ namespace std {
   struct hash<::platforms::darwinn::ExecutableType> {
     typedef ::platforms::darwinn::ExecutableType argument_type;
     typedef std::underlying_type<argument_type>::type underlying_type;
+#if __cplusplus < 201703L
     typedef std::hash<underlying_type>::result_type result_type;
+#else
+    typedef std::size_t result_type;
+#endif
     result_type operator()(const argument_type& arg) const {
         std::hash<underlying_type> hasher;
         return hasher(static_cast<underlying_type>(arg));

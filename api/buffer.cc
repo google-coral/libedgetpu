@@ -14,7 +14,8 @@
 
 #include "api/buffer.h"
 
-#include <stddef.h>
+#include <cstddef>
+#include <type_traits>
 
 #include "api/allocated_buffer.h"
 #include "port/errors.h"
@@ -140,7 +141,9 @@ int Buffer::fd() const {
 StatusOr<std::shared_ptr<DramBuffer>> Buffer::GetDramBuffer() {
   if (type_ != Type::kDram) {
     return FailedPreconditionError(
-        StringPrintf("Called GetDramBuffer on a buffer of type %d.", type_));
+        StringPrintf(
+          "Called GetDramBuffer on a buffer of type %d.",
+          static_cast<std::underlying_type<Type>::type>(type_)));
   }
   return dram_buffer_;
 }

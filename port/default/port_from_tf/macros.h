@@ -30,6 +30,9 @@ limitations under the License.
 #define ATTRIBUTE_COLD __attribute__((cold))
 #define ATTRIBUTE_WEAK __attribute__((weak))
 #define ATTRIBUTE_PACKED __attribute__((packed))
+#ifdef ABSL_MUST_USE_RESULT
+#undef ABSL_MUST_USE_RESULT
+#endif
 #define ABSL_MUST_USE_RESULT __attribute__((warn_unused_result))
 #define PRINTF_ATTRIBUTE(string_index, first_to_check) \
   __attribute__((__format__(__printf__, string_index, first_to_check)))
@@ -62,6 +65,9 @@ limitations under the License.
 #define ATTRIBUTE_COLD __attribute__((cold))
 #define ATTRIBUTE_WEAK __attribute__((weak))
 #define ATTRIBUTE_PACKED __attribute__((packed))
+#ifdef ABSL_MUST_USE_RESULT
+#undef ABSL_MUST_USE_RESULT
+#endif
 #define ABSL_MUST_USE_RESULT __attribute__((warn_unused_result))
 #define PRINTF_ATTRIBUTE(string_index, first_to_check) \
   __attribute__((__format__(__printf__, string_index, first_to_check)))

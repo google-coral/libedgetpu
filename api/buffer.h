@@ -15,7 +15,7 @@
 #ifndef DARWINN_API_BUFFER_H_
 #define DARWINN_API_BUFFER_H_
 
-#include <stddef.h>
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <unordered_map>

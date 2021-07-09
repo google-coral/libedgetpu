@@ -1,0 +1,19 @@
+option(
+  'darwinn',
+  type : 'combo',
+  choices : ['portable', 'firmware'],
+  value : 'portable',
+  description : 'Whether to build portably, or with Google libraries, or firmware',
+)
+option(
+  'pci',
+  type : 'feature',
+  value : 'enabled',
+  description : 'Build support for on board Coral chips',
+)
+option(
+  'usb',
+  type : 'feature',
+  value : 'enabled',
+  description : 'Build spport for USB Coral chips',
+)

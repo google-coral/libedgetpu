@@ -118,17 +118,7 @@ genrule(
         "usb_latest_firmware.h",
     ],
     cmd = """
-        echo "namespace {" > $(location usb_latest_firmware.h)
-        for FILE in $(SRCS); do
-          FILENAME=$${FILE##*/}
-          FILEBASE=$${FILENAME%.*}
-          echo "const unsigned char ""$$FILEBASE"" [] = {" >> $(location usb_latest_firmware.h)
-          xxd -i < "$$FILE" >> $(location usb_latest_firmware.h)
-          echo "};" >> $(location usb_latest_firmware.h)
-          echo "constexpr unsigned int ""$$FILEBASE""_len = sizeof(""$$FILEBASE"")/sizeof(unsigned char);" >> $(location usb_latest_firmware.h)
-          echo "" >> $(location usb_latest_firmware.h)
-        done
-        echo "} // namespace" >> $(location usb_latest_firmware.h)
+        $(location gen_usb_latest_firmware.sh) $(location usb_latest_firmware.h) $(SRCS)
     """,
 )
 

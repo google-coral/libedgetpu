@@ -33,7 +33,6 @@
 #include "api/timing.h"
 #include "driver/executable_util.h"
 #include "driver/package_registry.h"
-#include "driver/test_vector.h"
 #include "executable/executable_generated.h"
 #include "port/errors.h"
 #include "port/logging.h"
@@ -111,10 +110,6 @@ class DriverHelper : public api::Driver {
   }
 
   // Extensions to the Device interface to facilitate easier testing.
-
-  // Submits an inference request with given test vector.
-  Status Submit(const TestVector& test_vector, int batches)
-      LOCKS_EXCLUDED(mutex_);
 
   // Submits an inference request and execute the specified callback on
   // completion. |tag| is a user friendly name for tracking this request

@@ -484,7 +484,6 @@ Status UsbDfuCommands::ValidateFirmware(
   VLOG(7) << StringPrintf("%s Validating firmware", __func__);
 
   uint16_t block_number = 0;
-  bool short_packet_received = false;
   std::vector<uint8_t> upload_image;
   upload_image.reserve(firmware_image.size());
   std::vector<uint8_t> chunk_buffer(descriptor.transfer_size);
@@ -505,7 +504,6 @@ Status UsbDfuCommands::ValidateFirmware(
 
     if (chunk_bytes_transferred < transfer_size) {
       // A short packet! Upload is done.
-      short_packet_received = true;
       break;
     }
     // block number could wrap around.

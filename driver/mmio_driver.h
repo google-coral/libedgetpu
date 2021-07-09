@@ -116,7 +116,7 @@ class MmioDriver : public Driver {
     return dma_scheduler_.SetExecutableTiming(executable, timing);
   }
 
-  Status DoRemoveExecutableTiming(const ExecutableReference* executable) {
+  Status DoRemoveExecutableTiming(const ExecutableReference* executable) override {
     return dma_scheduler_.RemoveExecutableTiming(executable);
   }
 

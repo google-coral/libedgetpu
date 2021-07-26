@@ -17,10 +17,20 @@ package(default_visibility = ["//visibility:public"])
 licenses(["notice"])
 
 cc_library(
+    name = "custom_op_wrapped_buffer",
+    hdrs = ["custom_op_wrapped_buffer.h"],
+    deps = [
+        "//api:chip",
+    ],
+)
+
+cc_library(
     name = "custom_op_data",
     srcs = ["custom_op_data.cc"],
     hdrs = ["custom_op_data.h"],
     deps = [
+        ":custom_op_wrapped_buffer",
+        "@com_google_absl//absl/strings:str_format",
         "//api:chip",
         "//port",
         "@flatbuffers",
@@ -161,6 +171,7 @@ cc_library(
     srcs = ["tensor_data_controller.cc"],
     hdrs = ["tensor_data_controller.h"],
     deps = [
+        "@com_google_absl//absl/strings:str_format",
         "//port",
         "@flatbuffers",
         "@org_tensorflow//tensorflow/lite:framework",

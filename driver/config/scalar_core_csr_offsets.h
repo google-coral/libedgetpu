@@ -163,7 +163,12 @@ struct ScalarCoreCsrOffsets {
   uint64 didtRunningSumInterval;
   uint64 didtDifference;
   uint64 packageTdpAction;
+  uint64 ThrottleStallCounter_kMaskOneByFourAllOps;
+  uint64 ThrottleStallCounter_kMaskTwoByFourAllOps;
+  uint64 ThrottleStallCounter_kMaskThreeByFourAllOps;
   uint64 ThrottleStallCounter;
+
+  uint64 scalarCoreClockControl;
 
   // Scalar core cycle count. This could be used to synchronize timestamp
   // between host and the TPU

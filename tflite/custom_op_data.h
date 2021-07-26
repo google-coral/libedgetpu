@@ -19,6 +19,8 @@
 
 #include "flatbuffers/flexbuffers.h"
 #include "api/chip.h"
+#include "tflite/custom_op_wrapped_buffer.h"
+#include "flatbuffers/flatbuffers.h"
 
 namespace platforms {
 namespace darwinn {
@@ -27,30 +29,16 @@ namespace tflite {
 // Version 0.
 static const int32_t kCustomOpDataVersion = 0;
 
-struct WrappedBuffer {
-  const char* data;
-  size_t length;
-
-  // Optional field. Use to specify the target chip of the wrapped executable
-  // when there are multiple exectuables in `CustomOpData`.
-  api::Chip chip = api::Chip::kUnknown;
-};
-
 struct CustomOpData {
   int32_t version;
   // TODO Remove this field and update references in
   // custom_op_data.cc.
   // The field is only used by 1.0.
-  WrappedBuffer parameter_caching_executable;
+  CustomOpWrappedBuffer parameter_caching_executable;
 
-  std::vector<WrappedBuffer> executables;
+  std::vector<CustomOpWrappedBuffer> executables;
 
-  // Execution preference code (currently used by NNAPI only). For more
-  // information, please see PreferenceCode in:
-  // https://cs.corp.google.com/android/frameworks/ml/nn/runtime/include/NeuralNetworks.h
-  // -1 results in NNAPI's default value (FAST_SINGLE_ANSWER=1), it is used as
-  // default here in order to help identify older custom ops or ones that are
-  // created in a code path that does not set execution preference.
+  // Execution preference code (currently used by NNAPI only).
   int32_t execution_preference = -1;
 };
 

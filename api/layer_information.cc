@@ -432,52 +432,32 @@ int OutputLayerInformation::GetBufferIndex(
                           /*z=*/element_position[tensor_util::kZ]);
   }
 
-  const auto& device_shape = *layer()->shape();
+  const auto& host_shape = *layer()->shape();
+  const int host_shape_dim_size = host_shape.dimension()->size();
 
-  // The function is used in 1.0 pipeline to get index of an element in device
-  // shape, so the given position should have the same # of dimensions as device
-  // shape.
-  const int device_shape_dim_size = device_shape.dimension()->size();
-  CHECK_EQ(device_shape_dim_size, element_position.size());
+  // Host shape might have different dimension size with size of given position
+  // elements. If host shape has dimension size > position elements, add 0s to
+  // outermost dimensions of given position. If host shape has dimension size <
+  // position elements, check outermost dimensions of host equal to 1.
+  std::vector<int> legalized_position(host_shape_dim_size, 0);
+  auto dim_it = element_position.rbegin();
+  for (int dim_idx = host_shape_dim_size - 1; dim_idx >= 0; --dim_idx) {
+    if (dim_it == element_position.rend()) {
+      const auto& host_dim = host_shape.dimension()->Get(dim_idx);
+      DCHECK_EQ(host_dim->start(), host_dim->end());
+      continue;
+    }
+    legalized_position[dim_idx] = *dim_it;
+    dim_it++;
+  }
 
   const int data_type_size = DataTypeSize();
   const auto& slice_layouts = *shape_info->slice_layout();
 
-  const auto merged_shape = GetMergedOutputShape();
-
-  // Compute if each dimension of device_shape is valid or not. For example, a
-  // 4D shape of 4x1x1x10 might be optimized to a 2D shape of 4x10. So that the
-  // two dimensions in the middle (YX) are marked as invalid and Batch and Z
-  // dimensions are marked as valid.
-  std::vector<absl::optional<int>> valid_positions(device_shape_dim_size);
-  int marked_dimension_idx = device_shape_dim_size;
-  auto dim_it = merged_shape.dimension.rbegin();
-
-  for (int dim_idx = marked_dimension_idx - 1; dim_idx >= 0; --dim_idx) {
-    if (dim_it == merged_shape.dimension.rend()) {
-      continue;
-    }
-    const auto& d = device_shape.dimension()->Get(dim_idx);
-    if (dim_idx == 0) {
-      CHECK_EQ(dim_it->start(), d->start());
-      CHECK_EQ(dim_it->end(), d->end());
-      ++dim_it;
-      valid_positions[dim_idx] = element_position[dim_idx];
-      continue;
-    }
-    if (dim_it->end() == d->end() && dim_it->start() == d->start()) {
-      valid_positions[dim_idx] = element_position[dim_idx];
-      ++dim_it;
-    } else {
-      CHECK_EQ(d->end(), d->start());
-    }
-  }
-
   for (int i = 0; i < slice_layouts.size(); ++i) {
     const TensorLayout& slice_layout = *slice_layouts.Get(i);
     const TensorShape& slice_shape = *slice_layout.shape();
-    const auto legalized_position = tensor_util::LegalizePositionDimension(
-        valid_positions, slice_shape.dimension()->size());
+    DCHECK_EQ(host_shape_dim_size, slice_shape.dimension()->size());
 
     if (VLOG_IS_ON(10)) {
       std::string position_string;

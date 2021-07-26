@@ -245,7 +245,7 @@ table NumericsConstants {
   dequantization_factor:float;
 }
 
-//   //depot/google3/third_party/darwinn/api/runtime_version.h:runtime_version,
+//   //depot/google3/api/runtime_version.h:runtime_version,
 //   //depot/google3/platforms/darwinn/driver/test_data/backward_compatibility/BUILD:test_cases)
 
 // Layer data type information.
@@ -281,7 +281,7 @@ enum DataType : short {
   SIGNED_FIXED_POINT16 = 9,
 }
 
-//   //depot/google3/third_party/darwinn/api/runtime_version.h:runtime_version,
+//   //depot/google3/api/runtime_version.h:runtime_version,
 //   //depot/google3/platforms/darwinn/driver/test_data/backward_compatibility/BUILD:test_cases)
 
 // Output layer specific information.
@@ -474,5 +474,5 @@ table Package {
 
 root_type Package;
 
-//   //depot/google3/third_party/darwinn/api/runtime_version.h:runtime_version,
+//   //depot/google3/api/runtime_version.h:runtime_version,
 //   //depot/google3/platforms/darwinn/driver/test_data/backward_compatibility/BUILD:test_cases)

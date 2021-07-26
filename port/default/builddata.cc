@@ -12,11 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+extern "C" const char kDarwinnRuntimePerformance[];
+#if defined(THROTTLE_EDGE_TPU)
+const char kDarwinnRuntimePerformance[] = "PERFORMANCE=THROTTLED";
+#else
+const char kDarwinnRuntimePerformance[] = "PERFORMANCE=DIRECT";
+#endif
+
 extern "C" const char kDarwinnRuntimeBuildEmbedLabel[];
 const char kDarwinnRuntimeBuildEmbedLabel[] = BUILD_EMBED_LABEL;
 
 extern "C" const char kDarwinnRuntimeBaseChangeList[];
-const char kDarwinnRuntimeBaseChangeList[] = "CL_NUMBER=372182141";
+const char kDarwinnRuntimeBaseChangeList[] = "CL_NUMBER=385816442";
 
 namespace {
 // Build a type whose constructor will contain references to all the build data
@@ -27,6 +34,7 @@ struct KeepBuildDataVariables {
     if (!opaque_flag) return;
 
     const void* volatile capture;
+    capture = &kDarwinnRuntimePerformance;
     capture = &kDarwinnRuntimeBuildEmbedLabel;
     capture = &kDarwinnRuntimeBaseChangeList;
     static_cast<void>(capture);

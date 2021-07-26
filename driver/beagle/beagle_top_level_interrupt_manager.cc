@@ -30,8 +30,6 @@ namespace darwinn {
 namespace driver {
 namespace {
 
-// Top Level Interrupt ids:
-// https://g3doc.corp.google.com/platforms/darwinn/silo/g3doc/spec/index.md#interrupt-handling
 constexpr int kThermalShutdownId = 0;
 constexpr int kPcieErrorId = 1;
 constexpr int kMbistId = 2;

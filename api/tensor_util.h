@@ -70,15 +70,6 @@ bool IsElementInShape(const TensorShape& shape,
                       const std::vector<int>& position);
 bool IsElementInShape(const TensorShapeT& shape,
                       const std::vector<int>& position);
-
-// Returns legalized N-D position of given map of valid dimensions. If
-// "position" has value, the dimension is valid and it will be inserted in
-// legalized position, or the dimension should be discarded. If # valid
-// dimensions is less than required dimension size, 0 will be inserted as outer
-// position indexes.
-std::vector<int> LegalizePositionDimension(
-    const std::vector<absl::optional<int>>& positions, int dim_size);
-
 // Returns a row-major-packed layout for a tensor shape.
 std::unique_ptr<TensorLayoutT> BuildPackedLayout(const TensorShape& shape);
 std::unique_ptr<TensorLayoutT> BuildPackedLayout(const TensorShapeT& shape);

@@ -19,44 +19,45 @@
 
 // IWYU pragma: begin_exports
 #if DARWINN_PORT_USE_GOOGLE3
+#include "absl/status/status.h"
 #include "util/task/canonical_errors.h"
 
 namespace platforms {
 namespace darwinn {
 
 // Allows portable clients to use platforms::darwinn::*Errors.
-using ::util::AbortedError;
-using ::util::AlreadyExistsError;
-using ::util::CancelledError;
-using ::util::DataLossError;
-using ::util::DeadlineExceededError;
-using ::util::FailedPreconditionError;
-using ::util::InternalError;
-using ::util::InvalidArgumentError;
-using ::util::IsAborted;
-using ::util::IsAlreadyExists;
-using ::util::IsCancelled;
-using ::util::IsDataLoss;
-using ::util::IsDeadlineExceeded;
-using ::util::IsFailedPrecondition;
-using ::util::IsInternal;
-using ::util::IsInvalidArgument;
-using ::util::IsNotFound;
-using ::util::IsOutOfRange;
-using ::util::IsPermissionDenied;
-using ::util::IsResourceExhausted;
-using ::util::IsUnauthenticated;
-using ::util::IsUnavailable;
-using ::util::IsUnimplemented;
-using ::util::IsUnknown;
-using ::util::NotFoundError;
-using ::util::OutOfRangeError;
-using ::util::PermissionDeniedError;
-using ::util::ResourceExhaustedError;
-using ::util::UnauthenticatedError;
-using ::util::UnavailableError;
-using ::util::UnimplementedError;
-using ::util::UnknownError;
+using ::absl::AbortedError;
+using ::absl::AlreadyExistsError;
+using ::absl::CancelledError;
+using ::absl::DataLossError;
+using ::absl::DeadlineExceededError;
+using ::absl::FailedPreconditionError;
+using ::absl::InternalError;
+using ::absl::InvalidArgumentError;
+using ::absl::IsAborted;
+using ::absl::IsAlreadyExists;
+using ::absl::IsCancelled;
+using ::absl::IsDataLoss;
+using ::absl::IsDeadlineExceeded;
+using ::absl::IsFailedPrecondition;
+using ::absl::IsInternal;
+using ::absl::IsInvalidArgument;
+using ::absl::IsNotFound;
+using ::absl::IsOutOfRange;
+using ::absl::IsPermissionDenied;
+using ::absl::IsResourceExhausted;
+using ::absl::IsUnauthenticated;
+using ::absl::IsUnavailable;
+using ::absl::IsUnimplemented;
+using ::absl::IsUnknown;
+using ::absl::NotFoundError;
+using ::absl::OutOfRangeError;
+using ::absl::PermissionDeniedError;
+using ::absl::ResourceExhaustedError;
+using ::absl::UnauthenticatedError;
+using ::absl::UnavailableError;
+using ::absl::UnimplementedError;
+using ::absl::UnknownError;
 
 }  // namespace darwinn
 }  // namespace platforms

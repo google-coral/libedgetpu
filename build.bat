@@ -39,22 +39,18 @@ if defined ARG (
   goto PROCESSARGS
 )
 
-set BAZEL_INFO_FLAGS=^
---experimental_repo_remote_exec
-for /f %%i in ('bazel info %BAZEL_INFO_FLAGS% output_path') do set "BAZEL_OUTPUT_PATH=%%i"
+for /f %%i in ('bazel info output_path') do set "BAZEL_OUTPUT_PATH=%%i"
 set BAZEL_OUTPUT_PATH=%BAZEL_OUTPUT_PATH:/=\%
 set BAZEL_OUT_DIR=%BAZEL_OUTPUT_PATH%\%CPU%-%COMPILATION_MODE%\bin
 
 :: Supported EdgeTPU devices, one of: usb, pci or all.
 set EDGETPU_BUS=all
 
+for /f "tokens=1" %%i in ('bazel query "@libedgetpu_properties//..." ^| findstr /C:"tensorflow_commit" ^| cut -d# -f2') do set "TENSORFLOW_COMMIT=%%i"
 set TARGET=//tflite/public:edgetpu_direct_%EDGETPU_BUS%.dll
 set BAZEL_BUILD_FLAGS= ^
---experimental_repo_remote_exec ^
 --compilation_mode %COMPILATION_MODE% ^
---define darwinn_portable=1 ^
---copt=/DWIN32_LEAN_AND_MEAN ^
---copt=/std:c++14
+--embed_label='TENSORFLOW_COMMIT=%TENSORFLOW_COMMIT%' --stamp
 
 bazel build %BAZEL_BUILD_FLAGS% %LEFTOVER_ARGS% %TARGET%
 md %OUT_DIR%\direct\%CPU%

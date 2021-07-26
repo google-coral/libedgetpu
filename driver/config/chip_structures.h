@@ -101,6 +101,20 @@ struct ChipStructures {
   // Number of atomic clusters in the device. A default value of 1 is used for
   // legacy single-cluster projects.
   uint64 number_of_atomic_clusters;
+
+  // Default_cluster_id. A default value of 0 is used for single cluster
+  // projects.
+  uint64 default_cluster_id;
+
+  // Support interleaved tile memory. This value is 0 for Rio but 1 for previous
+  // projects
+  uint64 support_cacheline_interleaved_tile_memory;
+
+  // Number of Cells in a Tile.
+  uint64 num_cells;
+
+  // Tile Memory's base-and-bound unit size in bytes.
+  uint64 narrow_memory_partition_unit_size_bytes;
 };
 
 }  // namespace config

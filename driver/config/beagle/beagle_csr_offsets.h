@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // AUTO GENERATED FILE.
-// See http://go/darwinn-chip-structure for more info.
+
 
 #ifndef DARWINN_DRIVER_CONFIG_BEAGLE_BEAGLE_CSR_OFFSETS_H_
 #define DARWINN_DRIVER_CONFIG_BEAGLE_BEAGLE_CSR_OFFSETS_H_
@@ -1437,6 +1437,7 @@ const HibUserCsrOffsets kBeagleHibUserCsrOffsets = {
     0x48708,                         // NOLINT: hib_first_error_timestamp
     0x48710,                         // NOLINT: hib_inject_error
     0x487a8,                         // NOLINT: dma_burst_limiter
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, context_clock_gate_control
 };
 
 const QueueCsrOffsets kBeagleInstructionQueueCsrOffsets = {
@@ -1576,7 +1577,14 @@ const ScalarCoreCsrOffsets kBeagleScalarCoreCsrOffsets = {
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, didtRunningSumInterval
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, didtDifference
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, packageTdpAction
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // ThrottleStallCounter_kMaskOneByFourAllOps
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // ThrottleStallCounter_kMaskTwoByFourAllOps
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED,
+                                     // ThrottleStallCounter_kMaskThreeByFourAllOps
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, ThrottleStallCounter
+    kCsrRegisterSpaceInvalidOffset,  // UNUSED, scalarCoreClockControl
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, cycleCount
     0x44260,                         // NOLINT: Error_ScalarCore
     kCsrRegisterSpaceInvalidOffset,  // UNUSED, Error_ScalarCoreDatapath_0

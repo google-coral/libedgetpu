@@ -26,6 +26,9 @@ licenses(["notice"])
 cc_library(
     name = "chip",
     hdrs = ["chip.h"],
+    defines = select({
+        "//conditions:default": [],
+    }),
 )
 
 cc_library(

@@ -28,13 +28,16 @@ enum RuntimeVersion {
   // Increase this number everytime a change involving both compiler and runtime
   // happens. This number is used in binary compatibility checks for DarwiNN
   // packages.
-  kCurrent = 13,
+  kCurrent = 14,
   // This is the runtime version that has native batch support.
   kWithNativeBatchSupport = 11,
   // This is the runtime version that has support for int8 as host data type.
   kWithInt8HostDataTypeSupport = 12,
   // This is the runtime version that has support for 16-bit floating point.
   kWithFp16Support = 13,
+  // Coral release codename Grouper.
+  // Support for variable tensors and possibly other changes.
+  kCoralGrouperRelease = 14,
 };
 
 }  // namespace api

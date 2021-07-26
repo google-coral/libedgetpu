@@ -28,9 +28,22 @@ struct LpmCsrOffsets {
   uint64 psm_0_dmem_cfg;
   uint64 psm_0_dmem_start;
   uint64 psm_0_dmem_status;
+  uint64 psm_0_state_table_3_trans_3_enable_state;
+  uint64 psm_1_dmem_data_28;
+  uint64 psm_1_dmem_data_29;
+  uint64 psm_1_dmem_data_30;
   uint64 psm_1_dmem_cfg;
   uint64 psm_1_dmem_start;
   uint64 psm_1_dmem_status;
+  uint64 psm_1_state_table_3_trans_3_enable_state;
+  uint64 psm_2_dmem_cfg;
+  uint64 psm_2_dmem_start;
+  uint64 psm_2_dmem_status;
+  uint64 psm_2_state_table_3_trans_3_enable_state;
+  uint64 psm_3_dmem_cfg;
+  uint64 psm_3_dmem_start;
+  uint64 psm_3_dmem_status;
+  uint64 psm_3_state_table_3_trans_3_enable_state;
 };
 
 }  // namespace config

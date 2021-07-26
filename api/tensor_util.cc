@@ -117,22 +117,6 @@ int GetDimensionLength(const TensorShapeT& shape, int dimension) {
          shape.dimension.at(dimension).start() + 1;
 }
 
-std::vector<int> LegalizePositionDimension(
-    const std::vector<absl::optional<int>>& positions, int dim_size) {
-  std::vector<int> new_position;
-  for (auto position : positions) {
-    if (position.has_value()) {
-      new_position.push_back(position.value());
-    }
-  }
-
-  if (new_position.size() < dim_size) {
-    new_position.insert(new_position.begin(), dim_size - new_position.size(),
-                        0);
-  }
-  return new_position;
-}
-
 bool IsElementInShape(const TensorShape& shape,
                       const std::vector<int>& position) {
   CHECK_EQ(position.size(), shape.dimension()->size());

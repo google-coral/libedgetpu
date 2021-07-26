@@ -14,6 +14,11 @@
 
 #include "tflite/custom_op_data.h"
 
+#include <cstdint>
+#include <cstring>
+#include <vector>
+
+#include "absl/strings/str_format.h"
 #include "port/ptr_util.h"
 #include "port/status_macros.h"
 
@@ -57,7 +62,7 @@ std::unique_ptr<flexbuffers::Builder> SerializeCustomOpData(
 
   // Starting new fields in the map for config names
   builder->Vector(kVectorOfChipVersions, [&builder, &custom_op_data]() {
-    for (const WrappedBuffer& buffer : custom_op_data.executables) {
+    for (const CustomOpWrappedBuffer& buffer : custom_op_data.executables) {
       builder->Int(static_cast<int>(buffer.chip));
     }
   });
@@ -95,7 +100,7 @@ std::unique_ptr<CustomOpData> DeserializeCustomOpData(const uint8_t* buffer,
 
   if (flexbuffer_map[kVectorOfChipVersions].IsNull()) {
     // This file was serialized by some older version of this code.
-    WrappedBuffer wrapped_executable;
+    CustomOpWrappedBuffer wrapped_executable;
     wrapped_executable.data = executable.c_str();
     wrapped_executable.length = executable.length();
     wrapped_executable.chip = api::Chip::kUnknown;
@@ -132,7 +137,7 @@ std::unique_ptr<CustomOpData> DeserializeCustomOpData(const uint8_t* buffer,
     }
 
     custom_op_data->executables.reserve(chips.size());
-    WrappedBuffer wrapped_executable;
+    CustomOpWrappedBuffer wrapped_executable;
     wrapped_executable.data = executable.c_str();
     wrapped_executable.length = executable.length();
     wrapped_executable.chip = static_cast<api::Chip>(chips[0].AsInt32());
@@ -140,7 +145,7 @@ std::unique_ptr<CustomOpData> DeserializeCustomOpData(const uint8_t* buffer,
 
     for (int i = 1; i < chips.size(); ++i) {
       flexbuffers::String exe_bin = remaining_executables[i - 1].AsString();
-      WrappedBuffer remaining_wrapped_executable;
+      CustomOpWrappedBuffer remaining_wrapped_executable;
       remaining_wrapped_executable.data = exe_bin.c_str();
       remaining_wrapped_executable.length = exe_bin.length();
       remaining_wrapped_executable.chip =

@@ -58,6 +58,9 @@ struct HibUserCsrOffsets {
 
   // Limits AXI DMA burst.
   uint64 dma_burst_limiter;
+
+  // Control for per context clock gating
+  uint64 context_clock_gate_control;
 };
 
 }  // namespace config

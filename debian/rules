@@ -3,6 +3,7 @@
 
 # Uncomment this to turn on verbose mode.
 # export DH_VERBOSE=1
+LIBEDGETPU_BIN ?= out
 FILENAME := libedgetpu.so.1.0
 SONAME := libedgetpu.so.1
 LIB_DEV := debian/libedgetpu-dev/usr/lib/$(DEB_HOST_GNU_TYPE)
@@ -17,21 +18,21 @@ else ifeq ($(DEB_TARGET_ARCH),amd64)
   CPU := k8
 endif
 
-build:
-
 %:
 	dh $@
 
 override_dh_auto_install:
+	dh_auto_install
+
 	mkdir -p $(LIB_DEV)
 	ln -fs $(FILENAME) $(LIB_DEV)/libedgetpu.so
 
 	mkdir -p $(LIB_STD)
-	cp -f out/throttled/$(CPU)/$(FILENAME) $(LIB_STD)/$(FILENAME)
+	cp -f $(LIBEDGETPU_BIN)/throttled/$(CPU)/$(FILENAME) $(LIB_STD)/$(FILENAME)
 	ln -fs $(FILENAME) $(LIB_STD)/$(SONAME)
 
 	mkdir -p $(LIB_MAX)
-	cp -f out/direct/$(CPU)/$(FILENAME) $(LIB_MAX)/$(FILENAME)
+	cp -f $(LIBEDGETPU_BIN)/direct/$(CPU)/$(FILENAME) $(LIB_MAX)/$(FILENAME)
 	ln -fs $(FILENAME) $(LIB_MAX)/$(SONAME)
 
 # Skip auto build and auto clean.

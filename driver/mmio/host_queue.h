@@ -92,11 +92,6 @@ class HostQueue {
   // element, invoke registered callback.
   void ProcessStatusBlock() LOCKS_EXCLUDED(queue_mutex_);
 
-  // Process status block only if the host queue is open. This is only needed to
-  // work around an interrupt race condition in the Darwinn 1.0 stack.
-  // See: https://b.corp.google.com/issues/159997870#comment44
-  // TODO: Remove this work-around once the DV team has fully
-  // transitioned to the 2.0 stack for testing.
   void ProcessStatusBlockIfOpen() LOCKS_EXCLUDED(open_mutex_, queue_mutex_);
 
   // Return available space in the queue.

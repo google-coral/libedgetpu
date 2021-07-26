@@ -13,7 +13,7 @@
 // limitations under the License.
 
 // AUTO GENERATED FILE.
-// See http://go/darwinn-chip-structure for more info.
+
 
 #ifndef DARWINN_DRIVER_CONFIG_BEAGLE_BEAGLE_CHIP_STRUCTURES_H_
 #define DARWINN_DRIVER_CONFIG_BEAGLE_BEAGLE_CHIP_STRUCTURES_H_
@@ -51,6 +51,10 @@ const ChipStructures kBeagleChipStructures = {
     1ULL,        // NOLINT: number_of_scalar_core_contexts
     0ULL,        // NOLINT: support_tile_thread_gcsr_node
     1ULL,        // NOLINT: number_of_atomic_clusters
+    0ULL,        // NOLINT: default_cluster_id
+    1ULL,        // NOLINT: support_cacheline_interleaved_tile_memory
+    64ULL,       // NOLINT: num_cells
+    65536ULL,    // NOLINT: narrow_memory_partition_unit_size_bytes
 };
 
 }  // namespace config

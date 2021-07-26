@@ -17,8 +17,13 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-LIBEDGETPU_DIR="${SCRIPT_DIR}/../out"
-RULES_FILE="${SCRIPT_DIR}/../debian/edgetpu-accelerator.rules"
+if [[ -d "${SCRIPT_DIR}/libedgetpu" ]]; then
+  LIBEDGETPU_DIR="${SCRIPT_DIR}/libedgetpu"
+  RULES_FILE="${SCRIPT_DIR}/libedgetpu/edgetpu-accelerator.rules"
+else
+  LIBEDGETPU_DIR=${LIBEDGETPU_BIN:-"${SCRIPT_DIR}/../out"}
+  RULES_FILE="${SCRIPT_DIR}/../debian/edgetpu-accelerator.rules"
+fi
 
 function info {
   echo -e "\033[0;32m${1}\033[0m"  # green
@@ -42,7 +47,7 @@ function install_file {
     warn "File already exists. Replacing it..."
     rm -f "${dst}"
   fi
-  cp -a "${src}" "${dst}"
+  cp "${src}" "${dst}"
 }
 
 if [[ "${EUID}" != 0 ]]; then
@@ -63,10 +68,6 @@ if [[ "${OS}" == "Linux" ]]; then
     x86_64)
       HOST_GNU_TYPE=x86_64-linux-gnu
       CPU=k8
-      ;;
-    armv6l)
-      HOST_GNU_TYPE=arm-linux-gnueabihf
-      CPU=armv6
       ;;
     armv7l)
       HOST_GNU_TYPE=arm-linux-gnueabihf
@@ -145,9 +146,8 @@ if [[ "${CPU}" == "darwin" ]]; then
                "${LIBEDGETPU_DIR}/${FREQ_DIR}/darwin/libedgetpu.1.0.dylib" \
                "${LIBEDGETPU_LIB_DIR}"
 
-  install_file "Edge TPU runtime library symlink" \
-               "${LIBEDGETPU_DIR}/${FREQ_DIR}/darwin/libedgetpu.1.dylib" \
-               "${LIBEDGETPU_LIB_DIR}"
+  info "Generating symlink [${LIBEDGETPU_LIB_DIR}/libedgetpu.1.dylib]..."
+  ln -sf libedgetpu.1.0.dylib "${LIBEDGETPU_LIB_DIR}/libedgetpu.1.dylib"
 
   install_name_tool -id  "${LIBEDGETPU_LIB_DIR}/libedgetpu.1.dylib" \
                          "${LIBEDGETPU_LIB_DIR}/libedgetpu.1.0.dylib"
@@ -182,4 +182,3 @@ else
   ldconfig  # Generates libedgetpu.so.1 symlink
   info "Done."
 fi
-

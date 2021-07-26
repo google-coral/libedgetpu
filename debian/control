@@ -1,6 +1,5 @@
 Source: libedgetpu
 Maintainer: Coral <coral-support@google.com>
-Section: misc
 Priority: optional
 Build-Depends: debhelper (>= 9)
 Standards-Version: 3.9.6
@@ -8,7 +7,7 @@ Homepage: https://coral.ai/
 
 Package: libedgetpu1-std
 Provides: libedgetpu1 (= ${binary:Version})
-Conflicts: libedgetpu1
+Conflicts: libedgetpu1, libedgetpu1-legacy
 Section: misc
 Priority: optional
 Architecture: any
@@ -23,7 +22,7 @@ Description: Support library for Edge TPU
 
 Package: libedgetpu1-max
 Provides: libedgetpu1 (= ${binary:Version})
-Conflicts: libedgetpu1
+Conflicts: libedgetpu1, libedgetpu1-legacy
 Section: misc
 Priority: optional
 Architecture: any

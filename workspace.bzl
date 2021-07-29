@@ -91,12 +91,10 @@ def _port_libusb_path(ctx):
 def _libusb_impl(ctx):
     lower_name = ctx.os.name.lower()
     if lower_name.startswith("linux"):
-        path = "/usr/include"
+        path = None
         build_file_content = """
 cc_library(
   name = "headers",
-  includes = ["root"],
-  hdrs = ["root/libusb-1.0/libusb.h"],
   linkopts = ["-l:libusb-1.0.so"],
   visibility = ["//visibility:public"],
 )
@@ -136,7 +134,8 @@ cc_library(
     else:
         fail("Unsupported operating system.")
 
-    ctx.symlink(path, "root")
+    if path:
+        ctx.symlink(path, "root")
     ctx.file(
         "BUILD",
         content = build_file_content,

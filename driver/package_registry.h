@@ -788,4 +788,19 @@ class PackageRegistry {
 }  // namespace darwinn
 }  // namespace platforms
 
+#if !defined(__clang__) && defined(__GNUC__) && __GNUC__ < 6
+namespace std {
+  template<>
+  struct hash<::platforms::darwinn::ExecutableType> {
+    typedef ::platforms::darwinn::ExecutableType argument_type;
+    typedef std::underlying_type<argument_type>::type underlying_type;
+    typedef std::hash<underlying_type>::result_type result_type;
+    result_type operator()(const argument_type& arg) const {
+        std::hash<underlying_type> hasher;
+        return hasher(static_cast<underlying_type>(arg));
+    }
+  };
+}
+#endif
+
 #endif  // DARWINN_DRIVER_PACKAGE_REGISTRY_H_

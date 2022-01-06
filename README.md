@@ -9,7 +9,7 @@ This software is distributed in the binary form at [coral.ai/software](https://c
 There are three ways to build libedgetpu:
 
 * Docker + Bazel [Recommended]: Compatible with Linux, MacOS and Windows (via Dockerfile.windows and build.bat), this method ensures a known-good build enviroment and pulls all external depedencies needed.
-* Bazel: Supports Linux, macOS, and Windows (via build.bat). A proper enviroment setup is required before using this technique.
+* Bazel: Supports Linux, macOS, and Windows (via build.bat). A proper environment setup is required before using this technique.
 * Makefile: Supporting only Linux and Native builds, this strategy is pure Makefile and doesn't require Bazel or external dependencies to be pulled at runtime.
 
 ### Bazel + Docker

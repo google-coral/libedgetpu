@@ -17,19 +17,24 @@ MAKEFILE_DIR := $(realpath $(dir $(lastword $(MAKEFILE_LIST))))
 OUT_DIR ?= $(MAKEFILE_DIR)/out
 DIST_DIR ?= $(MAKEFILE_DIR)/dist
 OS := $(shell uname -s)
+ARCH := $(shell uname -p)
 
 ifeq ($(OS),Linux)
 CPU ?= k8
 sha256_check = echo "$(1)  $(2)" | sha256sum --check -
 else ifeq ($(OS),Darwin)
-CPU ?= darwin
+ifeq ($(ARCH),arm)
+CPU ?= darwin_arm64
+else
+CPU ?= darwin_x86_64
+endif
 sha256_check = echo "$(1) *$(2)" | shasum --algorithm 256 --check -
 else
 $(error $(OS) is not supported)
 endif
 
-ifeq ($(filter $(CPU),k8 armv7a aarch64 darwin),)
-$(error CPU must be k8, armv7a, aarch64, or darwin)
+ifeq ($(filter $(CPU),k8 armv7a aarch64 darwin_arm64 darwin_x86_64),)
+$(error CPU must be k8, armv7a, aarch64, darwin_arm64, or darwin_x86_64)
 endif
 
 COMPILATION_MODE ?= opt

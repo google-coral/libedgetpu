@@ -15,6 +15,7 @@
 #ifndef DARWINN_API_ALLOCATED_BUFFER_H_
 #define DARWINN_API_ALLOCATED_BUFFER_H_
 
+#include <cstddef>
 #include <functional>
 
 namespace platforms {

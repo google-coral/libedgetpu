@@ -83,13 +83,24 @@ if [[ "${OS}" == "Linux" ]]; then
       ;;
   esac
 elif [[ "${OS}" == "Darwin" ]]; then
-  CPU=darwin
+  case "${MACHINE}" in
+    x86_64)
+      CPU=darwin_x86_64
+      ;;
+    arm64)
+      CPU=darwin_arm64
+      ;;
+    *)
+      error "Your macOS platform is not supported."
+      exit 1
+      ;;
+  esac
 
   MACPORTS_PATH_AUTO="$(command -v port || true)"
   MACPORTS_PATH="${MACPORTS_PATH_AUTO:-/opt/local/bin/port}"
 
-  BREW_PATH_AUTO="$(command -v brew || true)"
-  BREW_PATH="${BREW_PATH_AUTO:-/usr/local/bin/brew}"
+  BREW_PATH_AUTO="$(sudo -i -u ${SUDO_USER} command -v brew || true)"
+  BREW_PATH="${BREW_PATH_AUTO:-/opt/homebrew/bin/brew}"
 
   if [[ -x "${MACPORTS_PATH}" ]]; then
     DARWIN_INSTALL_COMMAND="${MACPORTS_PATH}"
@@ -135,7 +146,7 @@ case "${USE_MAX_FREQ}" in
     ;;
 esac
 
-if [[ "${CPU}" == "darwin" ]]; then
+if [[ "${CPU}" == darwin* ]]; then
   sudo -u "${DARWIN_INSTALL_USER}" "${DARWIN_INSTALL_COMMAND}" install libusb
 
   DARWIN_INSTALL_LIB_DIR="$(dirname "$(dirname "${DARWIN_INSTALL_COMMAND}")")/lib"
@@ -143,7 +154,7 @@ if [[ "${CPU}" == "darwin" ]]; then
   mkdir -p "${LIBEDGETPU_LIB_DIR}"
 
   install_file "Edge TPU runtime library" \
-               "${LIBEDGETPU_DIR}/${FREQ_DIR}/darwin/libedgetpu.1.0.dylib" \
+               "${LIBEDGETPU_DIR}/${FREQ_DIR}/${CPU}/libedgetpu.1.0.dylib" \
                "${LIBEDGETPU_LIB_DIR}"
 
   info "Generating symlink [${LIBEDGETPU_LIB_DIR}/libedgetpu.1.dylib]..."
@@ -152,7 +163,7 @@ if [[ "${CPU}" == "darwin" ]]; then
   install_name_tool -id  "${LIBEDGETPU_LIB_DIR}/libedgetpu.1.dylib" \
                          "${LIBEDGETPU_LIB_DIR}/libedgetpu.1.0.dylib"
 
-  install_name_tool -change "/opt/local/lib/libusb-1.0.0.dylib" \
+  install_name_tool -change $(otool -L "${LIBEDGETPU_LIB_DIR}/libedgetpu.1.0.dylib" | grep usb | awk '{print $1}') \
                             "${DARWIN_INSTALL_LIB_DIR}/libusb-1.0.0.dylib" \
                             "${LIBEDGETPU_LIB_DIR}/libedgetpu.1.0.dylib"
 else

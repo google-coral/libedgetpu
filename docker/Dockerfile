@@ -54,7 +54,7 @@ RUN if grep 'Bionic Beaver' /etc/os-release > /dev/null; then \
         && DEBIAN_FRONTEND=noninteractive apt-get install -y gcc-9 g++-9; \
     fi
 
-ARG BAZEL_VERSION=4.2.1
+ARG BAZEL_VERSION=4.2.2
 RUN wget -O /bazel https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-installer-linux-x86_64.sh && \
     bash /bazel && \
     rm -f /bazel

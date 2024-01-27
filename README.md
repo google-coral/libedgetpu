@@ -8,7 +8,7 @@ This software is distributed in the binary form at [coral.ai/software](https://c
 
 There are three ways to build libedgetpu:
 
-* Docker + Bazel [Recommended]: Compatible with Linux, MacOS and Windows (via Dockerfile.windows and build.bat), this method ensures a known-good build enviroment and pulls all external depedencies needed.
+* Docker + Bazel: Compatible with Linux, MacOS and Windows (via Dockerfile.windows and build.bat), this method ensures a known-good build enviroment and pulls all external depedencies needed.
 * Bazel: Supports Linux, macOS, and Windows (via build.bat). A proper enviroment setup is required before using this technique.
 * Makefile: Supporting only Linux and Native builds, this strategy is pure Makefile and doesn't require Bazel or external dependencies to be pulled at runtime.
 
@@ -22,9 +22,9 @@ $ DOCKER_CPUS="armv7a aarch64" DOCKER_IMAGE="debian:stretch" DOCKER_TARGETS=libe
 
 All built binaries go to the `out` directory. Note that the bazel-* are not copied to the host from the Docker container.
 
-### Bazel
+### Bazel [Recommended]
 
-For proper environment setup check `docker` directory.
+This seems to work with 2024 OS and libraries. For proper environment setup check `docker` directory. `Bazel 4.2.2` is needed
 
 Build native binaries on Linux and macOS:
 ```
@@ -40,6 +40,11 @@ Cross-compile for ARMv7-A (32 bit), and ARMv8-A (64 bit) on Linux:
 ```
 $ CPU=armv7a make
 $ CPU=aarch64 make
+```
+
+To package a Debian deb:
+```
+debuild -us -uc -tc -b
 ```
 
 ### Makefile

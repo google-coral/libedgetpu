@@ -1,3 +1,9 @@
+libedgetpu (16.0-0ppa1) stable; urgency=medium
+  * Build agaist TF v2.8.4 
+ -- Nicola Ferralis <feranick@hotmail.com>  Sat, 27 Jan 2024 18:42:08 -0500
+libedgetpu (16.0) stable; urgency=medium
+  * New release
+ -- Coral <coral-support@google.com>  Fri, 09 Jul 2021 12:56:53 -0700
 libedgetpu (16.0) stable; urgency=medium
   * New release
  -- Coral <coral-support@google.com>  Fri, 09 Jul 2021 12:56:53 -0700

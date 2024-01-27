@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "api/allocated_buffer.h"
+#include "stddef.h"
 
 #include "port/logging.h"
 

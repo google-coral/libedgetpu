@@ -24,7 +24,7 @@ All built binaries go to the `out` directory. Note that the bazel-* are not copi
 
 ### Bazel [Recommended]
 
-This seems to work with 2024 OS and libraries. For proper environment setup check `docker` directory. It requires `Bazel 4.2.2` to compile TF 2.10.1.
+This seems to work with 2024 OS and libraries. For proper environment setup check `docker` directory. It requires `Bazel 5.3.0` to compile TF 2.11.1.
 
 Build native binaries on Linux and macOS:
 ```

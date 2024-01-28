@@ -50,6 +50,13 @@ To package a Debian deb:
 ```
 debuild -us -uc -tc -b
 ```
+NOTE for MacOS: Compilation with MacOS fails. Two requirements:
+- install `flatbuffers` (via macports)
+- after failure in compilation, add the following line to the temporary file that is created by bazel in `/var/tmp/_bazl_xxxxx/xxxxxxxxxxxxx/external/local_config_cc/BUILD` line 48:
+```
+"darwin_x86_64": ":cc-compiler-darwin",
+```
+Repeat compilation.
 
 ### Makefile
 

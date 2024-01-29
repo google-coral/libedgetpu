@@ -16,8 +16,8 @@ There are three ways to build libedgetpu:
 
 Build Linux binaries inside Docker container (works on Linux and macOS):
 ```
-$ DOCKER_CPUS="k8" DOCKER_IMAGE="ubuntu:18.04" DOCKER_TARGETS=libedgetpu make docker-build
-$ DOCKER_CPUS="armv7a aarch64" DOCKER_IMAGE="debian:stretch" DOCKER_TARGETS=libedgetpu make docker-build
+$ DOCKER_CPUS="k8" DOCKER_IMAGE="ubuntu:22.04" DOCKER_TARGETS=libedgetpu make docker-build
+$ DOCKER_CPUS="armv7a aarch64" DOCKER_IMAGE="debian:bookworm" DOCKER_TARGETS=libedgetpu make docker-build
 ```
 
 All built binaries go to the `out` directory. Note that the bazel-* are not copied to the host from the Docker container.

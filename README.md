@@ -22,6 +22,12 @@ $ DOCKER_CPUS="armv7a aarch64" DOCKER_IMAGE="debian:bookworm" DOCKER_TARGETS=lib
 
 All built binaries go to the `out` directory. Note that the bazel-* are not copied to the host from the Docker container.
 
+To package a Debian deb:
+```
+debuild -us -uc -tc -b
+```
+Note that the `debian/rules` may ned to be edited to specify the CPU manually (the if selector may not work for docker builds).
+
 ### Bazel [Recommended]
 
 [outdated] For proper environment setup check `docker` directory, although the setup is outdated. 

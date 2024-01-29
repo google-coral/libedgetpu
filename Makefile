@@ -165,12 +165,6 @@ for cpu in $(DOCKER_CPUS); do \
     make CPU=\$${cpu} -C $(DOCKER_CONTAINER_WORKSPACE) $(DOCKER_TARGETS) || exit 1; \
 done
 
-DOCKER_DEBIAN_COMMAND := \
-cd $(DOCKER_CONTAINER_WORKSPACE); \
-for cpu in $(DOCKER_CPUS); do \
-    CPU=\$${cpu} debuild -us -uc -tc -b || exit 1; \
-done
-
 define docker_run_command
 chmod a+w /; \
 groupadd --gid $(shell id -g) $(shell id -g -n); \
@@ -192,8 +186,3 @@ docker-build: docker-image
 	docker run --rm -i $(shell tty -s && echo --tty) \
 	    -v $(DOCKER_WORKSPACE):$(DOCKER_CONTAINER_WORKSPACE) \
 	    $(DOCKER_TAG) /bin/bash -c "$(call docker_run_command,$(DOCKER_MAKE_COMMAND))"
-
-docker-debian: docker-image
-	docker run --rm -i $(shell tty -s && echo --tty) \
-	    -v $(DOCKER_WORKSPACE):$(DOCKER_CONTAINER_WORKSPACE) \
-	    $(DOCKER_TAG) /bin/bash -c "$(call docker_run_command,$(DOCKER_DEBIAN_COMMAND))"

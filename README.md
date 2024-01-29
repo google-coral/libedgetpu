@@ -26,7 +26,7 @@ To package a Debian deb:
 ```
 debuild -us -uc -tc -b
 ```
-Note that the `debian/rules` may ned to be edited to specify the CPU manually (the if selector may not work for docker builds).
+Note that the `debian/rules` may need to be edited. Custom versions for aarch64 and armv7a are provided to be used as `debian/rules' for dockeer builds for these specific architectures. 
 
 ### Bazel [Recommended]
 

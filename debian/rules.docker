@@ -7,14 +7,19 @@ LIBEDGETPU_BIN ?= out
 FILENAME := libedgetpu.so.1.0
 SONAME := libedgetpu.so.1
 
-HOST_GNU_TYPE := armv7a-linux-gnu
-DEB_HOST_ARCH := armhf
+CPU := aarch64
+
+ifeq ($(CPU),armv7a)
+  HOST_GNU_TYPE := arm-linux-gnueabihf
+else ifeq ($(CPU),aarch64)
+  HOST_GNU_TYPE := aarch64-linux-gnu
+else ifeq ($(DEB_TARGET_ARCH),k8)
+  HOST_GNU_TYPE := x86_64-linux-gnu
+endif
 
 LIB_DEV := debian/libedgetpu-dev/usr/lib/$(HOST_GNU_TYPE)
 LIB_STD := debian/libedgetpu1-std/usr/lib/$(HOST_GNU_TYPE)
 LIB_MAX := debian/libedgetpu1-max/usr/lib/$(HOST_GNU_TYPE)
-
-CPU := armv7a
 
 #ifeq ($(DEB_TARGET_ARCH),armhf)
 #  CPU := armv7a

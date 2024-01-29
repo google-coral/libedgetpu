@@ -35,6 +35,12 @@ Build native binaries on Linux and macOS:
 $ make
 ```
 
+Rquired libraries for Linux:
+
+```
+$ sudo apt install python3-dev
+```
+
 Build native binaries on Windows:
 ```
 $ build.bat

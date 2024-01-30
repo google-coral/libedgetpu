@@ -12,7 +12,12 @@ There are three ways to build libedgetpu:
 * Bazel: Supports Linux, macOS, and Windows (via build.bat). A proper enviroment setup is required before using this technique.
 * Makefile: Supporting only Linux and Native builds, this strategy is pure Makefile and doesn't require Bazel or external dependencies to be pulled at runtime.
 
-### Bazel + Docker
+### Bazel + Docker [Recommended]
+
+For Debian/Ubuntu, install the following libraries:
+```
+$ sudo apt install docker.io devscripts
+```
 
 Build Linux binaries inside Docker container (works on Linux and macOS):
 ```
@@ -22,12 +27,12 @@ $ DOCKER_CPUS="armv7a aarch64" DOCKER_IMAGE="debian:bookworm" DOCKER_TARGETS=lib
 
 All built binaries go to the `out` directory. Note that the bazel-* are not copied to the host from the Docker container.
 
-To package a Debian deb for `arm64` and `armhf` respectively:
+To package a Debian deb for `arm64`,`armhf`,`amd64` respectively:
 ```
-debuild -us -uc -tc -b -a arm64 -d
-debuild -us -uc -tc -b -a armhf -d
+$ debuild -us -uc -tc -b -a arm64 -d
+$ debuild -us -uc -tc -b -a armhf -d
+$ debuild -us -uc -tc -b -a amd64 -d
 ```
-Note that the `debian/rules` may need to be edited. Custom versions for aarch64 and armv7a are provided to be used as `debian/rules' for dockeer builds for these specific architectures. 
 
 ### Bazel
 

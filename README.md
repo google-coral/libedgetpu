@@ -38,7 +38,7 @@ $ debuild -us -uc -tc -b -a amd64 -d
 
 [outdated] For proper environment setup check `docker` directory, although the setup is outdated. 
 
-This fork requires the use of `bazel` in the version recommended for the corresponding version of tensorflow. For example, it requires `Bazel 6.1.0` to compile TF 2.15.0.
+The version of `bazel` needs to be the same as that recommended for the corresponding version of tensorflow. For example, it requires `Bazel 6.1.0` to compile TF 2.15.0.
 
 Current version of tensorflow supported is 2.15.0.
 

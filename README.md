@@ -21,26 +21,23 @@ $ sudo apt install docker.io devscripts
 
 Build Linux binaries inside Docker container (works on Linux and macOS):
 ```
-$ DOCKER_CPUS="k8" DOCKER_IMAGE="ubuntu:22.04" DOCKER_TARGETS=libedgetpu make docker-build
-$ DOCKER_CPUS="armv7a aarch64" DOCKER_IMAGE="debian:bookworm" DOCKER_TARGETS=libedgetpu make docker-build
+DOCKER_CPUS="k8" DOCKER_IMAGE="ubuntu:22.04" DOCKER_TARGETS=libedgetpu make docker-build
+DOCKER_CPUS="armv7a aarch64" DOCKER_IMAGE="debian:bookworm" DOCKER_TARGETS=libedgetpu make docker-build
 ```
 
 All built binaries go to the `out` directory. Note that the bazel-* are not copied to the host from the Docker container.
 
 To package a Debian deb for `arm64`,`armhf`,`amd64` respectively:
 ```
-$ debuild -us -uc -tc -b -a arm64 -d
-$ debuild -us -uc -tc -b -a armhf -d
-$ debuild -us -uc -tc -b -a amd64 -d
+debuild -us -uc -tc -b -a arm64 -d
+debuild -us -uc -tc -b -a armhf -d
+debuild -us -uc -tc -b -a amd64 -d
 ```
 
 ### Bazel
-
-[outdated] For proper environment setup check `docker` directory, although the setup is outdated. 
-
 The version of `bazel` needs to be the same as that recommended for the corresponding version of tensorflow. For example, it requires `Bazel 6.1.0` to compile TF 2.15.0.
 
-Current version of tensorflow supported is 2.15.0.
+Current version of tensorflow supported is `2.15.0`.
 
 Build native binaries on Linux and macOS:
 ```
@@ -80,15 +77,15 @@ Repeat compilation.
 
 If only building for native systems, it is possible to significantly reduce the complexity of the build by removing Bazel (and Docker). This simple approach builds only what is needed, removes build-time depenency fetching, increases the speed, and uses upstream Debian packages.
 
-To prepare your system, you'll need the following packages (both available on Debian Bullseye or Buster-Backports):
+To prepare your system, you'll need the following packages (both available on Debian Bookworm, Bullseye or Buster-Backports):
 ```
 sudo apt install libabsl-dev libflatbuffers-dev
 ```
 
-Next, you'll need to clone the [Tensorflow Repo](https://github.com/tensorflow/tensorflow) at the desired checkout (using TF head isn't advised). If you are planning to use libcoral or pycoral libraries, this should match the ones in those repos' WORKSPACE files. For example, if you are using TF2.5, we can check that [tag in the TF Repo](https://github.com/tensorflow/tensorflow/commit/a4dfb8d1a71385bd6d122e4f27f86dcebb96712d) and then checkout that address:
+Next, you'll need to clone the [Tensorflow Repo](https://github.com/tensorflow/tensorflow) at the desired checkout (using TF head isn't advised). If you are planning to use libcoral or pycoral libraries, this should match the ones in those repos' WORKSPACE files. For example, if you are using TF2.15, we can check that [tag in the TF Repo](https://github.com/tensorflow/tensorflow/tree/r2.15) get the latest commit for that stable release and then checkout that address:
 ```
 git clone https://github.com/tensorflow/tensorflow
-git checkout a4dfb8d1a71385bd6d122e4f27f86dcebb96712d -b tf2.5
+git checkout r2.15
 ```
 
 To build the library:

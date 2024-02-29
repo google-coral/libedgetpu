@@ -52,5 +52,5 @@ ADD https://github.com/libusb/libusb/releases/download/v${LIBUSB_VERSION}/libusb
 RUN 7z x -oc:\libusb c:\windows\temp\libusb-$env:LIBUSB_VERSION.7z
 
 # Install Bazel
-ARG BAZEL_VERSION=6.5.0
+ARG BAZEL_VERSION=6.1.0
 ADD https://github.com/bazelbuild/bazel/releases/download/${BAZEL_VERSION}/bazel-${BAZEL_VERSION}-windows-x86_64.exe c:/windows/system32/bazel.exe

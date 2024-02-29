@@ -35,6 +35,10 @@ override_dh_auto_install:
 	cp -f $(LIBEDGETPU_BIN)/direct/$(CPU)/$(FILENAME) $(LIB_MAX)/$(FILENAME)
 	ln -fs $(FILENAME) $(LIB_MAX)/$(SONAME)
 
+# Use xz compression for compatibility with Debian
+override_dh_builddeb:
+	dh_builddeb -- -Zxz
+
 # Skip auto build and auto clean.
 override_dh_auto_clean:
 override_dh_auto_build:

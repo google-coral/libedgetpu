@@ -16,6 +16,7 @@
 #define DARWINN_API_ALLOCATED_BUFFER_H_
 
 #include <functional>
+#include "stddef.h"
 
 namespace platforms {
 namespace darwinn {

@@ -1,3 +1,30 @@
+libedgetpu (16.0tf2.15.0-1) stable; urgency=medium
+  * Build against TF v2.15.0
+ -- Nicola Ferralis <feranick@hotmail.com>  Tue, 31 Jan 2024 09:10:34 -0500
+libedgetpu (16.0tf2.13.1-2) stable; urgency=medium
+  * Updated libusb to v1.0.26
+ -- Nicola Ferralis <feranick@hotmail.com>  Tue, 30 Jan 2024 10:10:34 -0500
+libedgetpu (16.0tf2.13.1) stable; urgency=medium
+  * Build against TF v2.13.1
+ -- Nicola Ferralis <feranick@hotmail.com>  Sat, 27 Jan 2024 23:40:12 -0500
+libedgetpu (16.0tf2.12.1) stable; urgency=medium
+  * Build against TF v2.12.1
+ -- Nicola Ferralis <feranick@hotmail.com>  Sat, 27 Jan 2024 23:32:52 -0500
+libedgetpu (16.0tf2.11.1) stable; urgency=medium
+  * Build against TF v2.11.1
+ -- Nicola Ferralis <feranick@hotmail.com>  Sat, 27 Jan 2024 22:50:51 -0500
+libedgetpu (16.0pp3) stable; urgency=medium
+  * Build against TF v2.10.1
+ -- Nicola Ferralis <feranick@hotmail.com>  Sat, 27 Jan 2024 22:50:51 -0500
+libedgetpu (16.0pp2) stable; urgency=medium
+  * Build against TF v2.9.3
+ -- Nicola Ferralis <feranick@hotmail.com>  Sat, 27 Jan 2024 18:55:51 -0500
+libedgetpu (16.0-0ppa1) stable; urgency=medium
+  * Build agaist TF v2.8.4 
+ -- Nicola Ferralis <feranick@hotmail.com>  Sat, 27 Jan 2024 18:42:08 -0500
+libedgetpu (16.0) stable; urgency=medium
+  * New release
+ -- Coral <coral-support@google.com>  Fri, 09 Jul 2021 12:56:53 -0700
 libedgetpu (16.0) stable; urgency=medium
   * New release
  -- Coral <coral-support@google.com>  Fri, 09 Jul 2021 12:56:53 -0700

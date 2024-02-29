@@ -8,27 +8,46 @@ This software is distributed in the binary form at [coral.ai/software](https://c
 
 There are three ways to build libedgetpu:
 
-* Docker + Bazel [Recommended]: Compatible with Linux, MacOS and Windows (via Dockerfile.windows and build.bat), this method ensures a known-good build enviroment and pulls all external depedencies needed.
+* Docker + Bazel: Compatible with Linux, MacOS and Windows (via Dockerfile.windows and build.bat), this method ensures a known-good build enviroment and pulls all external depedencies needed.
 * Bazel: Supports Linux, macOS, and Windows (via build.bat). A proper enviroment setup is required before using this technique.
 * Makefile: Supporting only Linux and Native builds, this strategy is pure Makefile and doesn't require Bazel or external dependencies to be pulled at runtime.
 
-### Bazel + Docker
+### Bazel + Docker [Recommended]
+
+For Debian/Ubuntu, install the following libraries:
+```
+$ sudo apt install docker.io devscripts
+```
 
 Build Linux binaries inside Docker container (works on Linux and macOS):
 ```
-$ DOCKER_CPUS="k8" DOCKER_IMAGE="ubuntu:18.04" DOCKER_TARGETS=libedgetpu make docker-build
-$ DOCKER_CPUS="armv7a aarch64" DOCKER_IMAGE="debian:stretch" DOCKER_TARGETS=libedgetpu make docker-build
+DOCKER_CPUS="k8" DOCKER_IMAGE="ubuntu:22.04" DOCKER_TARGETS=libedgetpu make docker-build
+DOCKER_CPUS="armv7a aarch64" DOCKER_IMAGE="debian:bookworm" DOCKER_TARGETS=libedgetpu make docker-build
 ```
 
 All built binaries go to the `out` directory. Note that the bazel-* are not copied to the host from the Docker container.
 
-### Bazel
+To package a Debian deb for `arm64`,`armhf`,`amd64` respectively:
+```
+debuild -us -uc -tc -b -a arm64 -d
+debuild -us -uc -tc -b -a armhf -d
+debuild -us -uc -tc -b -a amd64 -d
+```
 
-For proper environment setup check `docker` directory.
+### Bazel
+The version of `bazel` needs to be the same as that recommended for the corresponding version of tensorflow. For example, it requires `Bazel 6.1.0` to compile TF 2.15.0.
+
+Current version of tensorflow supported is `2.15.0`.
 
 Build native binaries on Linux and macOS:
 ```
 $ make
+```
+
+Required libraries for Linux:
+
+```
+$ sudo apt install python3-dev
 ```
 
 Build native binaries on Windows:
@@ -42,19 +61,31 @@ $ CPU=armv7a make
 $ CPU=aarch64 make
 ```
 
+To package a Debian deb:
+```
+debuild -us -uc -tc -b
+```
+NOTE for MacOS: Compilation with MacOS fails. Two requirements:
+- install `flatbuffers` (via macports)
+- after failure in compilation, add the following line to the temporary file that is created by bazel in `/var/tmp/_bazl_xxxxx/xxxxxxxxxxxxx/external/local_config_cc/BUILD` line 48:
+```
+"darwin_x86_64": ":cc-compiler-darwin",
+```
+Repeat compilation.
+
 ### Makefile
 
 If only building for native systems, it is possible to significantly reduce the complexity of the build by removing Bazel (and Docker). This simple approach builds only what is needed, removes build-time depenency fetching, increases the speed, and uses upstream Debian packages.
 
-To prepare your system, you'll need the following packages (both available on Debian Bullseye or Buster-Backports):
+To prepare your system, you'll need the following packages (both available on Debian Bookworm, Bullseye or Buster-Backports):
 ```
 sudo apt install libabsl-dev libflatbuffers-dev
 ```
 
-Next, you'll need to clone the [Tensorflow Repo](https://github.com/tensorflow/tensorflow) at the desired checkout (using TF head isn't advised). If you are planning to use libcoral or pycoral libraries, this should match the ones in those repos' WORKSPACE files. For example, if you are using TF2.5, we can check that [tag in the TF Repo](https://github.com/tensorflow/tensorflow/commit/a4dfb8d1a71385bd6d122e4f27f86dcebb96712d) and then checkout that address:
+Next, you'll need to clone the [Tensorflow Repo](https://github.com/tensorflow/tensorflow) at the desired checkout (using TF head isn't advised). If you are planning to use libcoral or pycoral libraries, this should match the ones in those repos' WORKSPACE files. For example, if you are using TF2.15, we can check that [tag in the TF Repo](https://github.com/tensorflow/tensorflow/tree/r2.15) get the latest commit for that stable release and then checkout that address:
 ```
 git clone https://github.com/tensorflow/tensorflow
-git checkout a4dfb8d1a71385bd6d122e4f27f86dcebb96712d -b tf2.5
+git checkout r2.15
 ```
 
 To build the library:

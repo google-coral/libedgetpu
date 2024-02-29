@@ -44,7 +44,7 @@ Build native binaries on Linux and macOS:
 $ make
 ```
 
-Rquired libraries for Linux:
+Required libraries for Linux:
 
 ```
 $ sudo apt install python3-dev

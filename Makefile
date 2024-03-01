@@ -21,8 +21,12 @@ ARCH := $(shell uname -p)
 
 ifeq ($(OS),Linux)
 CPU ?= k8
+ABI ?= gnu
+OSSmall ?= linux
 sha256_check = echo "$(1)  $(2)" | sha256sum --check -
 else ifeq ($(OS),Darwin)
+ABI ?= darwin
+OSSmall ?= apple
 ifeq ($(ARCH),arm)
 CPU ?= darwin_arm64
 else
@@ -33,8 +37,15 @@ else
 $(error $(OS) is not supported)
 endif
 
-ifeq ($(filter $(CPU),k8 armv7a aarch64 darwin_arm64 darwin_x86_64),)
-$(error CPU must be k8, armv7a, aarch64, darwin_arm64, or darwin_x86_64)
+ifeq ($(filter $(CPU),k8 armv6 armv7a arm64 aarch64 riscv64 darwin_arm64 darwin_x86_64),)
+$(error CPU must be k8, armv6, armv7a, arm64, aarch64, riscv64, darwin_arm64, or darwin_x86_64)
+endif
+
+ifeq ($(ABI),musl)
+ZIG_CPU = $(CPU)
+ifeq ($(CPU),aarch64)
+ZIG_CPU = arm64
+endif
 endif
 
 COMPILATION_MODE ?= opt
@@ -74,6 +85,31 @@ BAZEL_BUILD_FLAGS = \
   --cpu=$(CPU) \
   --embed_label='TENSORFLOW_COMMIT=$(shell bazel query "@libedgetpu_properties//..." | grep tensorflow_commit | cut -d\# -f2)' \
   --stamp
+
+ifeq ($(CPU),armv6)
+BAZEL_BUILD_FLAGS = \
+  --sandbox_debug \
+  --stripopt=-x \
+  --compilation_mode=$(COMPILATION_MODE) \
+  --config=armv6_linux \
+  --embed_label='TENSORFLOW_COMMIT=$(shell bazel query "@libedgetpu_properties//..." | grep tensorflow_commit | cut -d\# -f2)' \
+  --stamp
+endif
+
+ifeq ($(ABI),musl)
+BAZEL_BUILD_FLAGS = \
+	--stripopt=-x \
+	--compilation_mode=$(COMPILATION_MODE) \
+	--cxxopt="-fPIC" \
+  	--copt="-fPIC" \
+	--cpu=$(CPU) \
+	--platforms=@zig_sdk//platform:$(OSSmall)_$(ZIG_CPU)_$(ABI) \
+	--extra_toolchains=@zig_sdk//toolchain:$(OSSmall)_$(ZIG_CPU)_$(ABI) \
+	--incompatible_enable_cc_toolchain_resolution=true \
+	--incompatible_use_cc_configure_from_rules_cc=true \
+	--embed_label='TENSORFLOW_COMMIT=$(shell bazel query "@libedgetpu_properties//..." | grep tensorflow_commit | cut -d\# -f2)' \
+	--stamp
+endif
 
 BAZEL_BUILD_TARGET := $(BAZEL_BUILD_TARGET_$(OS))
 BAZEL_BUILD_OUTPUT_FILE := $(BAZEL_BUILD_OUTPUT_FILE_$(OS))
@@ -155,9 +191,9 @@ clean:
 DOCKER_CONTEXT_DIR := $(MAKEFILE_DIR)/docker
 DOCKER_WORKSPACE := $(MAKEFILE_DIR)
 DOCKER_CONTAINER_WORKSPACE := /workspace
-DOCKER_CPUS ?= k8 armv7a aarch64
+DOCKER_CPUS ?= k8 armv6 armv7a aarch64 riscv64
 DOCKER_TARGETS ?=
-DOCKER_IMAGE ?= debian:stretch
+DOCKER_IMAGE ?= debian:bookworm
 DOCKER_TAG_BASE ?= libedgetpu-cross
 DOCKER_TAG := "$(DOCKER_TAG_BASE)-$(subst :,-,$(DOCKER_IMAGE))"
 DOCKER_SHELL_COMMAND ?=

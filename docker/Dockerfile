@@ -19,23 +19,28 @@ RUN /update_sources.sh
 
 RUN dpkg --add-architecture armhf
 RUN dpkg --add-architecture arm64
+RUN dpkg --add-architecture riscv64
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
       libc6-dev:arm64 \
       libc6-dev:armhf \
+      libc6-dev:riscv64 \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
       python3-all \
       python3-numpy \
       build-essential \
       crossbuild-essential-armhf \
       crossbuild-essential-arm64 \
+      crossbuild-essential-riscv64 \
       libusb-1.0-0-dev \
       libusb-1.0-0-dev:arm64 \
       libusb-1.0-0-dev:armhf \
+      libusb-1.0-0-dev:riscv64 \
       zlib1g-dev \
       zlib1g-dev:armhf \
       zlib1g-dev:arm64 \
+      zlib1g-dev:riscv64 \
       sudo \
       debhelper \
       pkg-config \

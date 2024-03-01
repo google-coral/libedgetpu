@@ -22,7 +22,7 @@ $ sudo apt install docker.io devscripts
 Build Linux binaries inside Docker container (works on Linux and macOS):
 ```
 DOCKER_CPUS="k8" DOCKER_IMAGE="ubuntu:22.04" DOCKER_TARGETS=libedgetpu make docker-build
-DOCKER_CPUS="armv7a aarch64" DOCKER_IMAGE="debian:bookworm" DOCKER_TARGETS=libedgetpu make docker-build
+DOCKER_CPUS="armv7a aarch64 riscv64" DOCKER_IMAGE="debian:bookworm" DOCKER_TARGETS=libedgetpu make docker-build
 ```
 
 All built binaries go to the `out` directory. Note that the bazel-* are not copied to the host from the Docker container.
@@ -55,10 +55,12 @@ Build native binaries on Windows:
 $ build.bat
 ```
 
-Cross-compile for ARMv7-A (32 bit), and ARMv8-A (64 bit) on Linux:
+Cross-compile for ARMv6 (32 bit), ARMv7-A (32 bit), ARMv8-A (64 bit), RISC-V (64 bit) on Linux:
 ```
+$ CPU=armv6 make
 $ CPU=armv7a make
 $ CPU=aarch64 make
+$ CPU=riscv64 make
 ```
 
 To package a Debian deb:

@@ -144,6 +144,7 @@ TfLiteRegistration* RegisterCustomOp() {
       platforms::darwinn::tflite::CustomOpPrepareDirect,
       platforms::darwinn::tflite::CustomOpInvoke,
   };
+  registration.registration_external = nullptr;
   return &registration;
 }
 

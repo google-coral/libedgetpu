@@ -52,7 +52,17 @@ echo Installing UsbDk
 start /wait msiexec /i "%ROOTDIR%\third_party\usbdk\UsbDk_*.msi" /quiet /qb! /norestart
 
 echo Installing Windows drivers
-pnputil /add-driver "%ROOTDIR%\third_party\coral_accelerator_windows\*.inf" /install
+if exist %SystemRoot%\System32\pnputil.exe (
+    set "SystemPath=%SystemRoot%\System32"
+) else if exist %SystemRoot%\Sysnative\pnputil.exe (
+    set "SystemPath=%SystemRoot%\Sysnative"
+) else (
+    echo ERROR: Cannot find pnputil.exe to install the driver.
+    echo/
+    pause
+    goto :EOF
+)
+%SystemPath%\pnputil.exe /add-driver "%ROOTDIR%\third_party\coral_accelerator_windows\*.inf" /install
 
 echo Installing performance counters
 lodctr /M:"%ROOTDIR%\third_party\coral_accelerator_windows\coral.man"

@@ -1,0 +1,33 @@
+@ -0,0 +1,32 @@
+common --experimental_repo_remote_exec
+
+build --define darwinn_portable=1
+build --subcommands
+build --verbose_failures
+build --enable_platform_specific_config
+build --spawn_strategy=standalone
+
+build:linux --crosstool_top=@crosstool//:toolchains
+build:linux --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+build:linux --distinct_host_configuration=false
+
+build:macos --cxxopt=-std=c++14
+build:macos --copt=-fvisibility=hidden
+
+build:windows --incompatible_restrict_string_escapes=false
+build:windows --copt=/DWIN32_LEAN_AND_MEAN
+build:windows --cxxopt=/std:c++14
+
+build:armv6_linux_base --crosstool_top=@my_local_config_embedded_arm//:toolchain
+build:armv6_linux_base --host_crosstool_top=@bazel_tools//tools/cpp:toolchain
+build:armv6_linux --config=armv6_linux_base
+build:armv6_linux --cpu=armv6
+build:armv6_linux --distinct_host_configuration=true
+build:armv6_linux --copt -mfp16-format=ieee
+build:armv6_linux --copt -mabi=aapcs-linux
+build:armv6_linux --copt -mfpu=vfp
+build:armv6_linux --copt -fstack-protector-strong
+build:armv6_linux --copt -mfloat-abi=hard
+build:armv6_linux --copt -mcpu=arm1176jzf-s
+build:armv6_linux --copt -fPIC
+build:armv6_linux --copt "-Wl,-z,now -Wl,-z,relro"

@@ -19,6 +19,7 @@
 
 #include <stddef.h>
 #include <algorithm>
+#include <cstdint>
 
 #include "port/integral_types.h"
 #include "port/macros.h"

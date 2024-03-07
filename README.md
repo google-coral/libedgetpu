@@ -35,9 +35,9 @@ debuild -us -uc -tc -b -a amd64 -d
 ```
 
 ### Bazel
-The version of `bazel` needs to be the same as that recommended for the corresponding version of tensorflow. For example, it requires `Bazel 6.1.0` to compile TF 2.15.0.
+The version of `bazel` needs to be the same as that recommended for the corresponding version of tensorflow. For example, it requires `Bazel 6.5.0` to compile TF 2.16.0.
 
-Current version of tensorflow supported is `2.15.0`.
+Current version of tensorflow supported is `2.16.0`.
 
 Build native binaries on Linux and macOS:
 ```
@@ -85,7 +85,7 @@ sudo apt install libabsl-dev libflatbuffers-dev
 Next, you'll need to clone the [Tensorflow Repo](https://github.com/tensorflow/tensorflow) at the desired checkout (using TF head isn't advised). If you are planning to use libcoral or pycoral libraries, this should match the ones in those repos' WORKSPACE files. For example, if you are using TF2.15, we can check that [tag in the TF Repo](https://github.com/tensorflow/tensorflow/tree/r2.15) get the latest commit for that stable release and then checkout that address:
 ```
 git clone https://github.com/tensorflow/tensorflow
-git checkout r2.15
+git checkout v2.16.0
 ```
 
 To build the library:

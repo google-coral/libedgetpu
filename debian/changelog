@@ -1,3 +1,6 @@
+libedgetpu (16.0.1~tf2.16.0-1) stable; urgency=medium
+  * Build against TF v2.16.0
+-- Nicola Ferralis < feranick@hotmail.com> Thu, 07 Mar 2024 10:01:34 -0500
 libedgetpu (16.0tf2.15.0-1) stable; urgency=medium
   * Build against TF v2.15.0
  -- Nicola Ferralis <feranick@hotmail.com>  Tue, 31 Jan 2024 09:10:34 -0500

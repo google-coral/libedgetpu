@@ -14,6 +14,16 @@ CC=gcc
 CXX=g++
 FLATC=flatc
 
+ARCH := $(shell uname -m)
+ifeq ($(ARCH),armv7)
+  CPU := armv7a
+else ifeq ($(ARCH),aarch64)
+  CPU := aarch64
+else ifeq ($(ARCH),x86_64)
+  CPU := k8
+endif
+
+
 LIBEDGETPU_CFLAGS := \
 	-fPIC \
 	-Wall \
@@ -22,7 +32,7 @@ LIBEDGETPU_CFLAGS := \
 LIBEDGETPU_CXXFLAGS := \
 	-fPIC \
 	-Wall \
-	-std=c++14 \
+	-std=c++17 \
 	-DDARWINN_PORT_DEFAULT
 
 LIBEDGETPU_LDFLAGS := \
@@ -32,7 +42,7 @@ LIBEDGETPU_LDFLAGS := \
 	-Wl,--version-script=$(BUILDROOT)/tflite/public/libedgetpu.lds \
 	-fuse-ld=gold \
 	-lflatbuffers \
-	-labsl_flags \
+	-labsl_flags_usage \
 	-labsl_flags_internal \
 	-labsl_flags_reflection \
 	-labsl_flags_marshalling \
@@ -59,7 +69,6 @@ LIBEDGETPU_INCLUDES := \
 	$(BUILDDIR)/$(BUILDROOT)
 LIBEDGETPU_INCLUDES := $(addprefix -I,$(LIBEDGETPU_INCLUDES))
 
-LIBEDGETPU_CSRCS := $(TFROOT)/tensorflow/lite/c/common.c
 LIBEDGETPU_COBJS := $(call TOBUILDDIR,$(patsubst %.c,%.o,$(LIBEDGETPU_CSRCS)))
 
 LIBEDGETPU_CCSRCS := \
@@ -140,6 +149,8 @@ LIBEDGETPU_CCSRCS := \
 	$(BUILDROOT)/tflite/edgetpu_c.cc \
 	$(BUILDROOT)/tflite/edgetpu_delegate_for_custom_op.cc \
 	$(BUILDROOT)/tflite/edgetpu_delegate_for_custom_op_tflite_plugin.cc \
+	$(TFROOT)/tensorflow/lite/c/common_internal.cc \
+	$(TFROOT)/tensorflow/lite/array.cc \
 	$(TFROOT)/tensorflow/lite/util.cc
 LIBEDGETPU_CCOBJS := $(call TOBUILDDIR,$(patsubst %.cc,%.o,$(LIBEDGETPU_CCSRCS)))
 
@@ -202,13 +213,13 @@ $(LIBEDGETPU_STD_CCOBJS) : $(BUILDDIR)/%-throttled.o: %.cc
 	@$(CXX) -DTHROTTLE_EDGE_TPU $(LIBEDGETPU_CXXFLAGS) $(LIBEDGETPU_INCLUDES) -c $< -MD -MT $@ -MF $(@:%o=%d) -o $@
 
 libedgetpu: | firmware $(LIBEDGETPU_FLATC_OBJS) $(LIBEDGETPU_COBJS) $(LIBEDGETPU_CCOBJS) $(LIBEDGETPU_MAX_CCOBJS)
-	@mkdir -p $(BUILDDIR)/direct/k8
+	@mkdir -p $(BUILDDIR)/direct/$(CPU)
 	@echo "Building libedgetpu.so"
-	@$(CXX) $(LIBEDGETPU_CCFLAGS) $(LIBEDGETPU_LDFLAGS) $(LIBEDGETPU_COBJS) $(LIBEDGETPU_CCOBJS) $(LIBEDGETPU_MAX_CCOBJS) -o $(BUILDDIR)/direct/k8/libedgetpu.so.1.0
-	@ln -sf $(BUILDDIR)/direct/k8/libedgetpu.so.1.0 $(BUILDDIR)/direct/k8/libedgetpu.so.1
+	@$(CXX) $(LIBEDGETPU_CCFLAGS) $(LIBEDGETPU_LDFLAGS) $(LIBEDGETPU_COBJS) $(LIBEDGETPU_CCOBJS) $(LIBEDGETPU_MAX_CCOBJS) -o $(BUILDDIR)/direct/$(CPU)/libedgetpu.so.1.0
+	@ln -sf $(BUILDDIR)/direct/$(CPU)/libedgetpu.so.1.0 $(BUILDDIR)/direct/$(CPU)/libedgetpu.so.1
 
 libedgetpu-throttled: | firmware $(LIBEDGETPU_FLATC_OBJS) $(LIBEDGETPU_COBJS) $(LIBEDGETPU_CCOBJS) $(LIBEDGETPU_STD_CCOBJS)
-	@mkdir -p $(BUILDDIR)/throttled/k8
+	@mkdir -p $(BUILDDIR)/throttled/$(CPU)
 	@echo "Building throttled libedgetpu.so"
-	@$(CXX) $(LIBEDGETPU_CCFLAGS) $(LIBEDGETPU_LDFLAGS) $(LIBEDGETPU_COBJS) $(LIBEDGETPU_CCOBJS) $(LIBEDGETPU_STD_CCOBJS) -o $(BUILDDIR)/throttled/k8/libedgetpu.so.1.0
-	@ln -sf $(BUILDDIR)/throttled/k8/libedgetpu.so.1.0 $(BUILDDIR)/throttled/k8/libedgetpu.so.1
+	@$(CXX) $(LIBEDGETPU_CCFLAGS) $(LIBEDGETPU_LDFLAGS) $(LIBEDGETPU_COBJS) $(LIBEDGETPU_CCOBJS) $(LIBEDGETPU_STD_CCOBJS) -o $(BUILDDIR)/throttled/$(CPU)/libedgetpu.so.1.0
+	@ln -sf $(BUILDDIR)/throttled/$(CPU)/libedgetpu.so.1.0 $(BUILDDIR)/throttled/$(CPU)/libedgetpu.so.1

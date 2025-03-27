@@ -22,36 +22,36 @@ RUN dpkg --add-architecture arm64
 
 RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-      libc6-dev:arm64 \
-      libc6-dev:armhf \
+    libc6-dev:arm64 \
+    libc6-dev:armhf \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y \
-      python3-all \
-      python3-numpy \
-      build-essential \
-      crossbuild-essential-armhf \
-      crossbuild-essential-arm64 \
-      libusb-1.0-0-dev \
-      libusb-1.0-0-dev:arm64 \
-      libusb-1.0-0-dev:armhf \
-      zlib1g-dev \
-      zlib1g-dev:armhf \
-      zlib1g-dev:arm64 \
-      sudo \
-      debhelper \
-      pkg-config \
-      zip \
-      unzip \
-      curl \
-      wget \
-      git \
-      tree \
-      software-properties-common \
-      $(grep Ubuntu /etc/os-release > /dev/null && echo vim-common || echo xxd)
+    python3-all \
+    python3-numpy \
+    build-essential \
+    crossbuild-essential-armhf \
+    crossbuild-essential-arm64 \
+    libusb-1.0-0-dev \
+    libusb-1.0-0-dev:arm64 \
+    libusb-1.0-0-dev:armhf \
+    zlib1g-dev \
+    zlib1g-dev:armhf \
+    zlib1g-dev:arm64 \
+    sudo \
+    debhelper \
+    pkg-config \
+    zip \
+    unzip \
+    curl \
+    wget \
+    git \
+    tree \
+    software-properties-common \
+    $(grep Ubuntu /etc/os-release > /dev/null && echo vim-common || echo xxd)
 
 # Bionic Beaver == Ubuntu 18.04
 RUN if grep 'Bionic Beaver' /etc/os-release > /dev/null; then \
-      add-apt-repository ppa:ubuntu-toolchain-r/test \
-        && DEBIAN_FRONTEND=noninteractive apt-get install -y gcc-9 g++-9; \
+    add-apt-repository ppa:ubuntu-toolchain-r/test \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y gcc-9 g++-9; \
     fi
 
 ARG BAZEL_VERSION=6.5.0

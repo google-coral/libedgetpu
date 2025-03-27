@@ -176,7 +176,7 @@ su $(shell id -u -n) $(if $(1),-c '$(1)',)
 endef
 
 docker-image:
-	docker build $(DOCKER_IMAGE_OPTIONS) -t $(DOCKER_TAG) \
+	docker build --platform linux/amd64 $(DOCKER_IMAGE_OPTIONS) -t $(DOCKER_TAG) \
 	    --build-arg IMAGE=$(DOCKER_IMAGE) $(DOCKER_CONTEXT_DIR)
 
 docker-shell: docker-image

@@ -15,6 +15,8 @@
 #ifndef DARWINN_DRIVER_USB_USB_DEVICE_INTERFACE_H_
 #define DARWINN_DRIVER_USB_USB_DEVICE_INTERFACE_H_
 
+#include <cstdint>
+
 #include "port/array_slice.h"
 #include "port/integral_types.h"
 #include "port/status.h"

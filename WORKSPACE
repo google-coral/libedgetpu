@@ -47,7 +47,12 @@ load(
     "python_repository",
 )
 
-python_repository(name = "python_version_repo")
+#python_repository(name = "python_version_repo")
+
+local_repository(
+    name = "python_version_repo",
+    path = "local_repo/python_version_repo"
+)
 
 load("@python_version_repo//:py_version.bzl", "HERMETIC_PYTHON_VERSION")
 

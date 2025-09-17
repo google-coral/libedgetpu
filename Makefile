@@ -49,8 +49,10 @@ endif
 EDGETPU_RUNTIME_DIR := /tmp/edgetpu_runtime
 #LIBUSB_URL := https://github.com/libusb/libusb/releases/download/v1.0.24/libusb-1.0.24.7z
 #LIBUSB_SHA256 := 620cec4dbe4868202949294157da5adb75c9fbb4f04266146fc833eef85f90fb
-LIBUSB_URL := https://github.com/libusb/libusb/releases/download/v1.0.27/libusb-1.0.27.7z
-LIBUSB_SHA256 := 19835e290f46fab6bd8ce4be6ab7dc5209f1c04bad177065df485e51dc4118c8
+#LIBUSB_URL := https://github.com/libusb/libusb/releases/download/v1.0.27/libusb-1.0.27.7z
+#LIBUSB_SHA256 := 19835e290f46fab6bd8ce4be6ab7dc5209f1c04bad177065df485e51dc4118c8
+LIBUSB_URL := https://github.com/libusb/libusb/releases/download/v1.0.29/libusb-1.0.29.7z
+LIBUSB_SHA256 := 964a38152ca9a104cd00ec8d2f0617b89cd814f9b635e29763c68563d951521d
 USBDK_URL := https://github.com/daynix/UsbDk/releases/download/v1.00-22/UsbDk_1.0.22_x64.msi
 USBDK_SHA256 := 91f6f695e1e13c656024e6d3b55620bf08d8835ef05ee0496935ba6bb62466a5
 LIBEDGETPU_BIN ?= $(MAKEFILE_DIR)/out/
@@ -172,7 +174,7 @@ chmod a+w /; \
 groupadd --gid $(shell id -g) $(shell id -g -n); \
 useradd -m -e '' -s /bin/bash --gid $(shell id -g) --uid $(shell id -u) $(shell id -u -n); \
 echo '$(shell id -u -n) ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers; \
-su $(shell id -u -n) $(if $(1),-c '$(1)',)
+su $(if $(1),-c '$(1)',)
 endef
 
 docker-image:

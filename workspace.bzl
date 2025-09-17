@@ -46,8 +46,36 @@ load("@bazel_tools//tools/build_defs/repo:utils.bzl", "maybe")
 #TENSORFLOW_SHA256 = "bb25fa4574e42ea4d452979e1d2ba3b86b39569d6b8106a846a238b880d73652"
 
 # TF release 2.16.1 as of 03/07/2024. Current.
-TENSORFLOW_COMMIT = "5bc9d26649cca274750ad3625bd93422617eed4b"
-TENSORFLOW_SHA256 = "fe592915c85d1a89c20f3dd89db0772ee22a0fbda78e39aa46a778d638a96abc"
+#TENSORFLOW_COMMIT = "5bc9d26649cca274750ad3625bd93422617eed4b"
+#TENSORFLOW_SHA256 = "fe592915c85d1a89c20f3dd89db0772ee22a0fbda78e39aa46a778d638a96abc"
+
+# TF release 2.17.0 as of 07/12/2024.
+#TENSORFLOW_COMMIT = "ad6d8cc177d0c868982e39e0823d0efbfb95f04c"
+#TENSORFLOW_SHA256 = "75b8dc9b33afff6f2e2d2e2dacc26dd0973bdcee94eec2af290828c1bc574bdc"
+
+# TF release 2.17.1 as of 10/24/2024.
+#TENSORFLOW_COMMIT = "3c92ac03cab816044f7b18a86eb86aa01a294d95"
+#TENSORFLOW_SHA256 = "317dd95c4830a408b14f3e802698eb68d70d81c7c7cfcd3d28b0ba023fe84a68"
+
+# TF release 2.18.0 as of 10/24/2024.
+#TENSORFLOW_COMMIT = "6550e4bd80223cdb8be6c3afd1f81e86a4d433c3"
+#TENSORFLOW_SHA256 = "403916fbcfcbd5657cd891a871debc72433d7a8c56760297a79085e1abc8f18a"
+
+# TF release 2.18.1 as of 03/07/2025.
+#TENSORFLOW_COMMIT = "cb64295ec7308f770b22db6047a1e755b35b7bee"
+#TENSORFLOW_SHA256 = "5fcca4ec0732e146547fc26f6966cf92236c2f85a9e086b85c83d303e2c38980"
+
+# TF release 2.19.0 as of 03/05/2025.
+#TENSORFLOW_COMMIT = "e36baa302922ea3c7131b302c2996bd2051ee5c4"
+#TENSORFLOW_SHA256 = "49279646fe4effe3bdc8f5227724566991adc70cf2fd2d22e5591c397db9b037"
+
+# TF release 2.19.1 as of 08/11/2025.
+TENSORFLOW_COMMIT = "f4247ebb6f9e7421f38c3f01a9a5d5cd54bd24fd"
+TENSORFLOW_SHA256 = "b4cbd03710db2f05a0f4f5f238c496f39e6be34bab1a168e5c0ade1b23d74dfe"
+
+# TF release 2.20.0 as of 08/06/2025.
+#TENSORFLOW_COMMIT = "72fbba3d20f4616d7312b5e2b7f79daf6e82f2fa"
+#TENSORFLOW_SHA256 = "86150d55ce57b2298d8ed42caa7b91c466ad33d9f7f347117c2257cc576d3413"
 
 #CORAL_CROSSTOOL_COMMIT = "6bcc2261d9fc60dff386b557428d98917f0af491"
 #CORAL_CROSSTOOL_SHA256 = "38cb4da13009d07ebc2fed4a9d055b0f914191b344dd2d1ca5803096343958b4"
@@ -77,6 +105,8 @@ def libedgetpu_dependencies(
         ],
         sha256 = tensorflow_sha256,
         strip_prefix = "tensorflow-" + tensorflow_commit,
+        patches = ["//patches:add_configure_cuda.diff"],
+        patch_args = ["-p1"],
     )
 
     maybe(

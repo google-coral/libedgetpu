@@ -1,0 +1,2 @@
+# DO NOT EDIT: automatically generated WORKSPACE file for python_repository rule
+workspace(name = "python_version_repo")
